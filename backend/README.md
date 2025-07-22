@@ -164,7 +164,7 @@ ClockKo/
 docker-compose up --build
 ```
 
-3. Access API at `http://localhost:8000`
+2. Access API at `http://localhost:8000`
 
 ---
 

@@ -52,8 +52,8 @@ clockko-frontend/
 
 ## 📦 Installation & Setup
 ```bash
-git clone https://github.com/Bamidele0102/clockko-frontend.git
-cd clockko-frontend
+git clone https://github.com/Bamidele0102/clockko-team04-althub-project/frontend.git
+cd frontend
 npm install
 ```
 

@@ -33,6 +33,7 @@ clockko-frontend/
 - **TailwindCSS**
 - **Axios** (for API calls)
 - **Redux Toolkit** or **React Context**
+- **Tanstack Query (for state management and API)
 - **Jest** & **React Testing Library** (testing)
 - **ESLint + Prettier** (linting & formatting)
 

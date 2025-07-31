@@ -1,4 +1,4 @@
-# 🏃 Sprint Plan for ClockKo Wellness App Invovling the Backend, Cloud, and CyberSecurity Team
+# 🏃 Sprint Plan for ClockKo Wellness App Involving the Backend, Cloud, and CyberSecurity Team
 
 This plan breaks down the project into feature-focused sprints, clarifying where the Backend, Cloud Engineering, and Cybersecurity teams come in for each sprint.
 

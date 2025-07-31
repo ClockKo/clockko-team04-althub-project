@@ -5,6 +5,7 @@ This plan breaks down the project into feature-focused sprints. Each sprint deli
 ---
 
 ## 🏁 Sprint 0: Project Setup & Core Infrastructure
+
 - Set up project repository and environments (Vite, React, TypeScript, ESLint, Prettier, Vitest, UI library, TanStack Query)
 - Establish base folder structure (`src/`, `features/`, `components/`, etc.)
 - Configure routing, theming, and global styles
@@ -13,6 +14,7 @@ This plan breaks down the project into feature-focused sprints. Each sprint deli
 ---
 
 ## 🔐 Sprint 1: Authentication
+
 - Implement login/logout UI and logic (`features/auth/`)
 - JWT handling, protected routes, and session management
 - Basic user context (current user info)
@@ -21,6 +23,7 @@ This plan breaks down the project into feature-focused sprints. Each sprint deli
 ---
 
 ## ⏱️ Sprint 2: Time Tracking
+
 - Clock in/out, break timer UI (`features/timeTracker/`)
 - Track and display daily summaries
 - Integrate with backend API
@@ -29,6 +32,7 @@ This plan breaks down the project into feature-focused sprints. Each sprint deli
 ---
 
 ## 📋 Sprint 3: Task Management
+
 - Task list, create/edit/delete tasks (`features/tasks/`)
 - Task timer and reminders
 - UI components for tasks
@@ -37,6 +41,7 @@ This plan breaks down the project into feature-focused sprints. Each sprint deli
 ---
 
 ## 🧘‍♂️ Sprint 4: Guided Shutdowns
+
 - Guided shutdown prompt UI (`features/shutdowns/`)
 - End-of-day reflection workflow
 - Hook up to backend, store reflection data
@@ -45,6 +50,7 @@ This plan breaks down the project into feature-focused sprints. Each sprint deli
 ---
 
 ## 👩‍💻 Sprint 5: Virtual Co-working
+
 - Coworking room UI and logic (`features/coworking/`)
 - Real-time presence (if MVP)
 - Join/leave room functionality
@@ -53,6 +59,7 @@ This plan breaks down the project into feature-focused sprints. Each sprint deli
 ---
 
 ## 📊 Sprint 6: Wellness Reports
+
 - Wellness stats dashboard (`features/wellnessReports/`)
 - Display charts/graphs for productivity & wellness
 - Fetch and render data from backend
@@ -61,6 +68,7 @@ This plan breaks down the project into feature-focused sprints. Each sprint deli
 ---
 
 ## 🎯 Sprint 7: Community Challenges
+
 - Challenge list, join/leave challenge (`features/challenges/`)
 - Show leaderboard and progress
 - UI and backend integration
@@ -69,6 +77,7 @@ This plan breaks down the project into feature-focused sprints. Each sprint deli
 ---
 
 ## 🎁 Sprint 8: Reward System
+
 - Points, badges, redeemables UI (`features/rewards/`)
 - Update points on user actions
 - Redeem reward workflow
@@ -77,6 +86,7 @@ This plan breaks down the project into feature-focused sprints. Each sprint deli
 ---
 
 ## 🧑 Sprint 9: Profile & Settings
+
 - Profile page (view/edit info) (`features/profile/`)
 - Update settings, avatar, etc.
 - Integrate with backend
@@ -85,6 +95,7 @@ This plan breaks down the project into feature-focused sprints. Each sprint deli
 ---
 
 ## 🧩 Sprint 10: Shared UI, Polish & Accessibility
+
 - Refactor and polish shared components (`components/`)
 - Ensure accessibility (a11y) and responsiveness
 - Apply consistent theming and style
@@ -93,6 +104,7 @@ This plan breaks down the project into feature-focused sprints. Each sprint deli
 ---
 
 ## 🧪 Sprint 11: Testing & Documentation
+
 - Expand unit/integration tests across features
 - Add Storybook (optional)
 - Finalize README and contribution docs
@@ -100,6 +112,7 @@ This plan breaks down the project into feature-focused sprints. Each sprint deli
 ---
 
 ## 🚀 Sprint 12: MVP Review, Bug Fixes, & Deployment
+
 - User acceptance testing
 - Fix bugs, address feedback
 - Prepare production build

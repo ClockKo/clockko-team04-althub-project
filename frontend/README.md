@@ -3,11 +3,13 @@
 Welcome to the **ClockKo Frontend** repository! This project is part of the AltHub 3.0 initiative, aiming to build a wellness-focused productivity application for remote workers.
 
 ## 🚀 Overview
+
 The frontend is built to interface seamlessly with the FastAPI backend and bring the UI/UX designs from the Product Design team to life. It supports features such as time tracking, guided shutdowns, task management, wellness reports, and more.
 
 ---
 
 ## 📁 Project Structure
+
 ```bash
 clockko-frontend/
 ├── public/               # Static assets
@@ -28,6 +30,7 @@ clockko-frontend/
 ---
 
 ## 🛠️ Tech Stack
+
 - **React** (with Vite or CRA)
 - **TypeScript**
 - **TailwindCSS**
@@ -40,6 +43,7 @@ clockko-frontend/
 ---
 
 ## 🧩 Key Features
+
 - 🔐 Authentication (JWT-based)
 - ⏱️ Time Tracking
 - 📋 Task Management
@@ -52,6 +56,7 @@ clockko-frontend/
 ---
 
 ## 📦 Installation & Setup
+
 ```bash
 git clone https://github.com/Bamidele0102/clockko-team04-althub-project/frontend.git
 cd frontend
@@ -61,11 +66,13 @@ pnpm install
 ```
 
 Create a `.env` file:
+
 ```env
 VITE_API_URL=https://your-backend-url.com
 ```
 
 Run the app:
+
 ```bash
 npm run dev
 or
@@ -75,6 +82,7 @@ pnpm run dev
 ---
 
 ## 🧪 Testing
+
 ```bash
 npm run test
 or
@@ -84,6 +92,7 @@ pnpm run test
 ---
 
 ## 🗂️ Contributing
+
 - Fork the repository
 - Create your feature branch: `git checkout -b feature/YourFeature`
 - Commit your changes: `git commit -m 'Add feature'`
@@ -93,12 +102,14 @@ pnpm run test
 ---
 
 ## 👥 Team
+
 Frontend Lead: TBD  
 Collaborators: All frontend team members (track via GitHub issues and Slack)
 
 ---
 
 ## 📌 Notes
+
 - Sync regularly with the **Backend** and **Design** teams
 - Refer to the shared [Figma designs](#) and API documentation
 - Use GitHub Project board to track issues and sprints
@@ -106,6 +117,7 @@ Collaborators: All frontend team members (track via GitHub issues and Slack)
 ---
 
 ## 📃 License
+
 [MIT](LICENSE)
 
 ---

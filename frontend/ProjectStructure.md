@@ -5,6 +5,7 @@ Welcome to the ClockKo Wellness App frontend! This project helps remote workers 
 ---
 
 ## 🧩 Key Features
+
 - 🔐 Authentication (JWT-based)
 - ⏱️ Time Tracking
 - 📋 Task Management
@@ -66,6 +67,7 @@ src/
 ## 👩‍💻 How to Contribute
 
 1. **Clone & Install:**
+
 ```bash
 git clone https://github.com/Bamidele0102/clockko-team04-althub-project/frontend.git
 cd frontend
@@ -76,12 +78,14 @@ pnpm install
 
 ---
 Create a `.env` file:
+
 ```env
 VITE_API_URL=https://your-backend-url.com
 ```
 
 2. **Start Development Server:**
 Run the app:
+
 ```bash
 npm run dev
 or
@@ -89,14 +93,17 @@ pnpm run dev
 ```
 
 ## 🧪 Testing
+
 ```bash
 npm run test
 or
 pnpm run test
 ```
+
 ---
 
 ## 🗂️ Contributing
+
 - Fork the repository
 - Create your feature branch: `git checkout -b feature/YourFeature`
 - Commit your changes: `git commit -m 'Add feature'`
@@ -153,6 +160,7 @@ Suppose the PRD adds "Team Announcements":
 ---
 
 ## 📌 Notes
+
 - Sync regularly with the **Backend** and **Design** teams
 - Refer to the shared [Figma designs](#) and API documentation
 - Use GitHub Project board to track issues and sprints
@@ -164,4 +172,3 @@ Suppose the PRD adds "Team Announcements":
 - [ClickUp PRD](https://app.clickup.com/9012978739/docs/8cke91k-652/8cke91k-352)
 - [User Flows & MVP Features](#🌟-mvp-features-and-folder-mapping)
 - [Architecture Guide](https://github.com/alan2207/bulletproof-react)
-

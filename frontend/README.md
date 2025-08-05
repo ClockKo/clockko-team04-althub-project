@@ -60,8 +60,6 @@ clockko-frontend/
 ```bash
 git clone https://github.com/Bamidele0102/clockko-team04-althub-project/frontend.git
 cd frontend
-npm install
-or
 pnpm install
 ```
 
@@ -74,8 +72,6 @@ VITE_API_URL=https://your-backend-url.com
 Run the app:
 
 ```bash
-npm run dev
-or
 pnpm run dev
 ```
 
@@ -84,8 +80,6 @@ pnpm run dev
 ## 🧪 Testing
 
 ```bash
-npm run test
-or
 pnpm run test
 ```
 

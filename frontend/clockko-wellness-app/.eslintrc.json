@@ -1,0 +1,4 @@
+{
+  "extends": ["@anfu/eslint-config"],
+  "root": true
+}

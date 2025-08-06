@@ -23,7 +23,7 @@ A FastAPI-based backend application for ClockKo - Authentication and user manage
 
 ### Authentication
 - `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login (JSON-only)
+- `POST /api/auth/login` - User login 
 - `GET /api/auth/user` - Get current user info
 
 ### Email Verification
@@ -60,7 +60,7 @@ A FastAPI-based backend application for ClockKo - Authentication and user manage
    DATABASE_URL=postgresql://username:password@localhost/clockko_db
    
    # JWT
-   SECRET_KEY=your-secret-key-here
+   SECRET_KEY=my-secret-key
    ALGORITHM=HS256
    ACCESS_TOKEN_EXPIRE_MINUTES=30
    
@@ -68,7 +68,7 @@ A FastAPI-based backend application for ClockKo - Authentication and user manage
    SMTP_HOST=smtp.gmail.com
    SMTP_PORT=587
    SMTP_USER=your-email@gmail.com
-   SMTP_PASSWORD=your-app-password
+   SMTP_PASSWORD=my-app-password
    SMTP_FROM=your-email@gmail.com
    SMTP_FROM_NAME=ClockKo
    

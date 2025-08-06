@@ -1,0 +1,1 @@
+/* ├── ProtectedRoute.tsx  // Wrapper to protect routes for logged-in users*/ 

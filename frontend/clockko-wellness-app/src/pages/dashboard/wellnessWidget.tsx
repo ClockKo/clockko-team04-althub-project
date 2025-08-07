@@ -1,0 +1,1 @@
+/* WellnessWidget.tsx   // Widget:monthly wellness, shutdown streak/consistency, total work hours */

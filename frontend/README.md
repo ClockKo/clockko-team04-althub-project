@@ -43,7 +43,7 @@ clockko-wellness-app/
 
 ## 🛠️ Tech Stack
 
-- **React 18** with **Vite**
+- **React 19** with **Vite**
 - **TypeScript** (full type safety)
 - **TailwindCSS** (styling)
 - **shadcn/ui** (component library)

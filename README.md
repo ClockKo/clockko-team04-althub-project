@@ -223,24 +223,6 @@ docker-compose up --build
 - `hotfix/` - Urgent fixes
 - `docs/` - Documentation updates
 
-## 🤝 Team Members
-
-**AltHub 3.0 - Team 04**
-
-| Track | Contributors |
-|-------|-------------|
-| Frontend | [Add team members] |
-| Backend | [Add team members] |
-| Cloud | [Add team members] |
-| Cybersecurity | [Add team members] |
-| Data Analytics | [Add team members] |
-
-## 📞 Support & Communication
-
-- **Project Board:** [GitHub Projects]
-- **Issues:** [GitHub Issues]
-- **Discussions:** [Team Communication Channel]
-- **Documentation:** [Wiki/Docs]
 
 ## 📄 License
 

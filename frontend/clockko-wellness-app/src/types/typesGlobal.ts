@@ -26,27 +26,6 @@ export interface RegistrationData {
   password: string;
 }
 /*************************************************************/ 
-
-// Landing Page
-export interface LandingPageContent {
-  features: LandingFeature[];
-  heroText: string;
-  callToActionText: string;
-  testimonials?: Testimonial[];
-}
-
-export interface LandingFeature {
-  title: string;
-  description: string;
-  iconUrl?: string;
-}
-
-export interface Testimonial {
-  id: string;
-  author: string;
-  quote: string;
-  avatarUrl?: string;
-}
 /*************************************************************/ 
 
 // Dashboard
@@ -183,14 +162,3 @@ export interface ChallengeMessage {
 }
 
 /*************************************************************/
-// Reward System
-export interface Reward {
-  id: string;
-  userId: string;
-  points: number;
-  redeemed: RedeemedPerk[];
-}
-export interface RedeemedPerk {
-  perk: string;
-  date: Date;
-}

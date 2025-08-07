@@ -1,0 +1,1 @@
+/* CoworkingRoom.tsx       // Main room UI component*/ 

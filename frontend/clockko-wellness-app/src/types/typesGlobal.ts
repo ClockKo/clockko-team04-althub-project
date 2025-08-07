@@ -111,28 +111,25 @@ export interface ShutdownReflection {
 export interface Room {
   id: string;
   name: string;
-  participants: RoomParticipant[];
+  participants: RoomMember[];
   sessionStart: Date | null;
   sessionEnd: Date | null;
   silent: boolean;
 }
-export interface RoomParticipant {
+export interface RoomMember {
   userId: string;
+  username: string;
   avatarUrl?: string;
-  initials?: string;
   joinedAt: Date;
+}
+
+export interface PresenceState {
+  members: RoomMember[];
+  roomId: string;
 }
 /*************************************************************/ 
 
 // Monthly Wellness Reports
-export interface WellnessReport {
-  id: string;
-  userId: string;
-  month: string; // e.g. '2025-08'
-  workHourBreakdown: WorkHourBreakdown;
-  shutdownConsistency: number; // e.g. percentage 0-100
-  recommendations: string[];
-}
 export interface WorkHourBreakdown {
   totalHours: number;
   averageDailyHours: number;
@@ -140,25 +137,56 @@ export interface WorkHourBreakdown {
   shortestSession: number;
 }
 
+export interface ProductivityStat {
+  date: string;    // e.g. '2025-08-07'
+  hoursWorked: number;
+  tasksCompleted: number;
+  score: number;
+}
+
+export interface WellnessStat {
+  date: string;
+  shutdownConsistency: number; // percentage
+  mood: number;                // 1-5
+  notes?: string;
+}
+
+export interface WellnessReport {
+  productivity: ProductivityStat[];
+  wellness: WellnessStat[];
+  workHourBreakdown: WorkHourBreakdown;
+  totalHours: number;
+  avgProductivity: number;
+  avgMood: number;
+  recommendations: string[];
+}
+
 /*************************************************************/ 
-// Community & Challenges
+// Community & Challenges Interfaces for challenge, participant, progress, etc.
 export interface Challenge {
   id: string;
-  name: string;
-  week: string; // e.g. '2025-W32'
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  goal: string;
   participants: ChallengeParticipant[];
-  messages: ChallengeMessage[];
 }
+
 export interface ChallengeParticipant {
   userId: string;
-  points: number;
+  username: string;
   avatarUrl?: string;
-  initials?: string;
+  progress: number;
+  points: number;
 }
-export interface ChallengeMessage {
-  userId: string;
-  text: string;
-  timestamp: Date;
+
+export interface JoinChallengePayload {
+  challengeId: string;
+}
+
+export interface LeaveChallengePayload {
+  challengeId: string;
 }
 
 /*************************************************************/

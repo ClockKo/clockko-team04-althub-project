@@ -1,11 +1,23 @@
-// Reward System
-export interface Reward {
+// Reward System // Interfaces for points, badges, redeemables, etc.
+export interface Badge {
   id: string;
-  userId: string;
-  points: number;
-  redeemed: RedeemedPerk[];
+  name: string;
+  description: string;
+  iconUrl?: string;
+  unlockedAt?: string;
 }
-export interface RedeemedPerk {
-  perk: string;
-  date: Date;
+
+export interface Redeemable {
+  id: string;
+  name: string;
+  cost: number;
+  description: string;
+  iconUrl?: string;
+  redeemedAt?: string;
+}
+
+export interface RewardsState {
+  points: number;
+  badges: Badge[];
+  redeemables: Redeemable[];
 }

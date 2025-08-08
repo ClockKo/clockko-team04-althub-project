@@ -26,9 +26,9 @@ ClockKo addresses the growing need for wellness-oriented productivity tools in t
 ## 🚀 Core Features
 
 - ⏱️ **Smart Time Tracking** - Automated work session monitoring
-- 📋 **Task Management** - Prioritized task organization with wellness breaks
+- 📋 **Task Management** - Prioritised task organization with wellness breaks
 - 🧘‍♂️ **Guided Shutdowns** - Structured end-of-day routines
-- 📊 **Wellness Analytics** - Personalized productivity and health insights
+- 📊 **Wellness Analytics** - Personalised productivity and health insights
 - 👥 **Virtual Coworking** - Collaborative workspaces with focus rooms
 - 🎮 **Gamification** - Challenges, rewards, and progress tracking
 - 🔒 **Privacy-First** - Secure data handling and user privacy protection

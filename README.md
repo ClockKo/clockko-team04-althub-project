@@ -209,11 +209,11 @@ docker-compose up --build
 ## 📋 Contributing Guidelines
 
 1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+2. **Create** a feature branch: `git checkout -b feature/YourFeature`
 3. **Follow** the established architecture patterns
 4. **Add** comprehensive tests
 5. **Commit** with clear messages: `git commit -m 'Add amazing feature'`
-6. **Push** to your branch: `git push origin feature/amazing-feature`
+6. **Push** to your branch: `git push origin feature/YourFeature`
 7. **Create** a Pull Request
 
 ### Branch Naming Convention

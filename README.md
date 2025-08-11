@@ -210,11 +210,12 @@ docker-compose up --build
 
 1. **Fork** the repository
 2. **Create** a feature branch: `git checkout -b feature/YourFeature`
-3. **Follow** the established architecture patterns
-4. **Add** comprehensive tests
-5. **Commit** with clear messages: `git commit -m 'Add amazing feature'`
-6. **Push** to your branch: `git push origin feature/YourFeature`
-7. **Create** a Pull Request
+3. **Example** of feature branch naming for backend `be-feature/time-tracker` for frontend `fe-feature/time-tracker`
+4. **Follow** the established architecture patterns
+5. **Add** comprehensive tests
+6. **Commit** with clear messages: `git commit -m 'Add amazing feature'`
+7. **Push** to your branch: `git push origin feature/YourFeature`
+8. **Create** a Pull Request
 
 ### Branch Naming Convention
 
@@ -222,7 +223,6 @@ docker-compose up --build
 - `bugfix/` - Bug fixes
 - `hotfix/` - Urgent fixes
 - `docs/` - Documentation updates
-
 
 ## 📄 License
 
@@ -239,4 +239,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Building the future of wellness-focused remote work productivity** 💪🌿
 
+---
 *Last Updated: August 2025*
+
+

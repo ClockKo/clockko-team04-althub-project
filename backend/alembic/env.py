@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from app.core.database import Base
 from app.models.user import User  # Import all models
-
+from app.models.timelog import Timelog
 # This is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

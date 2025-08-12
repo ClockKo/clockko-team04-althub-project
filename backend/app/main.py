@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth
+from app.api import auth, timetracker
 from app.core.database import Base, engine
 
 # Create all tables (if using without Alembic migrations)
@@ -24,6 +24,7 @@ app.add_middleware(
 
 # Include API routers
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(timetracker.router, prefix="", tags=["time-log"] )
 # app.include_router(user.router, prefix="/user", tags=["User"])
 # app.include_router(task.router, prefix="/api/tasks", tags=["Tasks"])
 

@@ -3,11 +3,9 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.schemas.timelog import StartSessionRequest, EndSessionRequest, TimeLogResponse
 from app.services import timetrackerservice
-
+# from app.models.timelog import Timelog
 
 router = APIRouter(tags=["time-log"])
-
-
 
 @router.post("/time-logs/start-work", response_model=TimeLogResponse)
 def start_work(request: StartSessionRequest, db: Session = Depends(get_db)):
@@ -36,18 +34,19 @@ def end_break(request: EndSessionRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/time-logs", response_model=list[TimeLogResponse])
-def get_logs(id: str, db: Session = Depends(get_db)):
-    return timetrackerservice.list_time_logs(db, id)
+def get_logs(user_id: str, db: Session = Depends(get_db)):
+    return timetrackerservice.list_time_logs(db, user_id)
 
 
 @router.get("/time-logs/summary")
-def get_summary(id: str, db: Session = Depends(get_db)):
-    return timetrackerservice.get_summary(db, id)
+def get_summary(session_id: str, db: Session = Depends(get_db)):
+    return timetrackerservice.get_summary(db, session_id)
+
 
 
 @router.get("/time-logs/current", response_model=TimeLogResponse)
-def current_session(id: str, db: Session = Depends(get_db)):
-    result = timetrackerservice.get_current_session(db, id)
+def current_session(user_id: str, db: Session = Depends(get_db)):
+    result = timetrackerservice.get_current_session(db, user_id)
     if not result:
         raise HTTPException(status_code=404, detail="No ongoing session")
     return result

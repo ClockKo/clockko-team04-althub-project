@@ -5,7 +5,7 @@ from sqlalchemy.types import TypeDecorator, CHAR
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 import sqlalchemy as sa
 from app.core.database import Base
-
+from sqlalchemy.orm import relationship
 
 class GUID(TypeDecorator):
     """Platform-independent GUID type.
@@ -60,3 +60,4 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     verification_token = Column(String, unique=True, nullable=True)
 
+time_logs = relationship("Timelog", back_populates="user")

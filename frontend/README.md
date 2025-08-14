@@ -141,7 +141,7 @@ The project follows a **feature-based architecture**:
 
 ## 🗂️ Contributing
 
-1. Fork the repository
+1. clone the repository
 2. Create your feature branch: `git checkout -b feature/YourFeature`
 3. Follow the existing folder structure and naming conventions
 4. Add tests for new functionality

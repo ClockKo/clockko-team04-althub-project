@@ -12,7 +12,7 @@ def start_session(db: Session, request: StartSessionRequest, session_type: str):
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
     if not user.is_verified:
-        raise HTTPException(status_code=403, detail="Inactive users cannot start sessions.")
+        raise HTTPException(status_code=403, detail="Only verified users can start a session.")
     active_session = db.query(Timelog).filter(
         Timelog.user_id == request.user_id,
         Timelog.end_time == None

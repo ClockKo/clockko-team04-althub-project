@@ -17,5 +17,5 @@ class Timelog(Base):
     
 
 
-user = relationship("User", back_populates="time_logs")
+
 

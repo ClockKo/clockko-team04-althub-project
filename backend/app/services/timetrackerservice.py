@@ -7,11 +7,11 @@ from fastapi import HTTPException
 import uuid
 
 def start_session(db: Session, request: StartSessionRequest, session_type: str):
-    # Check if user is an active
+    # Check if user is active
     user = db.query(User).filter(User.id == request.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
-    if not user.is_active:
+    if not user.is_verified:
         raise HTTPException(status_code=403, detail="Inactive users cannot start sessions.")
     active_session = db.query(Timelog).filter(
         Timelog.user_id == request.user_id,

@@ -60,4 +60,3 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     verification_token = Column(String, unique=True, nullable=True)
 
-time_logs = relationship("Timelog", back_populates="user")

@@ -25,9 +25,12 @@ resource "aws_db_instance" "postgres" {
   skip_final_snapshot     = true
   publicly_accessible     = false
 
-  # DB Credentials (sensitive variables)
-username = jsondecode(aws_secretsmanager_secret_version.db_creds_val.secret_string)["username"]
-password = jsondecode(aws_secretsmanager_secret_version.db_creds_val.secret_string)["password"]
+  # DB Name
+  db_name = var.db_name
+
+  # DB Credentials (in sync with Secrets Manager)
+  username = "clockko_admin"
+  password = random_password.db_password.result
 
   tags = {
     Name = "${var.project_name}-postgres"

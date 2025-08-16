@@ -51,3 +51,31 @@ variable "github_repo" {
   type    = string
   default = "clockko-team04-althub-project"
 }
+
+variable "container_port" {
+  description = "App container port exposed by FastAPI"
+  type        = number
+  default     = 8000
+}
+
+variable "desired_count" {
+  description = "Number of ECS tasks to run"
+  type        = number
+  default     = 1
+}
+
+variable "health_check_path" {
+  description = "HTTP path for ALB health checks"
+  type        = string
+  default     = "/health"
+}
+
+variable "task_cpu" {
+  type    = number
+  default = 512
+}
+
+variable "task_memory" {
+  type    = number
+  default = 1024
+}

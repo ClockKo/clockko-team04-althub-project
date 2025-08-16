@@ -103,3 +103,14 @@ resource "aws_security_group" "lb_sg" {
 
   tags = { Name = "${var.project_name}-lb-sg" }
 }
+
+# Allow ALB to reach ECS tasks on the app port
+resource "aws_security_group_rule" "ecs_from_alb_8000" {
+  type                     = "ingress"
+  security_group_id        = aws_security_group.ecs_sg.id
+  from_port                = var.container_port
+  to_port                  = var.container_port
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.lb_sg.id
+}
+

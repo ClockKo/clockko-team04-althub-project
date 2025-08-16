@@ -40,3 +40,20 @@ output "ecs_task_role_arn" {
 output "gha_role_arn" {
   value = aws_iam_role.gha_role.arn
 }
+
+output "alb_dns_name" {
+  value = aws_lb.app_alb.dns_name
+}
+
+output "ecs_service_name" {
+  value = aws_ecs_service.backend.name
+}
+
+output "ecs_taskdef_arn" {
+  value = aws_ecs_task_definition.backend.arn
+}
+
+output "target_group_arn" {
+  value = aws_lb_target_group.ecs_tg.arn
+}
+

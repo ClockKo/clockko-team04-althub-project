@@ -5,91 +5,104 @@ This guide helps you configure AWS CLI using **AWS Single Sign-On (SSO)** with t
 ---
 
 ## Prerequisites
-- AWS CLI v2 installed  
+
+- **AWS CLI v2 installed**  
+  AWS SSO only works with AWS CLI v2.  
+  [Download and install](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+
+- **Verify installation:**
+
   ```bash
   aws --version
-SSO details:
+  ```
 
-SSO Start URL: https://d-9367a4f4a4.awsapps.com/start
+---
 
-SSO Region: eu-west-1
+## SSO Details
 
-AWS Account ID: 474422890464
+- **SSO Start URL:** `https://d-9367a4f4a4.awsapps.com/start`
+- **SSO Region:** `eu-west-1`
+- **AWS Account ID:** `474422890464`
+- **Permission Set:** `AdministratorAccess`
 
-Permission Set: AdministratorAccess
+---
 
-1️⃣ Configure SSO Profile
+## 1️⃣ Configure SSO Profile
+
 Run:
 
-bash
-Copy
-Edit
+```bash
 aws configure sso --profile clockko-cloud-engineer
-When prompted:
+```
 
-SSO session name: clockko
+When prompted, enter:
 
-SSO start URL: https://d-9367a4f4a4.awsapps.com/start
+- SSO session name: `clockko`
+- SSO start URL: `https://d-9367a4f4a4.awsapps.com/start`
+- SSO region: `eu-west-1`
+- SSO registration scopes: *(Press Enter)*
 
-SSO region: eu-west-1
+Sign in via the browser and select:
 
-SSO registration scopes: (Press Enter)
+- Account: `474422890464`
+- Role: `AdministratorAccess`
+- Default client Region: `eu-west-1`
+- Default output format: `json`
 
-Sign in via the browser → select:
+---
 
-Account: 474422890464
+## 2️⃣ Login with SSO
 
-Role: AdministratorAccess
+Whenever you start work or your session expires, run:
 
-Default client Region: eu-west-1
-
-Default output format: json
-
-2️⃣ Login with SSO
-Whenever you start work or your session expires:
-
-bash
-Copy
-Edit
+```bash
 aws sso login --profile clockko-cloud-engineer
-3️⃣ Verify
+```
+
+---
+
+## 3️⃣ Verify
+
 Check your current identity:
 
-bash
-Copy
-Edit
+```bash
 aws sts get-caller-identity --profile clockko-cloud-engineer
+```
+
 Expected output should show:
 
-Account = 474422890464
+- Account = `474422890464`
+- Role contains `AWSReservedSSO_AdministratorAccess`
 
-Role contains AWSReservedSSO_AdministratorAccess
+---
 
-4️⃣ Accessing Secrets
-Get JWT secret:
+## 4️⃣ Accessing Secrets
 
-bash
-Copy
-Edit
+**Get JWT secret:**
+
+```bash
 aws secretsmanager get-secret-value \
   --secret-id clockko-jwt-secret \
   --query SecretString --output text \
   --profile clockko-cloud-engineer
-Get Database creds:
+```
 
-bash
-Copy
-Edit
+**Get Database creds:**
+
+```bash
 aws secretsmanager get-secret-value \
   --secret-id clockko-db-creds \
   --query SecretString --output text \
   --profile clockko-cloud-engineer
-5️⃣ Setting up .env (Local Dev)
-Linux/macOS:
+```
 
-bash
-Copy
-Edit
+---
+
+## 5️⃣ Setting up .env (Local Dev)
+
+**Linux/macOS:**
+
+```bash
 JWT=$(aws secretsmanager get-secret-value --secret-id clockko-jwt-secret \
   --query SecretString --output text --profile clockko-cloud-engineer | jq -r '.jwt_secret')
 
@@ -99,11 +112,11 @@ SECRET_KEY=$JWT
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 EOF
-Windows PowerShell:
+```
 
-powershell
-Copy
-Edit
+**Windows PowerShell:**
+
+```powershell
 $jwtJson = aws secretsmanager get-secret-value --secret-id clockko-jwt-secret --query SecretString --output text --profile clockko-cloud-engineer
 $jwt = (ConvertFrom-Json $jwtJson).jwt_secret
 @"
@@ -112,248 +125,230 @@ SECRET_KEY=$jwt
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 "@ | Set-Content -Path .env -NoNewline
-6️⃣ Testing ECS Tasks (Backend API)
+```
+
+---
+
+## 6️⃣ Testing ECS Tasks (Backend API)
+
 Once the infrastructure is deployed, you can test the backend running on ECS without redeploying locally.
 
-List running tasks
-bash
-Copy
-Edit
+**List running tasks:**
+
+```bash
 aws ecs list-tasks \
   --cluster clockko-cluster \
   --service-name clockko-backend-service \
   --profile clockko-cloud-engineer
-Describe the running task
-bash
-Copy
-Edit
+```
+
+**Describe the running task:**
+
+```bash
 aws ecs describe-tasks \
   --cluster clockko-cluster \
   --tasks <TASK_ID> \
   --profile clockko-cloud-engineer
+```
+
 Look for the Public IP in the ENI (Elastic Network Interface) section.
 
-Get the API public URL
-If the service is behind an Application Load Balancer:
+**Get the API public URL (if behind ALB):**
 
-bash
-Copy
-Edit
+```bash
 aws elbv2 describe-load-balancers \
   --names clockko-backend-alb \
   --query "LoadBalancers[0].DNSName" \
   --output text \
   --profile clockko-cloud-engineer
-Test the authentication API:
+```
 
-bash
-Copy
-Edit
+**Test the authentication API:**
+
+```bash
 curl -X POST "http://<ALB_DNS>/api/auth/register" \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com", "password":"Password123"}'
+```
+
 Or:
 
-bash
-Copy
-Edit
+```bash
 curl http://<ALB_DNS>/docs
-🔄 Everyday Workflow
-Login with:
+```
 
-bash
-Copy
-Edit
+---
+
+## 🔄 Everyday Workflow
+
+**Login with:**
+
+```bash
 aws sso login --profile clockko-cloud-engineer
-Use AWS CLI commands:
+```
 
-bash
-Copy
-Edit
+**Use AWS CLI commands:**
+
+```bash
 aws <service> <command> --profile clockko-cloud-engineer
-yaml
-Copy
-Edit
+```
 
-7️⃣ Testing the API in Postman
+---
+
+## 7️⃣ Testing the API in Postman
 
 Once the backend service is running in ECS and you have the ALB DNS Name, you can run tests in Postman.
 
-A. Get the Public API URL
+### A. Get the Public API URL
+
+```markdown
 aws elbv2 describe-load-balancers \
   --names clockko-backend-alb \
   --query "LoadBalancers[0].DNSName" \
   --output text \
   --profile clockko-cloud-engineer
-
+```
 
 Example output:
 
+```markdown
 clockko-backend-alb-123456789.eu-west-1.elb.amazonaws.com
+```
 
-B. Import Postman Collection
+### B. Import Postman Collection
 
-Ask the DevOps/Cloud Engineer for the ClockKo Backend Postman Collection (exported .json file).
+Ask the DevOps/Cloud Engineer for the ClockKo Backend Postman Collection (exported `.json` file).
 
 In Postman:
 
-Click Import → Upload the .json file.
+- Click **Import** → Upload the `.json` file.
+- Update the `{{base_url}}` environment variable in Postman:
 
-Update the {{base_url}} environment variable in Postman:
+  ```markdown
+  http://clockko-backend-alb-123456789.eu-west-1.elb.amazonaws.com
+  ```
 
-Example:
+### C. Test Authentication
 
-http://clockko-backend-alb-123456789.eu-west-1.elb.amazonaws.com
-
-C. Test Authentication
-
-Register User
-
-POST /api/auth/register
-
+**Register User**  
+`POST /api/auth/register`  
 Body (JSON):
 
+```json
 {
   "email": "test@example.com",
   "password": "Password123"
 }
+```
 
-
-Login
-
-POST /api/auth/login
-
+**Login**  
+`POST /api/auth/login`  
 Body:
 
+```json
 {
   "email": "test@example.com",
   "password": "Password123"
 }
+```
 
+Copy the returned JWT `access_token` for authenticated requests.
 
-Copy the returned JWT access_token for authenticated requests.
-
-Get Current User
-
-GET /api/auth/user
-
+**Get Current User**  
+`GET /api/auth/user`  
 Headers:
 
+```json
 Authorization: Bearer <access_token>
+```
 
-D. OTP, Password Reset, and Other Features
+### D. OTP, Password Reset, and Other Features
 
 The Postman collection includes requests for:
 
-Sending verification emails
+- Sending verification emails
+- Verifying OTP
+- Password reset requests
+- Resetting password with OTP
 
-Verifying OTP
-
-Password reset requests
-
-Resetting password with OTP
-
-E. Troubleshooting
+### E. Troubleshooting
 
 If requests fail:
 
-Make sure ECS tasks are running:
+- Make sure ECS tasks are running:
 
-aws ecs list-tasks \
-  --cluster clockko-cluster \
-  --service-name clockko-backend-service \
-  --profile clockko-cloud-engineer
+  ```bash
+  aws ecs list-tasks \
+    --cluster clockko-cluster \
+    --service-name clockko-backend-service \
+    --profile clockko-cloud-engineer
+  ```
 
+- Ensure the ALB listener has port 80 or 443 open.
+- Check ECS logs:
 
-Ensure the ALB listener has port 80 or 443 open.
+  ```bash
+  aws logs tail /clockko/app --follow --profile clockko-cloud-engineer
+  ```
 
-Check ECS logs:
+---
 
-aws logs tail /clockko/app --follow --profile clockko-cloud-engineer
+## ✅ Sprint 1 Achievements – Authentication & Developer Access Setup
 
-Do you want me to now prepare the Postman Collection for these exact authentication endpoints so your backend team can plug in the ALB DNS and start testing instantly? That would remove the need for them to write any requests manually.
-
-
-✅ Sprint 1 Achievements – Authentication & Developer Access Setup
-1. Authentication Service Ready in Backend
+### 1. Authentication Service Ready in Backend
 
 The FastAPI authentication system has been implemented by the backend team:
 
-User Registration (/api/auth/register)
+- User Registration (`/api/auth/register`)
+- Login & JWT-based authentication (`/api/auth/login`)
+- Get Current User Info (`/api/auth/user`)
+- Email verification (OTP-based)
+- Password reset with OTP
 
-Login & JWT-based authentication (/api/auth/login)
+**Security measures:**
 
-Get Current User Info (/api/auth/user)
+- JWT with expiry time
+- Password hashing (bcrypt)
+- SQLAlchemy ORM to prevent SQL injection
 
-Email verification (OTP-based)
+### 2. AWS Infrastructure Provisioned for Backend
 
-Password reset with OTP
+- ECS Cluster (`clockko-cluster`) ready to run backend containers.
+- ALB (Application Load Balancer) created to expose the backend service.
+- Secrets stored securely in AWS Secrets Manager:
+  - `clockko-db-creds`
+  - `clockko-jwt-secret`
+- PostgreSQL RDS instance provisioned in private subnets.
+- IAM roles & policies created for ECS tasks and GitHub Actions deployments.
 
-Security measures:
+### 3. SSO-based AWS CLI Access for Developers
 
-JWT with expiry time
+- No Access Keys shared — developers authenticate via AWS SSO.
+- AWS SSO Start URL: `https://d-9367a4f4a4.awsapps.com/start`
+- SSO profile setup instructions created so backend devs can:
+  - Retrieve JWT secret from Secrets Manager
+  - View ECS logs
+  - Query RDS endpoint if needed
+- Profile name: `clockko-cloud-engineer` (grants AdministratorAccess for project work)
 
-Password hashing (bcrypt)
+### 4. Developer Workflow Documentation
 
-SQLAlchemy ORM to prevent SQL injection
+- Step-by-step AWS SSO CLI setup guide written for backend devs.
+- Instructions for testing API in Postman once ECS tasks are running.
+- Guidance on retrieving ALB URL and logs for troubleshooting.
 
-2. AWS Infrastructure Provisioned for Backend
+### 5. Environment Readiness for Deployment
 
-ECS Cluster (clockko-cluster) ready to run backend containers.
+- Terraform infra successfully applied (42 resources created).
+- Secrets Manager is populated with sensitive credentials.
+- ECR repository ready for backend Docker images.
+- CloudWatch Log Group `/clockko/app` created for application logs.
 
-ALB (Application Load Balancer) created to expose the backend service.
+---
 
-Secrets stored securely in AWS Secrets Manager:
+## 💡 Next Steps for Sprint 1 Completion
 
-clockko-db-creds
-
-clockko-jwt-secret
-
-PostgreSQL RDS instance provisioned in private subnets.
-
-IAM roles & policies created for ECS tasks and GitHub Actions deployments.
-
-3. SSO-based AWS CLI Access for Developers
-
-No Access Keys shared — developers authenticate via AWS SSO.
-
-AWS SSO Start URL: https://d-9367a4f4a4.awsapps.com/start
-
-SSO profile setup instructions created so backend devs can:
-
-Retrieve JWT secret from Secrets Manager
-
-View ECS logs
-
-Query RDS endpoint if needed
-
-Profile name: clockko-cloud-engineer
-(grants AdministratorAccess for project work)
-
-4. Developer Workflow Documentation
-
-Step-by-step AWS SSO CLI setup guide written for backend devs.
-
-Instructions for testing API in Postman once ECS tasks are running.
-
-Guidance on retrieving ALB URL and logs for troubleshooting.
-
-5. Environment Readiness for Deployment
-
-Terraform infra successfully applied (42 resources created).
-
-Secrets Manager is populated with sensitive credentials.
-
-ECR repository ready for backend Docker images.
-
-CloudWatch Log Group /clockko/app created for application logs.
-
-💡 Next Steps for Sprint 1 Completion
-
-Deploy the backend container to ECS.
-
-Confirm ECS task is running and healthy.
-
-Backend team tests authentication endpoints via ALB URL in Postman.
-
-Verify email and password reset flows work end-to-end.
+- Deploy the backend container to ECS.
+- Confirm ECS task is running and healthy.
+- Backend team tests authentication endpoints via ALB URL in Postman.
+- Verify email and password reset flows work end-to-end.

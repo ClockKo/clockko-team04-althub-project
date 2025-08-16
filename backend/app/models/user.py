@@ -5,7 +5,7 @@ from sqlalchemy.types import TypeDecorator, CHAR
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 import sqlalchemy as sa
 from app.core.database import Base
-
+from sqlalchemy.orm import relationship
 
 class GUID(TypeDecorator):
     """Platform-independent GUID type.

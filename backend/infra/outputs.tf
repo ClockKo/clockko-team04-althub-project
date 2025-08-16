@@ -1,59 +1,100 @@
-output "ecr_repo_url" {
-  value = aws_ecr_repository.backend.repository_url
+# =========================
+# VPC + Networking
+# =========================
+output "vpc_id" {
+  description = "ID of the VPC"
+  value       = aws_vpc.clockko_vpc.id
 }
 
-output "s3_artifacts_bucket" {
-  value = aws_s3_bucket.artifacts.bucket
+output "public_subnets" {
+  description = "List of public subnet IDs"
+  value       = [aws_subnet.public.id, aws_subnet.public_b.id]
 }
 
-output "s3_reports_bucket" {
-  value = aws_s3_bucket.reports.bucket
+output "private_subnets" {
+  description = "List of private subnet IDs"
+  value       = [aws_subnet.private_a.id, aws_subnet.private_b.id]
 }
 
-output "cloudwatch_log_group" {
-  value = aws_cloudwatch_log_group.app_logs.name
+# =========================
+# Security Groups
+# =========================
+output "ecs_security_group_id" {
+  description = "Security group ID for ECS tasks"
+  value       = aws_security_group.ecs_sg.id
 }
 
-output "jwt_secret_arn" {
-  value     = aws_secretsmanager_secret.jwt_secret.arn
-  sensitive = true
+output "lb_security_group_id" {
+  description = "Security group ID for Load Balancer"
+  value       = aws_security_group.lb_sg.id
 }
 
-output "db_creds_secret_arn" {
-  value     = aws_secretsmanager_secret.db_creds.arn
-  sensitive = true
+output "db_security_group_id" {
+  description = "Security group ID for RDS"
+  value       = aws_security_group.db_sg.id
 }
 
-output "rds_endpoint" {
-  value     = length(aws_db_instance.postgres) > 0 ? aws_db_instance.postgres[0].address : ""
-  sensitive = true
-}
-
-output "ecs_cluster_name" {
-  value = aws_ecs_cluster.clockko.name
-}
-
-output "ecs_task_role_arn" {
-  value = aws_iam_role.ecs_task_role.arn
-}
-
-output "gha_role_arn" {
-  value = aws_iam_role.gha_role.arn
-}
-
+# =========================
+# ALB
+# =========================
 output "alb_dns_name" {
-  value = aws_lb.app_alb.dns_name
+  description = "DNS name of the Application Load Balancer"
+  value       = aws_lb.app_alb.dns_name
+}
+
+output "alb_target_group_arn" {
+  description = "Target group ARN for ECS service"
+  value       = aws_lb_target_group.ecs_tg.arn
+}
+
+# =========================
+# ECS
+# =========================
+output "ecs_cluster_id" {
+  description = "ECS Cluster ID"
+  value       = aws_ecs_cluster.clockko.id
 }
 
 output "ecs_service_name" {
-  value = aws_ecs_service.backend.name
+  description = "ECS Service name"
+  value       = aws_ecs_service.backend.name
 }
 
-output "ecs_taskdef_arn" {
-  value = aws_ecs_task_definition.backend.arn
+output "ecs_task_definition_arn" {
+  description = "ECS Task Definition ARN"
+  value       = aws_ecs_task_definition.backend.arn
 }
 
-output "target_group_arn" {
-  value = aws_lb_target_group.ecs_tg.arn
+# =========================
+# RDS
+# =========================
+output "db_endpoint" {
+  description = "RDS PostgreSQL endpoint"
+  value       = try(aws_db_instance.postgres[0].endpoint, null)
 }
 
+output "db_name" {
+  description = "Database name for the application"
+  value       = var.db_name
+}
+
+# =========================
+# Secrets
+# =========================
+output "db_secret_arn" {
+  description = "Secrets Manager ARN for DB credentials"
+  value       = aws_secretsmanager_secret.db_creds.arn
+}
+
+output "jwt_secret_arn" {
+  description = "Secrets Manager ARN for JWT secret"
+  value       = aws_secretsmanager_secret.jwt_secret.arn
+}
+
+# =========================
+# ECR
+# =========================
+output "ecr_repo_url" {
+  description = "ECR repository URL for backend"
+  value       = aws_ecr_repository.backend.repository_url
+}

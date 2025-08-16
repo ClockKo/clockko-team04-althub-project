@@ -79,3 +79,8 @@ variable "task_memory" {
   type    = number
   default = 1024
 }
+variable "image_tag" {
+  description = "Docker image tag for ECS (defaults to latest)"
+  type        = string
+  default     = "latest"
+}

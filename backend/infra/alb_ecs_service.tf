@@ -1,11 +1,11 @@
-# ALB uses two PUBLIC subnets
+# Application Load Balancer (must be in 2 public subnets)
 resource "aws_lb" "app_alb" {
   name               = "${var.project_name}-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.lb_sg.id]
   subnets            = [aws_subnet.public.id, aws_subnet.public_b.id]
-  tags = { Name = "${var.project_name}-alb" }
+  tags               = { Name = "${var.project_name}-alb" }
 }
 
 resource "aws_lb_target_group" "ecs_tg" {
@@ -35,6 +35,7 @@ resource "aws_lb_listener" "http" {
   }
 }
 
+# ECS Service on private subnets, no public IP
 resource "aws_ecs_service" "backend" {
   name            = "${var.project_name}-service"
   cluster         = aws_ecs_cluster.clockko.id
@@ -56,3 +57,4 @@ resource "aws_ecs_service" "backend" {
 
   depends_on = [aws_lb_listener.http]
 }
+

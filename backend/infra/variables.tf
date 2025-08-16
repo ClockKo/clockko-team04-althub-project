@@ -9,7 +9,7 @@ variable "project_name" {
 }
 
 variable "iam_profile" {
-  type = string
+  type    = string
   default = "clockko-cloud-engineer"
 }
 
@@ -20,27 +20,22 @@ variable "create_rds" {
 }
 
 variable "db_instance_class" {
-  type    = string
-  default = "db.t3.micro"
+  description = "RDS instance class (size/type)"
+  type        = string
+  default     = "db.t3.micro"
 }
 
 variable "db_allocated_storage" {
-  type    = number
-  default = 20
+  description = "Storage size in GB for RDS"
+  type        = number
+  default     = 20
 }
 
-# variable "db_username" {
-#   description = "Master username for the RDS database"
-#   type        = string
-#   sensitive   = true
-
-# }
-
-# variable "db_password" {
-#   description = "Master password for the RDS database"
-#   type        = string
-#   sensitive   = true
-# }
+variable "db_name" {
+  description = "Initial database name for the application"
+  type        = string
+  default     = "clockko_db"
+}
 
 variable "github_org" {
   type    = string
@@ -71,14 +66,17 @@ variable "health_check_path" {
 }
 
 variable "task_cpu" {
-  type    = number
-  default = 512
+  description = "vCPU units for ECS task (e.g. 256 = 0.25 vCPU)"
+  type        = number
+  default     = 512
 }
 
 variable "task_memory" {
-  type    = number
-  default = 1024
+  description = "Memory (MB) for ECS task"
+  type        = number
+  default     = 1024
 }
+
 variable "image_tag" {
   description = "Docker image tag for ECS (defaults to latest)"
   type        = string

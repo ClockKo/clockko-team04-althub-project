@@ -59,12 +59,6 @@ variable "desired_count" {
   default     = 1
 }
 
-variable "health_check_path" {
-  description = "HTTP path for ALB health checks"
-  type        = string
-  default     = "/health"
-}
-
 variable "task_cpu" {
   description = "vCPU units for ECS task (e.g. 256 = 0.25 vCPU)"
   type        = number

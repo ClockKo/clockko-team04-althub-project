@@ -12,6 +12,16 @@ resource "aws_ecs_service" "backend" {
     assign_public_ip = true
   }
 
+  # Optional: wait for steady state before finishing deploy
+  deployment_controller {
+    type = "ECS"
+  }
+
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
+
+  # Prevent Terraform from forcing redeployment every time
+  lifecycle {
+    ignore_changes = [task_definition]
+  }
 }

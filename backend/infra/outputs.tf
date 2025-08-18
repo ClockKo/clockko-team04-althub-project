@@ -24,27 +24,9 @@ output "ecs_security_group_id" {
   value       = aws_security_group.ecs_sg.id
 }
 
-output "lb_security_group_id" {
-  description = "Security group ID for Load Balancer"
-  value       = aws_security_group.lb_sg.id
-}
-
 output "db_security_group_id" {
   description = "Security group ID for RDS"
   value       = aws_security_group.db_sg.id
-}
-
-# =========================
-# ALB
-# =========================
-output "alb_dns_name" {
-  description = "DNS name of the Application Load Balancer"
-  value       = aws_lb.app_alb.dns_name
-}
-
-output "alb_target_group_arn" {
-  description = "Target group ARN for ECS service"
-  value       = aws_lb_target_group.ecs_tg.arn
 }
 
 # =========================
@@ -97,4 +79,17 @@ output "jwt_secret_arn" {
 output "ecr_repo_url" {
   description = "ECR repository URL for backend"
   value       = aws_ecr_repository.backend.repository_url
+}
+
+# =========================
+# CloudWatch Logs
+# =========================
+output "cloudwatch_log_group_name" {
+  description = "CloudWatch Log Group for ECS tasks"
+  value       = aws_cloudwatch_log_group.app_logs.name
+}
+
+output "cloudwatch_log_group_arn" {
+  description = "CloudWatch Log Group ARN for ECS tasks"
+  value       = aws_cloudwatch_log_group.app_logs.arn
 }

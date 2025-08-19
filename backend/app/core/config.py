@@ -1,34 +1,69 @@
 import os
+import boto3
+import json
 from dotenv import load_dotenv
 
 load_dotenv()
 
+def get_secret(secret_name: str, region_name: str = "eu-west-1"):
+    """
+    Fetch secret from AWS Secrets Manager
+    """
+    client = boto3.client("secretsmanager", region_name=region_name)
+    response = client.get_secret_value(SecretId=secret_name)
+    return json.loads(response["SecretString"])
 
 class Settings:
-    # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./clockko.db")
-    
-    # Security
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-here-change-in-production")
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
-    
-    # Email Configuration
-    SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
-    SMTP_USER: str = os.getenv("SMTP_USER", "")
-    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
-    SMTP_FROM: str = os.getenv("SMTP_FROM", "")
-    SMTP_FROM_NAME: str = os.getenv("SMTP_FROM_NAME", "ClockKo Team")
-    
-    # Application
-    APP_NAME: str = "ClockKo API"
-    DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
-    
-    # OTP Configuration
-    OTP_EXPIRE_MINUTES: int = int(os.getenv("OTP_EXPIRE_MINUTES", "5"))
-    OTP_LENGTH: int = 6
+    def __init__(self):
+        # ====================
+        # Database
+        # ====================
+        try:
+            db_creds = get_secret("clockko-db-creds")
+            self.DATABASE_URL = (
+                f"postgresql://{db_creds['username']}:{db_creds['password']}@"
+                f"{db_creds['host']}/{db_creds['dbname']}"
+            )
+        except Exception:
+            # Fallback for local development
+            self.DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./clockko.db")
+
+        # ====================
+        # Security (JWT)
+        # ====================
+        try:
+            jwt_secret = get_secret("clockko-jwt-secret")
+            self.SECRET_KEY = jwt_secret["SECRET_KEY"]
+        except Exception:
+            self.SECRET_KEY = os.getenv("SECRET_KEY", "your-local-secret")
+
+        self.ALGORITHM = "HS256"
+        self.ACCESS_TOKEN_EXPIRE_MINUTES = int(
+            os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
+        )
+
+        # ====================
+        # Email Configuration
+        # ====================
+        self.SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
+        self.SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+        self.SMTP_USER = os.getenv("SMTP_USER", "")
+        self.SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+        self.SMTP_FROM = os.getenv("SMTP_FROM", "")
+        self.SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "ClockKo Team")
+
+        # ====================
+        # Application
+        # ====================
+        self.APP_NAME = "ClockKo API"
+        self.DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+        self.FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
+        # ====================
+        # OTP Configuration
+        # ====================
+        self.OTP_EXPIRE_MINUTES = int(os.getenv("OTP_EXPIRE_MINUTES", "5"))
+        self.OTP_LENGTH = 6
 
 
 settings = Settings()

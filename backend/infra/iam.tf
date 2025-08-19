@@ -111,7 +111,12 @@ data "aws_iam_policy_document" "gha_assume" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_org}/${var.github_repo}:ref:refs/heads/*"]
+      values = [
+        "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/*",
+        "repo:${var.github_org}/${var.github_repo}:ref:refs/tags/*",
+        "repo:${var.github_org}/${var.github_repo}:pull_request"
+      ]
+
     }
 
     condition {
@@ -161,7 +166,8 @@ data "aws_iam_policy_document" "gha_policy_doc" {
   statement {
     effect = "Allow"
     actions = [
-      "s3:ListBucket"
+      "s3:ListBucket",
+      "s3:GetBucketLocation"
     ]
     resources = [
       "arn:aws:s3:::clockko-terraform-state-eu-west-1"

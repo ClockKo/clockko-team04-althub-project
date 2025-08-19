@@ -93,3 +93,11 @@ output "cloudwatch_log_group_arn" {
   description = "CloudWatch Log Group ARN for ECS tasks"
   value       = aws_cloudwatch_log_group.app_logs.arn
 }
+
+# =========================
+# GitHub Actions OIDC Role
+# =========================
+output "gha_role_arn" {
+  description = "IAM Role ARN for GitHub Actions OIDC"
+  value       = aws_iam_role.gha_role.arn
+}

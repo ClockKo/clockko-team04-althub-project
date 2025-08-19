@@ -1,4 +1,6 @@
-# Assume role policy for ECS tasks
+# ==================================================
+# ECS Task Assume Role Policy
+# ==================================================
 data "aws_iam_policy_document" "ecs_assume" {
   statement {
     effect = "Allow"
@@ -10,15 +12,15 @@ data "aws_iam_policy_document" "ecs_assume" {
   }
 }
 
-# === Application (Task) Role ===
-# App code uses this role at runtime. No Secrets access here.
+# ==================================================
+# Application (Task) Role
+# ==================================================
 resource "aws_iam_role" "ecs_task_role" {
   name               = "${var.project_name}-ecs-task-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_assume.json
   tags               = { Name = "${var.project_name}-ecs-task-role" }
 }
 
-# App permissions (example: S3 only). Remove/adjust if unneeded.
 data "aws_iam_policy_document" "ecs_task_app_permissions" {
   statement {
     effect = "Allow"
@@ -46,21 +48,20 @@ resource "aws_iam_role_policy_attachment" "ecs_task_app_attach" {
   policy_arn = aws_iam_policy.ecs_task_app_policy.arn
 }
 
-# === Execution Role ===
-# Pulls image from ECR, writes logs, and fetches Secrets.
+# ==================================================
+# ECS Execution Role
+# ==================================================
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "${var.project_name}-ecs-task-exec-role"
+  name               = "${var.project_name}-ecs-task-exec-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_assume.json
-  tags = { Name = "${var.project_name}-ecs-task-exec-role" }
+  tags               = { Name = "${var.project_name}-ecs-task-exec-role" }
 }
 
-# Standard AWS-managed permissions for ECS execution (ECR + CloudWatch Logs)
 resource "aws_iam_role_policy_attachment" "ecs_task_exec_managed" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# Add Secrets Manager read for the execution role
 data "aws_iam_policy_document" "ecs_exec_secrets" {
   statement {
     effect = "Allow"
@@ -70,7 +71,6 @@ data "aws_iam_policy_document" "ecs_exec_secrets" {
     ]
     resources = compact([
       aws_secretsmanager_secret.jwt_secret.arn,
-      # Database URL secret only exists if create_rds = true
       var.create_rds ? aws_secretsmanager_secret.db_url[0].arn : null
     ])
   }
@@ -86,7 +86,18 @@ resource "aws_iam_role_policy_attachment" "ecs_exec_secrets_attach" {
   policy_arn = aws_iam_policy.ecs_exec_secrets_policy.arn
 }
 
-# === GitHub Actions OIDC role ===
+# ==================================================
+# GitHub Actions OIDC Provider
+# ==================================================
+resource "aws_iam_openid_connect_provider" "github" {
+  url             = "https://token.actions.githubusercontent.com"
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = ["2b18947a6a9fc7764fd8b5fb18a863b0c6dac24f"]
+}
+
+# ==================================================
+# GitHub Actions Role
+# ==================================================
 data "aws_iam_policy_document" "gha_assume" {
   statement {
     effect  = "Allow"
@@ -94,9 +105,7 @@ data "aws_iam_policy_document" "gha_assume" {
 
     principals {
       type        = "Federated"
-      identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
-      ]
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
     }
 
     condition {

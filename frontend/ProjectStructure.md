@@ -70,7 +70,7 @@ src/
 
 ```bash
 git clone https://github.com/Bamidele0102/clockko-team04-althub-project/frontend.git
-cd frontend
+cd frontend/clockko-wellness-app
 pnpm install
 ```
 
@@ -98,7 +98,7 @@ pnpm run test
 
 ## 🗂️ Contributing
 
-- Fork the repository
+- clone the repository
 - Create your feature branch: `git checkout -b feature/YourFeature`
 - Commit your changes: `git commit -m 'Add feature'`
 - Push to the branch: `git push origin feature/YourFeature`

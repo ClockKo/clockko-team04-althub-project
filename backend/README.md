@@ -8,7 +8,7 @@ A FastAPI-based backend application for ClockKo - Authentication and user manage
 - **Email Verification**: OTP-based email verification with beautiful sky blue themed emails
 - **Password Reset**: Secure password reset with OTP verification
 - **PostgreSQL Database**: Robust database with SQLAlchemy ORM
-- **Email Service**: Professional email templates with SMTP integration
+- **Email Service**: Professional email templates with SMTP integration.
 
 ## Tech Stack
 

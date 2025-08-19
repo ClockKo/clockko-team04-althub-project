@@ -3,15 +3,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
+from app.core.config import settings
 
 # Load environment variables
 load_dotenv()
 
-# Database URL from environment variable or default to SQLite for development
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    "sqlite:///./clockko.db"  # Default to SQLite for development
-)
+DATABASE_URL = settings.DATABASE_URL
 
 # Create SQLAlchemy engine with database-specific configurations
 if "sqlite" in DATABASE_URL:
@@ -19,7 +16,7 @@ if "sqlite" in DATABASE_URL:
     engine = create_engine(
         DATABASE_URL,
         connect_args={"check_same_thread": False},
-        echo=os.getenv("DEBUG", "False").lower() == "true"  # Enable SQL logging in debug mode
+        echo=settings.DEBUG
     )
 elif "postgresql" in DATABASE_URL:
     # PostgreSQL-specific configuration
@@ -27,15 +24,12 @@ elif "postgresql" in DATABASE_URL:
         DATABASE_URL,
         pool_size=5,
         max_overflow=10,
-        pool_pre_ping=True,  # Verify connections before use
-        echo=os.getenv("DEBUG", "False").lower() == "true"
+        pool_pre_ping=True,
+        echo=settings.DEBUG
     )
 else:
     # Generic configuration for other databases
-    engine = create_engine(
-        DATABASE_URL,
-        echo=os.getenv("DEBUG", "False").lower() == "true"
-    )
+    engine = create_engine(DATABASE_URL, echo=settings.DEBUG)
 
 # Create SessionLocal class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -43,18 +37,17 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Create Base class for models
 Base = declarative_base()
 
-
 def get_db():
     """
     Dependency to get database session
     Yields a database session and ensures it's closed after use
     """
+    
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
 
 def get_database_type():
     """
@@ -65,5 +58,4 @@ def get_database_type():
         return "sqlite"
     elif "postgresql" in DATABASE_URL:
         return "postgresql"
-    else:
-        return "unknown"
+    return "unknown"

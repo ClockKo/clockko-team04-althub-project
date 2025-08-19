@@ -8,9 +8,10 @@ variable "project_name" {
   default = "clockko"
 }
 
-variable "iam_profile" {
-  type    = string
-  default = "clockko-cloud-engineer"
+variable "aws_profile" {
+  description = "AWS profile to use locally (ignored in GitHub Actions OIDC)"
+  type        = string
+  default     = "clockko-cloud-engineer"
 }
 
 variable "create_rds" {

@@ -111,7 +111,12 @@ data "aws_iam_policy_document" "gha_assume" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_org}/${var.github_repo}:ref:refs/heads/*"]
+      values = [
+        "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/*",
+        "repo:${var.github_org}/${var.github_repo}:ref:refs/tags/*",
+        "repo:${var.github_org}/${var.github_repo}:pull_request"
+      ]
+
     }
 
     condition {
@@ -128,6 +133,7 @@ resource "aws_iam_role" "gha_role" {
   tags               = { Name = "${var.project_name}-gha-role" }
 }
 
+# GitHub Actions Policy – updated with state bucket perms
 data "aws_iam_policy_document" "gha_policy_doc" {
   statement {
     effect = "Allow"
@@ -138,14 +144,37 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "ecr:InitiateLayerUpload",
       "ecr:UploadLayerPart",
       "ecr:CompleteLayerUpload",
-      "s3:PutObject",
-      "s3:GetObject",
       "secretsmanager:GetSecretValue",
       "secretsmanager:DescribeSecret"
     ]
     resources = ["*"]
   }
+
+  # Terraform state bucket permissions (CRUD on objects + list bucket)
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject"
+    ]
+    resources = [
+      "arn:aws:s3:::clockko-terraform-state-eu-west-1/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:ListBucket",
+      "s3:GetBucketLocation"
+    ]
+    resources = [
+      "arn:aws:s3:::clockko-terraform-state-eu-west-1"
+    ]
+  }
 }
+
 
 resource "aws_iam_policy" "gha_policy" {
   name   = "${var.project_name}-gha-policy"

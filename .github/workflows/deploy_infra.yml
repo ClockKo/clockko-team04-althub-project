@@ -65,8 +65,7 @@ jobs:
         env:
           TF_VAR_image_tag: ${{ env.IMAGE_TAG }}
         run: |
-          cd backend
-          cd infra
+          cd backend/infra
           terraform init -input=false
           terraform apply -auto-approve -input=false
 

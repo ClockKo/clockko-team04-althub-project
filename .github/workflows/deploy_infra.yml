@@ -26,7 +26,7 @@ jobs:
       - name: Configure AWS (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.GHA_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::474422890464:role/clockko-gha-role
           aws-region: eu-west-1
 
       - name: Login to ECR
@@ -44,7 +44,7 @@ jobs:
         with:
           name: image-tag
           path: image_tag.txt
-          retention-days: 14
+          retention-days: 14   # Keep tags for 2 weeks (adjust as needed)
 
       - name: Build & Push image
         env:
@@ -52,7 +52,6 @@ jobs:
           ECR_REPOSITORY: clockko-backend
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
         run: |
-          cd backend
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
@@ -75,7 +74,7 @@ jobs:
       - name: Configure AWS (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.GHA_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::474422890464:role/clockko-gha-role
           aws-region: eu-west-1
 
       - name: Download latest image tag artifact

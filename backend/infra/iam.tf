@@ -169,16 +169,17 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "logs:DescribeLogStreams",
       "logs:GetLogEvents",
 
-      # --- S3 (read + Terraform state writes)
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:DeleteObject",
-      "s3:ListBucket",
-      "s3:GetBucketLocation",
-      "s3:GetBucketVersioning",
-      "s3:GetEncryptionConfiguration",
-      "s3:GetLifecycleConfiguration",
-      "s3:GetBucketPolicy",
+  # --- S3 (read + Terraform state writes)
+  "s3:GetObject",
+  "s3:PutObject",
+  "s3:DeleteObject",
+  "s3:ListBucket",
+  "s3:GetBucketLocation",
+  "s3:GetBucketVersioning",
+  "s3:GetEncryptionConfiguration",
+  "s3:GetLifecycleConfiguration",
+  "s3:GetBucketPolicy",
+  "s3:GetAccelerateConfiguration",
 
       # --- Secrets Manager (read, state lookups)
       "secretsmanager:GetSecretValue",

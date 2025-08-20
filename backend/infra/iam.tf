@@ -156,6 +156,7 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "ecs:ListServices",
       "ecs:ListTasks",
       "ecs:RegisterTaskDefinition",
+      "ecs:DeregisterTaskDefinition",
       "ecs:DescribeTaskDefinition",
 
       # --- IAM (read only, needed for roles/policies in state)

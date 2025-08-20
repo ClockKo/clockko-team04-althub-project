@@ -182,7 +182,8 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "s3:GetAccelerateConfiguration",
       "s3:GetBucketRequestPayment",
       "s3:GetBucketLogging",
-      "s3:GetReplicationConfiguration",
+  "s3:GetReplicationConfiguration",
+  "s3:GetBucketObjectLockConfiguration",
 
       # --- Secrets Manager (read, state lookups)
       "secretsmanager:GetSecretValue",

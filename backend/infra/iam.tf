@@ -193,11 +193,32 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "ec2:DescribeVpcAttribute",
       "ec2:DescribeAddressesAttribute",
 
-
       # --- General monitoring (optional but useful)
       "cloudwatch:DescribeAlarms",
       "cloudwatch:GetMetricData",
-      "cloudwatch:ListMetrics"
+      "cloudwatch:ListMetrics",
+
+      # --- NEW PERMISSIONS (add these 12) ---
+      # CloudWatch Logs tags
+      "logs:ListTagsForResource",
+      
+      # ECR tags
+      "ecr:ListTagsForResource",
+      
+      # IAM additional read permissions
+      "iam:ListRolePolicies",
+      "iam:GetPolicyVersion",
+      
+      # S3 additional permissions
+      "s3:GetBucketAcl",
+      
+      # EC2 additional permissions (for VPC resources)
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeInternetGateways",
+      "ec2:DescribeNatGateways",
+      "ec2:DescribeRouteTables",
+      "ec2:DescribeVpcEndpoints"
     ]
     resources = ["*"]
   }

@@ -216,3 +216,22 @@ Dockerfile
 # Backup files
 *.bak
 *.backup
+
+# =============================================
+# Terraform/Ignore
+# =============================================
+**/.terraform/*
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+*.tfplan
+*.tfplan.json
+plan.out
+tfplan
+.terraform.lock.hcl
+terraform.tfvars
+*.auto.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

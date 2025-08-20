@@ -116,7 +116,6 @@ data "aws_iam_policy_document" "gha_assume" {
         "repo:${var.github_org}/${var.github_repo}:ref:refs/tags/*",
         "repo:${var.github_org}/${var.github_repo}:pull_request"
       ]
-
     }
 
     condition {
@@ -133,8 +132,11 @@ resource "aws_iam_role" "gha_role" {
   tags               = { Name = "${var.project_name}-gha-role" }
 }
 
-# GitHub Actions Policy – updated with state bucket perms
+# ==================================================
+# GitHub Actions Policy – Least Privilege
+# ==================================================
 data "aws_iam_policy_document" "gha_policy_doc" {
+  # --- ECR ---
   statement {
     effect = "Allow"
     actions = [
@@ -143,14 +145,14 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "ecr:PutImage",
       "ecr:InitiateLayerUpload",
       "ecr:UploadLayerPart",
-      "ecr:CompleteLayerUpload",
-      "secretsmanager:GetSecretValue",
-      "secretsmanager:DescribeSecret"
+      "ecr:CompleteLayerUpload"
     ]
-    resources = ["*"]
+    resources = [
+      "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/clockko-backend"
+    ]
   }
 
-  # Terraform state bucket permissions (CRUD on objects + list bucket)
+  # --- Terraform S3 State Bucket ---
   statement {
     effect = "Allow"
     actions = [
@@ -173,12 +175,39 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "arn:aws:s3:::clockko-terraform-state-eu-west-1"
     ]
   }
+
+  # --- DynamoDB Lock Table ---
+  statement {
+    effect = "Allow"
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:DeleteItem",
+      "dynamodb:DescribeTable"
+    ]
+    resources = [
+      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/clockko-terraform-locks"
+    ]
+  }
+
+  # --- Secrets Manager ---
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:DescribeSecret"
+    ]
+    resources = compact([
+      aws_secretsmanager_secret.jwt_secret.arn,
+      var.create_rds ? aws_secretsmanager_secret.db_url[0].arn : null
+    ])
+  }
 }
 
-
 resource "aws_iam_policy" "gha_policy" {
-  name   = "${var.project_name}-gha-policy"
-  policy = data.aws_iam_policy_document.gha_policy_doc.json
+  name        = "${var.project_name}-gha-policy"
+  description = "Permissions for GitHub Actions to deploy to ECS and manage Terraform state"
+  policy      = data.aws_iam_policy_document.gha_policy_doc.json
 }
 
 resource "aws_iam_role_policy_attachment" "gha_policy_attach" {

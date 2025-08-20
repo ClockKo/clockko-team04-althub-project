@@ -149,12 +149,13 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "ecr:DescribeRepositories",
       "ecr:ListImages",
 
-      # --- ECS (describe only)
+      # --- ECS (describe + register)
       "ecs:DescribeClusters",
       "ecs:DescribeServices",
       "ecs:DescribeTasks",
       "ecs:ListServices",
       "ecs:ListTasks",
+      "ecs:RegisterTaskDefinition",
 
       # --- IAM (read only, needed for roles/policies in state)
       "iam:GetRole",

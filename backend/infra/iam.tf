@@ -180,6 +180,7 @@ data "aws_iam_policy_document" "gha_policy_doc" {
   "s3:GetLifecycleConfiguration",
   "s3:GetBucketPolicy",
   "s3:GetAccelerateConfiguration",
+  "s3:GetBucketRequestPayment",
 
       # --- Secrets Manager (read, state lookups)
       "secretsmanager:GetSecretValue",

@@ -218,7 +218,13 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "ec2:DescribeInternetGateways",
       "ec2:DescribeNatGateways",
       "ec2:DescribeRouteTables",
-      "ec2:DescribeVpcEndpoints"
+      "ec2:DescribeVpcEndpoints",
+
+      # RDS permissions
+      "rds:DescribeDBSubnetGroups",
+      
+      # S3 CORS permissions
+      "s3:GetBucketCORS"
     ]
     resources = ["*"]
   }

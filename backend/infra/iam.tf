@@ -164,6 +164,7 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "iam:ListRoles",
       "iam:ListPolicies",
       "iam:ListAttachedRolePolicies",
+      "iam:PassRole",
 
       # --- CloudWatch Logs (read)
       "logs:DescribeLogGroups",

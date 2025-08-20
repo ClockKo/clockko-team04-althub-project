@@ -15,7 +15,7 @@ export function WelcomeModal({ onNext }: { onNext?: () => void }) {
         <h2 className="text-dark text-xl xs:text-2xl font-bold mb-2">Welcome to ClockKo!</h2>
         <p className="text-darkGray mb-6 text-sm xs:text-base">
           Hi there, I’m Ko, your partner in healthy work habits!
-          <br />
+          <br className='hidden xs:block' />
           Let’s set up your workspace for better work-life balance
         </p>
         <Progress value={0} className="mb-6 h-1 md:w-[400px] mx-auto bg-progressBarBlue" />

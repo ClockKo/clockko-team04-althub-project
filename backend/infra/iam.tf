@@ -222,9 +222,11 @@ data "aws_iam_policy_document" "gha_policy_doc" {
 
       # RDS permissions
       "rds:DescribeDBSubnetGroups",
+      "rds:ListTagsForResource",
       
       # S3 CORS permissions
-      "s3:GetBucketCORS"
+      "s3:GetBucketCORS",
+      "s3:GetBucketWebsite"
     ]
     resources = ["*"]
   }

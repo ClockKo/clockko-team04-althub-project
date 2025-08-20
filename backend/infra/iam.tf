@@ -190,6 +190,9 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "ec2:DescribeAvailabilityZones",
       "ec2:DescribeVpcs",
       "ec2:DescribeAddresses",
+      "ec2:DescribeVpcAttribute",
+      "ec2:DescribeAddressesAttribute",
+
 
       # --- General monitoring (optional but useful)
       "cloudwatch:DescribeAlarms",

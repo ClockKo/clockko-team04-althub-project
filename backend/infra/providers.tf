@@ -17,7 +17,7 @@ provider "aws" {
   region  = var.aws_region
 
   # Use profile locally, ignore in CI/CD
-  profile = try(var.aws_profile, null)
+  profile = length(trimspace(var.aws_profile)) > 0 ? var.aws_profile : null
 }
 
 data "aws_caller_identity" "current" {}

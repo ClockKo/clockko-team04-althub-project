@@ -11,7 +11,7 @@ variable "project_name" {
 variable "aws_profile" {
   description = "AWS profile to use locally (ignored in GitHub Actions OIDC)"
   type        = string
-  default     = "clockko-cloud-engineer"
+  default     = ""   # empty by default so CI won't use it
 }
 
 variable "create_rds" {

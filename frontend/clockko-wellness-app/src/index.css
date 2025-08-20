@@ -5,7 +5,14 @@
 
 @theme {
   --color-blue1: hsla(221, 50%, 41%, 1);
-  --color-lightDark: hsla(220, 6%, 21%, 1)
+  --color-lightDark: hsla(220, 6%, 21%, 1);
+  --color-gray: hsla(219, 11%, 75%, 1);
+  --color-coolWhite: hsla(240, 100%, 99%, 1);
+  --color-dark: hsla(225, 100%, 2%, 1);
+  --color-darkGray: hsla(228, 2%, 41%, 1);
+  --color-progressBarBlue: hsla(221, 37%, 88%, 1);
+  --color-lightBlue: hsla(245, 58%, 51%, 0.1);
+  --color-borderGray: hsla(240, 2%, 80%, 1)
 }
 
 @theme inline {

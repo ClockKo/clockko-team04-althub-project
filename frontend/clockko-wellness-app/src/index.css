@@ -3,6 +3,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --color-blue1: hsla(221, 50%, 41%, 1);
+  --color-lightDark: hsla(220, 6%, 21%, 1)
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

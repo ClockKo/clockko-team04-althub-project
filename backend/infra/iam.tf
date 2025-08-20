@@ -136,78 +136,67 @@ resource "aws_iam_role" "gha_role" {
 # GitHub Actions Policy – Least Privilege
 # ==================================================
 data "aws_iam_policy_document" "gha_policy_doc" {
-# --- ECR ---
-statement {
-  effect = "Allow"
-  actions = [
-    "ecr:GetAuthorizationToken"
-  ]
-  resources = ["*"]
-}
-
-statement {
-  effect = "Allow"
-  actions = [
-    "ecr:BatchCheckLayerAvailability",
-    "ecr:PutImage",
-    "ecr:InitiateLayerUpload",
-    "ecr:UploadLayerPart",
-    "ecr:CompleteLayerUpload"
-  ]
-  resources = [
-    "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/clockko-backend"
-  ]
-}
-
-  # --- Terraform S3 State Bucket ---
   statement {
     effect = "Allow"
     actions = [
+      # --- ECR (full push & read)
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:PutImage",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:DescribeRepositories",
+      "ecr:ListImages",
+
+      # --- ECS (describe only)
+      "ecs:DescribeClusters",
+      "ecs:DescribeServices",
+      "ecs:DescribeTasks",
+      "ecs:ListServices",
+      "ecs:ListTasks",
+
+      # --- IAM (read only, needed for roles/policies in state)
+      "iam:GetRole",
+      "iam:GetPolicy",
+      "iam:GetOpenIDConnectProvider",
+      "iam:ListRoles",
+      "iam:ListPolicies",
+      "iam:ListAttachedRolePolicies",
+
+      # --- CloudWatch Logs (read)
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:GetLogEvents",
+
+      # --- S3 (read + Terraform state writes)
       "s3:GetObject",
       "s3:PutObject",
-      "s3:DeleteObject"
-    ]
-    resources = [
-      "arn:aws:s3:::clockko-terraform-state-eu-west-1/*"
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
+      "s3:DeleteObject",
       "s3:ListBucket",
-      "s3:GetBucketLocation"
-    ]
-    resources = [
-      "arn:aws:s3:::clockko-terraform-state-eu-west-1"
-    ]
-  }
+      "s3:GetBucketLocation",
+      "s3:GetBucketVersioning",
+      "s3:GetEncryptionConfiguration",
+      "s3:GetLifecycleConfiguration",
+      "s3:GetBucketPolicy",
 
-  # --- DynamoDB Lock Table ---
-  statement {
-    effect = "Allow"
-    actions = [
-      "dynamodb:GetItem",
-      "dynamodb:PutItem",
-      "dynamodb:DeleteItem",
-      "dynamodb:DescribeTable"
-    ]
-    resources = [
-      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/clockko-terraform-locks"
-    ]
-  }
-
-  # --- Secrets Manager ---
-  statement {
-    effect = "Allow"
-    actions = [
+      # --- Secrets Manager (read, state lookups)
       "secretsmanager:GetSecretValue",
-      "secretsmanager:DescribeSecret"
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:GetResourcePolicy",
+      "secretsmanager:ListSecrets",
+
+      # --- EC2 (for VPC/AZ/EIP reads)
+      "ec2:DescribeAvailabilityZones",
+      "ec2:DescribeVpcs",
+      "ec2:DescribeAddresses",
+
+      # --- General monitoring (optional but useful)
+      "cloudwatch:DescribeAlarms",
+      "cloudwatch:GetMetricData",
+      "cloudwatch:ListMetrics"
     ]
-    resources = compact([
-      aws_secretsmanager_secret.jwt_secret.arn,
-      var.create_rds ? aws_secretsmanager_secret.db_url[0].arn : null
-    ])
+    resources = ["*"]
   }
 }
 

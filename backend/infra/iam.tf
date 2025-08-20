@@ -136,21 +136,28 @@ resource "aws_iam_role" "gha_role" {
 # GitHub Actions Policy – Least Privilege
 # ==================================================
 data "aws_iam_policy_document" "gha_policy_doc" {
-  # --- ECR ---
-  statement {
-    effect = "Allow"
-    actions = [
-      "ecr:GetAuthorizationToken",
-      "ecr:BatchCheckLayerAvailability",
-      "ecr:PutImage",
-      "ecr:InitiateLayerUpload",
-      "ecr:UploadLayerPart",
-      "ecr:CompleteLayerUpload"
-    ]
-    resources = [
-      "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/clockko-backend"
-    ]
-  }
+# --- ECR ---
+statement {
+  effect = "Allow"
+  actions = [
+    "ecr:GetAuthorizationToken"
+  ]
+  resources = ["*"]
+}
+
+statement {
+  effect = "Allow"
+  actions = [
+    "ecr:BatchCheckLayerAvailability",
+    "ecr:PutImage",
+    "ecr:InitiateLayerUpload",
+    "ecr:UploadLayerPart",
+    "ecr:CompleteLayerUpload"
+  ]
+  resources = [
+    "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/clockko-backend"
+  ]
+}
 
   # --- Terraform S3 State Bucket ---
   statement {

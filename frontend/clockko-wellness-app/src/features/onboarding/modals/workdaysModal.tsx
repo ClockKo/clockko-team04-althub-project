@@ -51,11 +51,6 @@ export function WorkDaysModal({
           </div>
           <Progress value={step} max={totalStep} />
         </div>
-        <div className="absolute top-4 right-4">
-          <Button variant="outline" onClick={onNext}>
-            Skip
-          </Button>
-        </div>
 
         <img src={Group6} alt="koala bear face" className="mx-auto mb-2" />
 
@@ -82,18 +77,22 @@ export function WorkDaysModal({
           ))}
         </div>
 
-        <div className='flex justify-between gap-2'>
-            <Button variant="ghost" onClick={onPrev} className='w-1/2 text-blue1 font-thin'>
-              Previous
-            </Button>
+        <div className="flex justify-between gap-2">
+          <Button
+            variant="ghost"
+            onClick={onPrev}
+            className="w-1/2 md:w-[20%] text-blue1 font-thin cursor-pointer"
+          >
+            Previous
+          </Button>
 
-        <Button
-          className="w-1/2 bg-blue1 text-white xs:px-6 xs:py-2 text-base rounded-lg"
-          disabled={selectedDays.length === 0}
-          onClick={onNext}
-        >
-          Next
-        </Button>
+          <Button
+            className="w-1/2 md:w-[20%] bg-blue1 text-white xs:px-6 xs:py-2 text-base rounded-lg font-thin cursor-pointer hover:bg-blue-700/80"
+            disabled={selectedDays.length === 0}
+            onClick={onNext}
+          >
+            Next
+          </Button>
         </div>
       </div>
     </motion.div>

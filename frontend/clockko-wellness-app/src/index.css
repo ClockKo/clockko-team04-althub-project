@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -12,7 +12,8 @@
   --color-darkGray: hsla(228, 2%, 41%, 1);
   --color-progressBarBlue: hsla(221, 37%, 88%, 1);
   --color-lightBlue: hsla(245, 58%, 51%, 0.1);
-  --color-borderGray: hsla(240, 2%, 80%, 1)
+  --color-borderGray: hsla(240, 2%, 80%, 1);
+  --color-mint: hsla(166, 73%, 88%, 1);
 }
 
 @theme inline {
@@ -128,5 +129,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Manrope', sans-serif;
+    font-optical-sizing: auto;
   }
 }

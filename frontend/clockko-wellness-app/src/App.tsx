@@ -1,5 +1,5 @@
 import { BrowserRouter } from "react-router-dom"
-import OnboardingRoutes from "./features/onboarding/routes/onboadringRoutes"
+import OnboardingRoutes from "./features/onboarding/routes/onboardingRoutes"
 
 function App() {
   return (

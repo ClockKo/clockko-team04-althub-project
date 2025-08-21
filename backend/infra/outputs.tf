@@ -47,6 +47,30 @@ output "ecs_task_definition_arn" {
   value       = aws_ecs_task_definition.backend.arn
 }
 
+# The task definition ARN currently set on the ECS Service (includes revision)
+output "ecs_service_task_definition_arn" {
+  description = "ECS Service's active Task Definition ARN (with revision)"
+  value       = aws_ecs_service.backend.task_definition
+}
+
+# Image reference baked into the current task definition (repo:tag)
+output "ecs_task_definition_image" {
+  description = "Container image used by the task definition (repo:tag)"
+  value       = jsondecode(aws_ecs_task_definition.backend.container_definitions)[0].image
+}
+
+# Convenience: parsed tag from the task definition image
+output "ecs_task_definition_image_tag" {
+  description = "Tag portion of the task definition image"
+  value       = split(":", jsondecode(aws_ecs_task_definition.backend.container_definitions)[0].image)[1]
+}
+
+# Convenience: the image tag provided to this deployment (from CI/CD)
+output "deployed_image_tag" {
+  description = "Image tag provided via TF_VAR_image_tag during this apply"
+  value       = var.image_tag
+}
+
 output "ecs_task_role_arn" {
   description = "ARN of the ECS task role"
   value       = aws_iam_role.ecs_task_role.arn

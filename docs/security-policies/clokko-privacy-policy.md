@@ -1,26 +1,26 @@
-**ClockKo Privacy Policy**
+# ClockKo Privacy Policy
 
-Version: 1.0
+**Version:** 1.0
 
-Date: Aug 8, 2025
+**Date:** Aug 8, 2025
 
-Classification: Confidential — Internal Draft
+**Classification:** Confidential — Internal Draft
 
-Audience: End-users, regulators (public-facing).
+**Audience:** End-users, regulators (public-facing).
 
-Purpose: Explain what we collect, why we collect it, and how it’s protected and used in plain language.
+**Purpose:** Explain what we collect, why we collect it, and how it’s protected and used in plain language.
 
-Author: Beatrice Pepple
+**Author:** Beatrice Pepple
 
-1.  # YOUR PRIVACY 
+## 1. YOUR PRIVACY 
 
 At ClockKo, we put your wellbeing first. We are committed to protecting your personal information and respect your privacy when you use our content and products via our website. This privacy policy explains how we collect, use, store and protect your personal data in full compliance with the provisions of the Nigeria Data Protection Act 2023 and other applicable data protection regulations.
 
-2.  # YOUR PERSONAL INFORMATION
+## 2. YOUR PERSONAL INFORMATION
 
 When you create an Account with ClockKo and consume our products and services, we collect information you provide us via forms, phone calls, correspondence by email and any other channels we may make available to you.
 
-## 2.1 INFORMATION WE HOLD ABOUT YOU
+### 2.1 INFORMATION WE HOLD ABOUT YOU
 
 The personal data we collect may include but are not limited to the following:
 
@@ -35,7 +35,7 @@ The personal data we collect may include but are not limited to the following:
 | Usage Data                        | Includes information about how data subject uses our website, products and services                                                                                                                                                                                                                                                                |
 | Marketing and Communications Data | Information about data subject communications with the Bank. Preferences in receiving marketing e-mails and consents given by data subject to ClockKo.                                                                                                                                                                                             |
 
-## 2.2 WHY DO WE NEED YOUR DATA?
+### 2.2 WHY DO WE NEED YOUR DATA?
 
 ClockKo ensures that the personal data collected and processed is necessary for the purpose of collection, and ClockKO shall not collect ot process more data than is reasonably required for a particular processing activity. Depending on the circumstances of our interactions with you, our legal basis for processing your personal data may be one of the following:
 
@@ -45,11 +45,11 @@ ClockKo ensures that the personal data collected and processed is necessary for 
 
 In certain circumstances, we may collect personal information about you collected by third parties and other service partners to better serve your needs. Third party sources are not controlled by ClockKo and as such we are not liable for how they use it.
 
-3.  # CONSENT
+## 3. CONSENT
 
 We don't ask for your personal information unless we need it to provide or improve our products and services for you. You give your consent to our processing of your personal data when you access our platforms or, when you accept our cookies policy; or specifically, as you use the services offered on our website or digital platforms. By accessing and using ClockKo,  you are accepting the practices described in this Privacy Policy (including new versions of this Privacy Policy when and as they go into effect).
 
-4.  # USE OF YOUR INFORMATION
+## 4. USE OF YOUR INFORMATION
 
 We may use your personal information in the following ways:
 
@@ -62,14 +62,14 @@ We may use your personal information in the following ways:
 - To comply with our Internal Policies.
 - To protect ourselves, you and others such as by taking actions to prevent fraud and other unlawful or unauthorized activity, and creating and maintaining a trusted, secure, and reliable online environment
 
-5.  # COOKIES
+## 5. COOKIES
 
 Cookies are small text files placed on your device’s browser that enable the website to identify your device as you view different pages. Like most interactive websites, our website uses cookies to enable us track of your activity for the duration of a session. We use temporary, encrypted session cookies to make the website and app work properly.
 
 - They do not track you after you log out.
 - You may disable cookies, but some features may not work as intended.
 
-6.  # INFORMATION SHARING AND DISCLOSURE
+## 6. INFORMATION SHARING AND DISCLOSURE
 
 ClockKo will not sell or rent your personally identifiable information to anyone. We may share or disclose your personal information with the following categories of third parties:
 
@@ -87,7 +87,7 @@ ClockKo will not sell or rent your personally identifiable information to anyone
 
 - With your consent: We also will share your Personal Data and other information with your consent or direction.
 
-7.  # INFORMATION PROTECTION
+## 7. INFORMATION PROTECTION
 
 Security: The security of your personal information is important to us. We maintain technical, physical, and administrative security measures designed to provide reasonable protection for your Personal Data against loss, misuse, unauthorized access, disclosure, and alteration. The security measures include firewalls, data encryption and role-based access controls as well as information access authorization controls.
 
@@ -105,11 +105,11 @@ In the event of a data breach that may pose a high risk to your rights or freedo
 
 Organisational measures: ClockKo has implemented internal policies and frameworks designed to safeguard the security, integrity, and confidentiality of your personal data. We also conduct regular training and awareness programs to ensure that all authorized team members remain equipped with up-to-date knowledge and best practices in data protection and security.
 
-8.  # DATA RETENTION
+## 8. DATA RETENTION
 
 We will keep your personal information for as long as needed to perform our obligations to you, or for as long as legally permitted. This retention period has been established to enable us to use the personal data for the necessary legitimate purposes identified, in full compliance with the legal and regulatory requirements. The criteria used to determine our retention periods include: (i) the length of time we have an ongoing relationship with you; (ii) whether there is a legal obligation to which we are subject; and (iii) whether retention is advisable in light of our legal position (such as in regard to applicable statutes of limitations, litigation or regulatory investigations). For example, we keep your account information, like your name, email address, and password, for as long as your account exists so that you may access it.
 
-9.  # YOUR RIGHTS UNDER THIS POLICY
+## 9. YOUR RIGHTS UNDER THIS POLICY
 
 According to the provision of Nigerian Data Protection Act 2023 (NDPA), data subjects have certain rights. The following rights are available to you under this Policy:
 
@@ -120,17 +120,17 @@ According to the provision of Nigerian Data Protection Act 2023 (NDPA), data sub
 5.  Requests for Portability: Subject to the directives of the Nigeria Data Protection Commission and technical possibilities, you can exercise you right to portability by requesting us to provide your data in a commonly used and machine-readable electronic format.
 6.  Except in scenarios clearly stated in the Nigerian Data Protection Act (NDPA). You have the right not to be subject to a decision based solely on automated processing, including profiling, which produces legal or similar significant effects about you.
 
-7.  # REMEDIES FOR VIOLATION AND TIME-FRAME FOR REMEDY
+## 7. REMEDIES FOR VIOLATION AND TIME-FRAME FOR REMEDY
 
 In the unlikely event of violation of any of your rights a data subject, our Data Protection Officer shall within 30 days of our notice of the said violation, address the issue and redress the violation as practicable as possible. The available remedies include but not limited to correction or deletion of your data, grant of access to your data, due information on the processing of your data, restriction on further processing and other applicable remedies as the relevant laws prescribe.
 
 You also have the right to lodge a compliant directly with the supervisory authority, Nigeria Data Protection Commission (NDPC) where you suspect any misconduct or violations of the above listed rights in section. Email: Info@ndpc.gov.ng
 
-11. # UPDATES TO THIS PRIVACY POLICY
+## 11. UPDATES TO THIS PRIVACY POLICY
 
 ClockKo may change the terms of this Privacy Policy at any time. This privacy policy is reviewed periodically and Whenever there is a material change to business or regulatory requirements, we will take appropriate action to notify you, such as by posting on our Website, Social Media Accounts or sending you an email. The effective date of the most recent version of this Privacy Policy will appear at the top of this page.
 
-# Resources
+## Resources
 
 - Nigeria Data Protection Act 2023
 - ClockKo Access Control Policy

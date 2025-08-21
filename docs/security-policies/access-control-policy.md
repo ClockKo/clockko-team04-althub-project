@@ -1,20 +1,24 @@
 **ClockKo Access Control Policy**
 
-Version: 1.0
-Date: Aug 17, 2025
-Classification: Internal, Technical Draft
-Audience: Internal, Dev Team
-Author: Beatrice Pepple
+**Version:** 1.0
 
-1.  # Purpose
+**Date:** Aug 17, 2025
+
+**Classification:** Internal, Technical Draft
+
+**Audience:** Internal, Dev Team
+
+**Author:** Beatrice Pepple
+
+## 1. Purpose
 
     The purpose of this Role-Based Access Control (RBAC) Policy is to establish a structured approach for managing access to ClockKo systems, data, and user reflections. This ensures that access is granted only to authorized individuals and services, in alignment with the principles of least privilege, data minimization, and accountability under the Nigeria Data Protection Act (NDPA) 2023 and NDPR.
 
-2.  # Scope 
+## 2. Scope 
 
     This policy applies to all ClockKo team members, service accounts, and third-party service providers who interact with ClockKo systems, including production databases, APIs, and user reflections.
 
-3.  # NDPA Compliance Principles
+## 3. NDPA Compliance Principles
     ClockKo enforces access control in line with NDPA 2023, guided by the following principles:
 
 - Data Minimization: Access is restricted to only what is necessary to perform assigned duties.
@@ -22,11 +26,11 @@ Author: Beatrice Pepple
 - Integrity & Confidentiality: Technical and organizational measures prevent unauthorized disclosure of personal data.
 - User Rights Protection: Access controls ensure that users can exercise their rights (access, correction, deletion) securely.
 
-4.  # RBAC - Role Based Access Framework
+## 4. RBAC - Role Based Access Framework
 
 Access permissions are assigned to roles rather than individuals. Users and services are granted roles based on their responsibilities, ensuring consistency and reducing risk.
 
-5.  # Role Definitions
+## 5. Role Definitions
 
 The following roles exist within ClockKo:
 
@@ -41,7 +45,7 @@ The following roles exist within ClockKo:
 | Cybersecurity Team             | Audit logs, incident response.                                                            | Read-only access to audit/security logs, security tools, incident response authority.                 | Reflection content (unless anonymized), direct database manipulation. |
 | Compliance & Security Officers | Ensure compliance with NDPA 2023 and internal policies.                                   | Read-only access to audit logs, access control records.                                               | Reflections                                                           |
 
-6.  # Access Control Rules
+## 6. Access Control Rules
 
 - Role-based: Permissions are tied to job function, not individuals.
 - Least Privilege: Only the minimum required access is granted.
@@ -50,7 +54,7 @@ The following roles exist within ClockKo:
 - Authentication: All access requires secure authentication (OAuth 2.1, MFA for the team).
 - Service Authentication: Authorized services (analytics, notifications, wellness insights) must use signed JWT/OAuth 2.1 service-to-service authentication before accessing reflections.
 
-7.  # Access Requests & Reviews
+## 7. Access Requests & Reviews
 
 - Access requests must be submitted through formal channels and approved by a manager and the Security Officer.
 - Roles are reviewed quarterly to ensure validity.
@@ -60,20 +64,20 @@ The following roles exist within ClockKo:
 - Logs must include: user/service ID, timestamp, reflection ID, and action taken (view/edit/delete/export).
 - Logs must be immutable and retained in line with the Data Retention Policy.
 
-8.  # Monitoring & Enforcement
+## 8. Monitoring & Enforcement
 
 - Continuous monitoring of access attempts is enforced.
 - Unauthorized access attempts trigger security alerts and incident response.
 - Violations of this policy may result in disciplinary action, termination, and regulatory reporting in line with NDPA 2023 obligations.
 
-9.  # Review & Audit
+## 9. Review & Audit
 
 This policy will be reviewed annually or upon changes in NDPA or ClockKo’s infrastructure. Audit trails of access control activities will be retained in accordance with the Data Retention & Deletion Policy.
 
-10. # Approval & Version Control
+## 10. Approval & Version Control
 
-Approved by: Cybersecurity Lead
+**Approved by:** Cybersecurity Lead
 
-Date: August 2025
+**Date:** August 2025
 
-Next Review Date: January 2026
+**Next Review Date:** January 2026

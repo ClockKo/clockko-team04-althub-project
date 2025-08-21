@@ -1,20 +1,20 @@
-**ClockKo Data Retention & Deletion Policy**
+# ClockKo Data Retention & Deletion Policy
 
-Version: 1.0
+**Version:** 1.0
 
-Date: Aug 17, 2025
+**Date:** Aug 17, 2025
 
-Classification: Internal Use Only
+**Classification:** Internal Use Only
 
-Audience: Internal, Dev Team
+**Audience:** Internal, Dev Team
 
-Author: Beatrice Pepple
+**Author:** Beatrice Pepple
 
-1.  # Purpose 
+### Purpose 
 
 This policy establishes how ClockKo collects, stores, retains, and deletes user data, ensuring compliance with the Nigeria Data Protection Act (NDPA) 2023. It protects user privacy while supporting ClockKo’s mission to promote wellness-focused productivity for remote workers.
 
-2.  # Scope 
+### Scope 
 
 This policy applies to all user data processed by ClockKo, including:
 
@@ -26,7 +26,7 @@ This policy applies to all user data processed by ClockKo, including:
 - Gamification data (challenges, rewards, progress metrics)
 - Account Metadata (profile information, authentication credentials, preferences, audit logs)
 
-3.  # NDPA 2023 Compliance Principles
+### NDPA 2023 Compliance Principles
 
 ClockKo adheres to the following NDPA 2023 requirements in its retention practices:
 
@@ -35,7 +35,7 @@ ClockKo adheres to the following NDPA 2023 requirements in its retention practic
 - User Rights: Ensure users can request access, correction, or deletion of their data.
 - Accountability & Transparency: Maintain clear records of retention schedules and securely dispose of expired data.
 
-4.  # Retention Schedule
+### Retention Schedule
 
 | Data Category                                  | Purpose                                                          | Retention Period                                                                                              | Deletion Method                                                                                       |
 | ---------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -48,34 +48,34 @@ ClockKo adheres to the following NDPA 2023 requirements in its retention practic
 | Account Metadata                               | Authentication, legal compliance, fraud detection.               | Active account lifetime + 5 years post-deletion (NDPA + financial regulations).                               | Secure deletion, audit logs archived.                                                                 |
 | System & Security Logs                         | Security monitoring, compliance audits, incident investigations. | 12 months.                                                                                                    | Secure purge.                                                                                         |
 
-5.  # Data Deletion Process
+### Data Deletion Process
 
 - User-Initiated Deletion: Users may delete reflections, tasks, or their entire account at any time through the ClockKo interface.  Reflections removed from active storage within 24 hours.
 - Automated Deletion:  Inactive account reflections deleted after 24 months, with prior user notification.
 - Backup Deletion: Deleted data erased from encrypted backups within 30 days.
 - Secure Disposal: Data deletion uses industry-standard techniques (cryptographic erasure, secure overwrite) to prevent recovery. This means, Once deleted, reflections cannot be restored by admins, engineers, or services.
 
-6.  # Responsibilities
+### Responsibilities
 
 - Data Protection Officer (DPO): Ensures NDPA compliance and oversees execution of this policy.
 - Engineering & Cloud Teams: Implement secure deletion procedures and automated retention controls.
 - Cybersecurity Team: Monitor for unauthorized access and validate secure disposal.
 - Team Leads: Review data access and retention compliance quarterly.
 
-7.  # User Rights & Transparency
+### User Rights & Transparency
 
 - Users can request data access, correction, export, or deletion in line with NDPA.
 - Retention timelines are disclosed in the ClockKo Privacy Policy.
 - Users will be notified of material changes to retention schedules.
 
-8.  # Review & Audit
+### Review & Audit
 
 This policy will be reviewed annually or upon significant legal/technical changes. Audit logs of deletion activities will be retained for 3 years for accountability.
 
-9.  # Approval & Version Control
+### Approval & Version Control
 
-Approved by: Cybersecurity Lead
+**Approved by:** Cybersecurity Lead
 
-Date: August 2025
+**Date:** August 2025
 
-Next Review Date: January 2026
+**Next Review Date:** January 2026

@@ -149,7 +149,7 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "ecr:DescribeRepositories",
       "ecr:ListImages",
 
-      # --- ECS (describe + register)
+  # --- ECS (describe + register + update service)
       "ecs:DescribeClusters",
       "ecs:DescribeServices",
       "ecs:DescribeTasks",
@@ -157,6 +157,8 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "ecs:ListTasks",
       "ecs:RegisterTaskDefinition",
       "ecs:DeregisterTaskDefinition",
+      "ecs:DescribeTaskDefinition",
+      "ecs:UpdateService",
       "ecs:DescribeTaskDefinition",
 
       # --- IAM (read only, needed for roles/policies in state)

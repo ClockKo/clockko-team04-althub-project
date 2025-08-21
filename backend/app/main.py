@@ -36,3 +36,9 @@ app.include_router(timetracker.router, prefix="", tags=["time-log"] )
 @app.get("/")
 def read_root():
     return {"message": "ClockKo API is running"}
+
+# K8s/ECS-friendly health endpoints
+@app.get("/health")
+@app.get("/healthz")
+def health():
+    return {"status": "ok", "service": "clockko-api", "version": app.version}

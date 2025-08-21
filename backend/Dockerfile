@@ -30,6 +30,7 @@ WORKDIR /app
 # Install only runtime libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy pre-built wheels and install

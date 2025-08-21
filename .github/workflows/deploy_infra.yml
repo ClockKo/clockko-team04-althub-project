@@ -53,8 +53,13 @@ jobs:
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
         run: |
           cd backend
+          # Build with versioned tag
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          # Also tag as latest for manual testing/compat, but deploys use the unique tag
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          # Push both
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3

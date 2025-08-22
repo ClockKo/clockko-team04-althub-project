@@ -7,7 +7,6 @@ import frame1 from '../../assets/images/frame1.png'
 import google from '../../assets/images/google.png'
 import { Mail, LockKeyhole } from 'lucide-react'
 
-
 export function OnboardingLoginPage() {
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string | number>('')
@@ -50,15 +49,15 @@ export function OnboardingLoginPage() {
           <h1 className="text-2xl font-bold mb-6 text-center">Welcome to ClockKo!</h1>
 
           <motion.form className="space-y-4" onSubmit={handleLoginSubmit}>
-            <div className='relative'>
+            <div className="relative">
               <label htmlFor="email" className="text-[12px] relative top-[-6px]">
                 Email
               </label>
-                {email === "" && (
-                  <span className="absolute inset-y-0 left-0 top-6 flex items-center pl-3">
-                    <Mail className="h-4 w-4 text-gray" />
-                  </span>
-                )}
+              {email === '' && (
+                <span className="absolute inset-y-0 left-0 top-6 flex items-center pl-3">
+                  <Mail className="h-4 w-4 text-gray" />
+                </span>
+              )}
               <Input
                 type="email"
                 placeholder="Enter your email"
@@ -72,11 +71,11 @@ export function OnboardingLoginPage() {
               <label htmlFor="password" className="text-[12px] relative top-[-6px]">
                 Password
               </label>
-                {password === "" && (
-                    <span className="absolute inset-y-0 left-0 top-6 flex items-center pl-3">
-                    <LockKeyhole className="h-4 w-4 text-gray" />
-                    </span>
-                )}
+              {password === '' && (
+                <span className="absolute inset-y-0 left-0 top-6 flex items-center pl-3">
+                  <LockKeyhole className="h-4 w-4 text-gray" />
+                </span>
+              )}
               <Input
                 type="password"
                 placeholder="Enter your password"
@@ -95,7 +94,10 @@ export function OnboardingLoginPage() {
 
             {/* submit button */}
             <div className="flex flex-col gap-2 text-[12px]">
-              <Button type="submit" className="shadow-lg cursor-pointer w-full bg-blue1 text-white mt-2 md:text-lg transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-100 hover:bg-blue1/80">
+              <Button
+                type="submit"
+                className="shadow-lg cursor-pointer w-full bg-blue1 text-white mt-2 md:text-lg transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-100 hover:bg-blue1/80"
+              >
                 Log In
               </Button>
               <Button

@@ -77,7 +77,9 @@ export function AvatarModal({
         </div>
         <img src={Group6} alt="Koala bear face" className="mx-auto mb-2 mt-8" />
         <h2 className="text-lg xs:text-xl font-bold mb-1 mt-4">Choose an Avatar</h2>
-        <p className="text-gray-500 mb-4 text-sm font-thin">Which of the following matches your vibe?</p>
+        <p className="text-gray-500 mb-4 text-sm font-thin">
+          Which of the following matches your vibe?
+        </p>
         {/* Avatar grid */}
         <div className="grid grid-cols-3 gap-3 mb-6 mx-auto md:ml-[7.5rem] md:mr-[2.5rem] justify-evenly items-center md:mt-8">
           {avatars.map((a, i) => (

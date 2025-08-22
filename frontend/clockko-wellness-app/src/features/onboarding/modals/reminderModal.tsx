@@ -41,7 +41,8 @@ export function ReminderModal({
               className="bg-blue1 h-1 rounded-full transition-all"
               style={{ width: `${(step / totalSteps) * 100}%` }}
             ></div>
-          </div>        </div>
+          </div>{' '}
+        </div>
         <img src={Group6} alt="Koala" className="mx-auto mb-2 mt-8" />
         <h2 className="text-lg xs:text-xl font-bold mb-1 mt-4">Enable Reminders</h2>
         <p className="text-gray-500 mb-4 text-sm">Help us help you maintain healthy work habits</p>
@@ -50,15 +51,17 @@ export function ReminderModal({
             {/* Guided Shutdown */}
             <div className="flex items-center justify-between py-4">
               <div className="text-left">
-              <div className="font-semibold text-sm md:text-[1rem]">Guided Shutdown Reminders</div>
-              <div className="text-xs text-gray-500">
-                Get reminded to start your end-of-day routine
-              </div>
+                <div className="font-semibold text-sm md:text-[1rem]">
+                  Guided Shutdown Reminders
+                </div>
+                <div className="text-xs text-gray-500">
+                  Get reminded to start your end-of-day routine
+                </div>
               </div>
               <Switch
-              checked={reminders.shutdown}
-              onCheckedChange={(v) => setReminders({ ...reminders, shutdown: v })}
-              className={`cursor-pointer !bg-lightGray !border-lightGray ${reminders.shutdown ? '!bg-blue1 !border-blue1' : '!bg-lightGray'} switch-bg !ring-0`}
+                checked={reminders.shutdown}
+                onCheckedChange={(v) => setReminders({ ...reminders, shutdown: v })}
+                className={`cursor-pointer !bg-lightGray !border-lightGray ${reminders.shutdown ? '!bg-blue1 !border-blue1' : '!bg-lightGray'} switch-bg !ring-0`}
               />
             </div>
             {/* Work Break */}

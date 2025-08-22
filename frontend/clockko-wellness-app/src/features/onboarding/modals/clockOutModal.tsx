@@ -2,7 +2,6 @@ import { Button } from '../../../components/ui/button'
 import { motion } from 'framer-motion'
 import Group6 from '../../../assets/images/Group6.png'
 
-
 type ClockOutModalProps = {
   clockOut: { hour: string; minute: string }
   setClockOut: (t: { hour: string; minute: string }) => void
@@ -59,7 +58,9 @@ export function ClockOutModal({
         </div>
 
         <img src={Group6} alt="koala bear face" className="mx-auto mb-2 mt-8" />
-        <h2 className="text-dark text-lg xs:text-xl font-bold mb-1 mt-8">Set your Clock-out Time</h2>
+        <h2 className="text-dark text-lg xs:text-xl font-bold mb-1 mt-8">
+          Set your Clock-out Time
+        </h2>
         <p className="text-lightDark mb-4 text-sm mt-2">
           When do you want to be reminded to finish work
         </p>

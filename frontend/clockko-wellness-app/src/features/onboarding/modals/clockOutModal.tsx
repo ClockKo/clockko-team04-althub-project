@@ -1,8 +1,7 @@
 import { Button } from '../../../components/ui/button'
 import { motion } from 'framer-motion'
 import Group6 from '../../../assets/images/Group6.png'
-import { Progress } from '../../../components/ui/progress'
-// import { Input } from '../../../components/ui/input'
+
 
 type ClockOutModalProps = {
   clockOut: { hour: string; minute: string }
@@ -45,24 +44,29 @@ export function ClockOutModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      <div className="bg-white rounded-2xl p-4 xs:p-6 w-full max-w-xs xs:max-w-md md:max-w-xl mx-auto text-center shadow-lg relative">
+      <div className="bg-white rounded-2xl p-4 xs:p-6 w-full max-w-xs xs:max-w-md md:max-w-[800px] mx-auto text-center shadow-lg relative">
         {/* Progress and Step indicator */}
         <div className="mb-4">
           <div className="text-xs text-darkGray mb-1">
             Step {step} of {totalSteps}
           </div>
-          <Progress className="bg-progressBarBlue h-1" value={(step / totalSteps) * 100} />
+          <div className="w-full bg-gray-200 rounded-full h-1 mt-4">
+            <div
+              className="bg-blue1 h-1 rounded-full transition-all"
+              style={{ width: `${(step / totalSteps) * 100}%` }}
+            ></div>
+          </div>
         </div>
 
-        <img src={Group6} alt="koala bear face" className="mx-auto mb-2" />
-        <h2 className="text-dark text-lg xs:text-xl font-bold mb-1">Set your Clock-out Time</h2>
-        <p className="text-lightDark mb-4 text-sm">
+        <img src={Group6} alt="koala bear face" className="mx-auto mb-2 mt-8" />
+        <h2 className="text-dark text-lg xs:text-xl font-bold mb-1 mt-8">Set your Clock-out Time</h2>
+        <p className="text-lightDark mb-4 text-sm mt-2">
           When do you want to be reminded to finish work
         </p>
 
         {/* Time input section*/}
         <div className="flex flex-col items-center mb-6">
-          <div className="flex justify-center items-center gap-2 bg-gray-100 rounded-xl px-4 py-2 mb-2">
+          <div className="flex justify-center items-center gap-2 bg-gray-100 rounded-xl px-4 py-8 mb-2 text-3xl">
             {/* hour input */}
             <input
               type="text"
@@ -90,7 +94,7 @@ export function ClockOutModal({
           </div>
 
           {/* AM/PM toggle */}
-          <div className="flex mt-1 ">
+          <div className="flex mt-2 ">
             <Button
               variant={ampm === 'AM' ? 'default' : 'outline'}
               onClick={() => setAmpm('AM')}
@@ -102,7 +106,7 @@ export function ClockOutModal({
             <Button
               variant={ampm === 'PM' ? 'default' : 'outline'}
               onClick={() => setAmpm('PM')}
-              className={`absolute right-[5.5rem] md:right-[12.5rem] rounded-full px-8 py-1 md:px-10 transition-colors duration-200 ease-in-out font-thin cursor-pointer hover:bg-blue1 ${ampm === 'PM' ? 'bg-lightBlue text-dark font-bold shadow font-thin' : ''}`}
+              className={`absolute right-[5.5rem] md:right-[19.5rem] rounded-full px-8 py-1 md:px-10 transition-colors duration-200 ease-in-out font-thin cursor-pointer hover:bg-blue1 ${ampm === 'PM' ? 'bg-lightBlue text-dark font-bold shadow font-thin' : ''}`}
               type="button"
             >
               PM
@@ -123,7 +127,7 @@ export function ClockOutModal({
             variant="ghost"
             onClick={onNext}
             disabled={!clockOut.hour || !clockOut.minute}
-            className="w-1/2 md:w-[20%] bg-blue1 text-white xs:px-6 xs:py-2 text-base rounded-lg hover:bg-blue-600/80 transition duration-200 scale-100 ease-in-out shadow-md cursor-pointer"
+            className="w-1/2 md:w-[20%] bg-blue1 text-white xs:px-6 xs:py-2 text-base rounded-lg hover:bg-blue-900/80 transition duration-200 scale-100 ease-in-out shadow-md cursor-pointer"
           >
             Next
           </Button>

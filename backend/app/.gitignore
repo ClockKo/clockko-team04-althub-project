@@ -1,0 +1,6 @@
+#python -m venv clockkoenv
+#clockkoenv/Scripts/activate.bat
+#pip install -r requirements.txt
+
+clockkoenv/
+__pycache__

@@ -59,6 +59,8 @@ export function ReminderModal({
                 </div>
               </div>
               <Switch
+                role='switch'
+                aria-label='guided shutdown reminders'
                 checked={reminders.shutdown}
                 onCheckedChange={(v) => setReminders({ ...reminders, shutdown: v })}
                 className={`cursor-pointer !bg-lightGray !border-lightGray ${reminders.shutdown ? '!bg-blue1 !border-blue1' : '!bg-lightGray'} switch-bg !ring-0`}
@@ -73,6 +75,8 @@ export function ReminderModal({
                 </div>
               </div>
               <Switch
+                role='switch'
+                aria-label='work break reminders'
                 checked={reminders.break}
                 onCheckedChange={(v) => setReminders({ ...reminders, break: v })}
                 className={`cursor-pointer !bg-lightGray !border-lightGray ${reminders.break ? '!bg-blue1 !border-blue1' : '!bg-lightGray'} switch-bg !ring-0`}
@@ -85,6 +89,8 @@ export function ReminderModal({
                 <div className="text-xs text-gray-500">Get reminded about tasks and deadlines</div>
               </div>
               <Switch
+                role='switch'
+                aria-label='due tasks reminders'
                 checked={reminders.tasks}
                 onCheckedChange={(v) => setReminders({ ...reminders, tasks: v })}
                 className={`cursor-pointer !bg-lightGray !border-lightGray ${reminders.tasks ? '!bg-blue1 !border-blue1' : '!bg-lightGray'} switch-bg !ring-0`}

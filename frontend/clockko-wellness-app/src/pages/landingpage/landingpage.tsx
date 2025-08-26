@@ -274,7 +274,7 @@ export const LandingPage: React.FC = () => {
               {/* Community icons (You can swap for shadcn icons) */}
               <a href="#" className="text-blue-600"><img src={svg} alt="Discord" className="w-5 h-5 hover:transition duration-300 ease-in-out" /></a>
               <a href="#" className="text-blue-600"><img src={youtubelogo} alt="YouTube" className="w-5 h-5 hover:transition duration-300 ease-in-out" /></a>
-              <a href="#" className="text-blue-600"><img src={tiwtter} alt="Twitter" className="w-5 h-5 hover:transition duration-300 ease-in-out" /></a>
+              <a href="#" className="text-blue-600"><img src={twitter} alt="Twitter" className="w-5 h-5 hover:transition duration-300 ease-in-out" /></a>
               <a href="#" className="text-blue-600"><img src={thread} alt="Thread" className="w-5 h-5 hover:transition duration-300 ease-in-out" /></a>
             </div>
           </div>

@@ -2,9 +2,16 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import frame1 from '../../assets/images/frame1.png';
 
-const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+
+// Update the component's props to accept an optional background color
+type AuthLayoutProps = {
+  children: React.ReactNode;
+  bgColor?: string; // The '?' makes the prop optional
+};
+
+const AuthLayout: React.FC<AuthLayoutProps> = ({ children, bgColor = 'bg-white' }) => {
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className={`flex flex-col min-h-screen ${bgColor}`}>
       {/* Header with Logo */}
       <header className="p-4 sm:p-6">
         <Link to="/">

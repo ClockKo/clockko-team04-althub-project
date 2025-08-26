@@ -38,7 +38,7 @@ const SignUpPage: React.FC = () => {
   }
 
   return (
-    <AuthLayout>
+    <AuthLayout bgColor="bg-white">
       {/* Sign Up Card */}
 
       <div className="w-full max-w-md pb-4 bg-white rounded-lg ">
@@ -61,7 +61,7 @@ const SignUpPage: React.FC = () => {
 
           <Button
             type="submit"
-            className="w-full mt-4 justify-center rounded-md bg-[#34559e] px-8 py-3 text-lg font-semibold text-white shadow-sm hover:bg-indigo-500"
+            className="mt-4 justify-center rounded-md bg-[#34559e] px-8 py-3 text-lg font-semibold text-white shadow-sm hover:bg-blue1/80"
           >
             Send me a registration link
           </Button>

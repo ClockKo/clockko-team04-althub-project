@@ -7,7 +7,6 @@
 // import google from '../../assets/images/google.png'
 // import { Mail, LockKeyhole } from 'lucide-react'
 
-
 // export function OnboardingLoginPage() {
 //   const [email, setEmail] = useState<string>('')
 //   const [password, setPassword] = useState<string | number>('')
@@ -115,28 +114,28 @@
 //   )
 // }
 
-import { motion } from 'framer-motion';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
-import { Input } from '../../components/ui/input';
-import { Button } from '../../components/ui/button';
-import frame1 from '../../assets/images/frame1.png';
-import google from '../../assets/images/google.png';
-import { Mail, LockKeyhole } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { useNavigate } from 'react-router-dom'
+import { Input } from '../../components/ui/input'
+import { Button } from '../../components/ui/button'
+import google from '../../assets/images/google.png'
+import { Mail, LockKeyhole } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import AuthLayout from './AuthLayout'
 
 // 1. Define the validation schema and TypeScript type
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email' }),
   password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
-});
+})
 
-type LoginFormInputs = z.infer<typeof loginSchema>;
+type LoginFormInputs = z.infer<typeof loginSchema>
 
 export function OnboardingLoginPage() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   // 2. Set up react-hook-form
   const {
@@ -145,121 +144,105 @@ export function OnboardingLoginPage() {
     formState: { errors },
   } = useForm<LoginFormInputs>({
     resolver: zodResolver(loginSchema),
-  });
+  })
   // 3. This function will run on successful form submission
   const handleLoginSubmit = (data: LoginFormInputs) => {
-    console.log('Login data:', data);
-    navigate('/dashboard');
-  };
+    console.log('Login data:', data)
+    navigate('/dashboard')
+  }
 
   return (
-    <motion.div
-      className="min-h-screen bg-gray-50 flex flex-col"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      {/* Header section */}
-      <header className="flex justify-between items-center px-4 py-4 md:px-12 md:py-8">
-        <div className="text-2xl font-bold text-blue1">
-          <img src={frame1} alt="Logo" className="w-20 md:w-30" />
-        </div>
-        <div className="flex gap-2 text-[12px] md:gap-4 md:text-[14px]">
-          <Button
-            variant="outline"
-            className="border-blue1 text-blue1 px-6 rounded-[50px] md:px-10"
-          >
-            Log In
-          </Button>
+    <AuthLayout bgColor="bg-gray-50">
+      <motion.div className="flex flex-col" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        {/* Login card */}
+        <div className="flex-1 flex items-center justify-center flex-col">
+          <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-xs md:max-w-md md:p-10">
+            <h1 className="text-2xl font-bold mb-6 text-center">Welcome to ClockKo!</h1>
 
-          <Link to="/signup">
-          <Button className="bg-blue1 text-white px-6 rounded-[50px] md:px-10">
-            Sign Up
-          </Button>
-          </Link>
-        </div>
-      </header>
-
-      {/* Login card */}
-      <div className="flex-1 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-xs md:max-w-md md:p-10">
-          <h1 className="text-2xl font-bold mb-6 text-center">Welcome to ClockKo!</h1>
-
-          {/* 4. Connect the form to handleSubmit */}
-          <motion.form
-            className="space-y-4"
-            onSubmit={handleSubmit(handleLoginSubmit)}
-          >
-            <div className="relative">
-              <label htmlFor="email" className="text-[12px] block mb-1">
-                Email
-              </label>
+            {/* 4. Connect the form to handleSubmit */}
+            <motion.form className="space-y-4" onSubmit={handleSubmit(handleLoginSubmit)}>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                  <Mail className="h-4 w-4 text-gray-400" />
-                </span>
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  className={`pl-10 text-lightDark placeholder:text-lightDark placeholder:opacity-50 placeholder:font-light placeholder:text-[12px] ${errors.email ? 'border-red-500' : ''}`}
-                  // 5. Register the input field
-                  {...register('email')}
-                />
+                <label htmlFor="email" className="text-[12px] block mb-1 text-left">
+                  Email
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                    <Mail className="h-4 w-4 text-gray-400" />
+                  </span>
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    className={`pl-10 text-lightDark placeholder:text-lightDark placeholder:opacity-50 placeholder:font-light placeholder:text-[12px] ${errors.email ? 'border-red-500' : ''}`}
+                    // 5. Register the input field
+                    {...register('email')}
+                  />
+                </div>
+                {/* 6. Display validation error */}
+                {errors.email && (
+                  <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+                )}
               </div>
-              {/* 6. Display validation error */}
-              {errors.email && (
-                <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
-              )}
-            </div>
 
-            <div className="relative">
-              <label htmlFor="password" className="text-[12px] block mb-1">
-                Password
-              </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                  <LockKeyhole className="h-4 w-4 text-gray-400" />
-                </span>
-                <Input
-                  type="password"
-                  placeholder="Enter your password"
-                  className={`pl-10 text-lightDark placeholder:text-lightDark placeholder:opacity-50 placeholder:font-light placeholder:text-[12px] ${errors.password ? 'border-red-500' : ''}`}
-                  // 5. Register the input field
-                  {...register('password')}
-                />
-                <a
-                  href="#forgot-password"
-                  className="text-xs text-blue1 absolute right-2 top-1/2 -translate-y-1/2"
+                <label htmlFor="password" className="text-[12px] block mb-1 text-left">
+                  Password
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                    <LockKeyhole className="h-4 w-4 text-gray-400" />
+                  </span>
+                  <Input
+                    type="password"
+                    placeholder="Enter your password"
+                    className={`pl-10 text-lightDark placeholder:text-lightDark placeholder:opacity-50 placeholder:font-light placeholder:text-[12px] ${errors.password ? 'border-red-500' : ''}`}
+                    // 5. Register the input field
+                    {...register('password')}
+                  />
+                  <a
+                    href="#forgot-password"
+                    className="text-xs text-blue1 absolute right-2 top-1/2 -translate-y-1/2"
+                  >
+                    Forgot Password?
+                  </a>
+                </div>
+                {/* 6. Display validation error */}
+                {errors.password && (
+                  <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2 pt-2">
+                <Button
+                  type="submit"
+                  className="shadow-lg w-full bg-blue1 text-white md:text-lg transition hover:-translate-y-1 hover:scale-100 hover:bg-blue1/80"
                 >
-                  Forgot Password?
-                </a>
+                  Log In
+                </Button>
+                <Button
+                  variant="outline"
+                  type="button" // Set type to button to prevent form submission
+                  className="w-full flex items-center justify-center mt-2 text-base md:text-lg transition hover:-translate-y-1 hover:scale-100"
+                >
+                  <img src={google} alt="Google logo" className="h-5 w-5 mr-3" />
+                  <span className="text-lightDark text-[12px] md:text-sm">Sign in with Google</span>
+                </Button>
               </div>
-              {/* 6. Display validation error */}
-              {errors.password && (
-                <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2 pt-2">
+            </motion.form>
+          </div>
+          {/* Sign Up Link */}
+          <p className="mt-16 text-center text-sm text-gray-600">
+            Don't have an account?{' '}
+            <Link to="/signup" className='ml-8'>
               <Button
                 type="submit"
-                className="shadow-lg w-full bg-blue1 text-white md:text-lg transition hover:-translate-y-1 hover:scale-100 hover:bg-blue1/80"
+                className="shadow-lg bg-blue1 text-white md:text-lg transition hover:-translate-y-1 hover:scale-100 hover:bg-blue1/80"
               >
-                Log In
+                Sign Up
               </Button>
-              <Button
-                variant="outline"
-                type="button" // Set type to button to prevent form submission
-                className="w-full flex items-center justify-center mt-2 text-base md:text-lg transition hover:-translate-y-1 hover:scale-100"
-              >
-                <img src={google} alt="Google logo" className="h-5 w-5 mr-3" />
-                <span className="text-lightDark text-[12px] md:text-sm">
-                  Sign in with Google
-                </span>
-              </Button>
-            </div>
-          </motion.form>
+            </Link>
+          </p>
         </div>
-      </div>
-    </motion.div>
-  );
+      </motion.div>
+    </AuthLayout>
+  )
 }

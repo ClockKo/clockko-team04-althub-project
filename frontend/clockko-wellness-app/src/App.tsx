@@ -4,7 +4,7 @@ import OnboardingRoutes from "./features/onboarding/routes/onboardingRoutes"
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-background p-8">
+      <div className="min-h-screen bg-background">
         <OnboardingRoutes />
       </div>
     </BrowserRouter>

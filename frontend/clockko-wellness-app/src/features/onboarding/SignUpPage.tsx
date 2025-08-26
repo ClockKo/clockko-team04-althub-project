@@ -41,19 +41,19 @@ const SignUpPage: React.FC = () => {
     <AuthLayout>
       {/* Sign Up Card */}
 
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md pb-4 bg-white rounded-lg ">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Sign up for Free</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-4">
           <div>
-            <label htmlFor="email" className="sr-only">
+            <label htmlFor="email" className="text-l font-medium text-gray-700 mb-1 block text-left">
               E-mail
             </label>
             <Input
               id="email"
               type="email"
               placeholder="Your Work E-mail"
-              className={`w-full text-center rounded-md border text-lg p-3 ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+              className={`w-full text-left rounded-md border text-lg p-3 ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
               {...register('email')}
             />
             {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>}
@@ -61,13 +61,15 @@ const SignUpPage: React.FC = () => {
 
           <Button
             type="submit"
-            className="w-full justify-center rounded-md bg-indigo-600 px-8 py-3 text-lg font-semibold text-white shadow-sm hover:bg-indigo-500"
+            className="w-full mt-4 justify-center rounded-md bg-[#34559e] px-8 py-3 text-lg font-semibold text-white shadow-sm hover:bg-indigo-500"
           >
             Send me a registration link
           </Button>
         </form>
 
-        <p className="mt-6 text-xs text-gray-500">
+        
+      </div>
+      <p className="mt-6 text-xs text-gray-500 pt-20">
           By signing in, you agree to ClockKo's{' '}
           <Link to="/terms" className="underline hover:text-gray-700">
             Terms of Service
@@ -78,7 +80,6 @@ const SignUpPage: React.FC = () => {
           </Link>
           .
         </p>
-      </div>
     </AuthLayout>
   )
 }

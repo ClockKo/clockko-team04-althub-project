@@ -21,7 +21,7 @@ const CheckInboxPage: React.FC = () => {
           Please click the link to confirm your email address.
         </p>
 
-        <div className="mt-8 text-xs text-gray-500">
+        <div className="mt-8 text-xs text-gray-500 pt-20">
           <p>Can't see the e-mail? Please check the spam folder.</p>
           <p>
             Wrong e-mail?{' '}

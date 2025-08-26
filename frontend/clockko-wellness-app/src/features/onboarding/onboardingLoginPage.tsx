@@ -146,11 +146,9 @@ export function OnboardingLoginPage() {
   } = useForm<LoginFormInputs>({
     resolver: zodResolver(loginSchema),
   });
-
-  // 3. This function now receives typed and validated data
+  // 3. This function will run on successful form submission
   const handleLoginSubmit = (data: LoginFormInputs) => {
     console.log('Login data:', data);
-    // Handle login logic here (e.g., send to API)
     navigate('/dashboard');
   };
 
@@ -160,7 +158,7 @@ export function OnboardingLoginPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      {/* Header section (remains the same) */}
+      {/* Header section */}
       <header className="flex justify-between items-center px-4 py-4 md:px-12 md:py-8">
         <div className="text-2xl font-bold text-blue1">
           <img src={frame1} alt="Logo" className="w-20 md:w-30" />

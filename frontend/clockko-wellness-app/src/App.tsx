@@ -10,10 +10,14 @@ function App() {
         <Route path="/onboarding/*" element={<OnboardingRoutes />} />
         {/* Add other routes like login, dashboard, etc. */}
         <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/onboarding" />} />
       </Routes>
     </BrowserRouter>
   );
 }
 
 export default App;
+
+
+
 

@@ -13,7 +13,7 @@ import lines from "../../assets/images/lines.png"
 import KoPoses from "../../assets/images/KoPoses.png"
 import svg from "../../assets/images/SVG.png"
 import youtubelogo from "../../assets/images/YoutubeLogo.png"
-import tiwtter from "../../assets/images/twitter.png"
+import twitter from "../../assets/images/twitter.png"
 import thread from "../../assets/images/thread.png"
 
 

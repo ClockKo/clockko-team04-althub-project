@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import frame1 from '../../assets/images/frame1.png'
 import google from '../../assets/images/google.png'
 import { Mail, LockKeyhole } from 'lucide-react'
@@ -28,7 +28,9 @@ export function OnboardingLoginPage() {
       <header className="flex justify-between items-center px-4 py-4 md:px-12 md:py-8">
         <div className="text-2xl font-bold text-blue1">
           {/* logo */}
-          <img src={frame1} alt="Logo" className="w-20 md:w-30" />
+          <Link to="/">
+            <img src={frame1} alt="Logo" className="w-20 md:w-30" />
+          </Link>
         </div>
 
         {/* login/sign up button */}

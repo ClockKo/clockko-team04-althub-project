@@ -11,9 +11,9 @@ import framer3 from "../../assets/images/frame3.png"
 import framer5 from "../../assets/images/frame5.png"
 import lines from "../../assets/images/lines.png"
 import KoPoses from "../../assets/images/KoPoses.png"
-import svg from "../../assets/images/SVG.png"
+import instagram from "../../assets/images/SVG.png"
 import youtubelogo from "../../assets/images/YoutubeLogo.png"
-import tiwtter from "../../assets/images/twitter.png"
+import twitter from "../../assets/images/twitter.png"
 import thread from "../../assets/images/thread.png"
 
 
@@ -119,7 +119,6 @@ export const LandingPage: React.FC = () => {
             className="w-full max-w-md rounded-xl shadow-lg bg-white border md:translate-x-50"
           >
             <div className="hidden md:block absolute top-[-11rem] z-0 right-0 rounded-[50%] rounded-right-none overflow-hidden bg-powderBlue w-[40vw] h-[74vh] left-[8rem]">
-                circles
             </div>
             <img
               src={TaskExapanded}
@@ -272,9 +271,9 @@ export const LandingPage: React.FC = () => {
             <h3 className="font-bold mb-2 text-sm">JOIN OUR COMMUNITY</h3>
             <div className="flex gap-2 justify-center md:justify-start">
               {/* Community icons (You can swap for shadcn icons) */}
-              <a href="#" className="text-blue-600"><img src={svg} alt="Discord" className="w-5 h-5 hover:transition duration-300 ease-in-out" /></a>
+              <a href="#" className="text-blue-600"><img src={instagram} alt="Instagram" className="w-5 h-5 hover:transition duration-300 ease-in-out" /></a>
               <a href="#" className="text-blue-600"><img src={youtubelogo} alt="YouTube" className="w-5 h-5 hover:transition duration-300 ease-in-out" /></a>
-              <a href="#" className="text-blue-600"><img src={tiwtter} alt="Twitter" className="w-5 h-5 hover:transition duration-300 ease-in-out" /></a>
+              <a href="#" className="text-blue-600"><img src={twitter} alt="Twitter" className="w-5 h-5 hover:transition duration-300 ease-in-out" /></a>
               <a href="#" className="text-blue-600"><img src={thread} alt="Thread" className="w-5 h-5 hover:transition duration-300 ease-in-out" /></a>
             </div>
           </div>

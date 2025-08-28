@@ -180,6 +180,16 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "s3:PutObject",
       "s3:DeleteObject",
       "s3:ListBucket",
+      # Bucket management (to create/manage frontend site bucket)
+      "s3:CreateBucket",
+      "s3:DeleteBucket",
+      "s3:PutBucketPolicy",
+      "s3:PutBucketAcl",
+      "s3:PutBucketTagging",
+      "s3:PutBucketOwnershipControls",
+      "s3:PutBucketPublicAccessBlock",
+      "s3:PutBucketWebsite",
+      "s3:PutBucketVersioning",
       "s3:GetBucketLocation",
       "s3:GetBucketVersioning",
       "s3:GetEncryptionConfiguration",
@@ -191,6 +201,8 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "s3:GetReplicationConfiguration",
       "s3:GetBucketObjectLockConfiguration",
       "s3:GetBucketTagging",
+      "s3:GetBucketPublicAccessBlock",
+      "s3:DeleteBucketPolicy",
 
       # --- Secrets Manager (read, state lookups)
       "secretsmanager:GetSecretValue",

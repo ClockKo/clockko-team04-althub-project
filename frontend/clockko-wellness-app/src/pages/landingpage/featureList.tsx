@@ -1,1 +1,0 @@
-/* FeatureList.tsx     // Component for listing features (optional)*/ 

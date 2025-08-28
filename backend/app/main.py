@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, timetracker
+from app.api import auth, timetracker, tasks, users
 from app.core.database import Base, engine
 
 # Create all tables (if using without Alembic migrations)
@@ -24,20 +24,24 @@ app.add_middleware(
 
 # Include API routers
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
-app.include_router(timetracker.router, prefix="", tags=["time-log"] )
-# app.include_router(user.router, prefix="/user", tags=["User"])
-# app.include_router(task.router, prefix="/api/tasks", tags=["Tasks"])
+app.include_router(timetracker.router, prefix="", tags=["time-log"])
+app.include_router(users.router, prefix="/api/users", tags=["User Management"])
+app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
 
 # If you have a reminder thread, import and start it here
 # from app.reminders import start_reminder_thread
 # start_reminder_thread()
 
 # Optional: Health check route
+
+
 @app.get("/")
 def read_root():
     return {"message": "ClockKo API is running"}
 
 # K8s/ECS-friendly health endpoints
+
+
 @app.get("/health")
 @app.get("/healthz")
 def health():

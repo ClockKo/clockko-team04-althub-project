@@ -1,6 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { OnboardingLoginPage } from '../onboardingLoginPage'
-import { DashboardLayout } from '../../dashboard/dashboardLayout'
+import { DashboardLayout } from '../../../pages/dashboard/dashboard'
 import { Navigate } from 'react-router-dom'
 import CheckInboxPage from '../../auth/CheckInboxPage'
 import CreateAccountPage from '../../auth/CreateAccountPage'
@@ -10,13 +10,9 @@ import ResetPasswordPage from '../../auth/ResetPasswordPage';
 export default function OnboardingRoutes() {
   return (
     <Routes>
-      <Route path="/onboarding/login" element={<OnboardingLoginPage />} />
-      <Route path="/dashboard" element={<DashboardLayout />} />
-      <Route path="/" element={<Navigate to="/onboarding/login" />} />
-      <Route path="/check-inbox" element={<CheckInboxPage />} />
-      <Route path="/create-account" element={<CreateAccountPage />} />
-      <Route path="/signin" element={<SignInPage />} />
-      <Route path="/forgot-password" element={<ResetPasswordPage />} />
+      <Route path="login" element={<OnboardingLoginPage />} />
+      <Route path="dashboard" element={<DashboardLayout />} />
+      <Route path="/" element={<Navigate to="login" />} />
     </Routes>
   )
 }

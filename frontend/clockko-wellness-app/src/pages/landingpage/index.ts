@@ -1,8 +1,3 @@
-export * from './featureList'
-export * from './hero'
-export * from './testimonalList'
+
 export * from './landingpage'
-export * from './test/featureList.test'
-export * from './test/hero.test'
-export * from './test/testimonalList.test'
 export * from './test/landingpage.test'

@@ -124,7 +124,7 @@ import { Button } from '../../components/ui/button'
 import google from '../../assets/images/google.png'
 import { Mail, LockKeyhole } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import AuthLayout from './AuthLayout'
+import AuthLayout from '../auth/TestAuthLayout'
 
 // 1. Define the validation schema and TypeScript type
 const loginSchema = z.object({

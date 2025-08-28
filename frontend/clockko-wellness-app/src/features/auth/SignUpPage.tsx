@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
-import AuthLayout from './AuthLayout'
+import TestAuthLayout from './TestAuthLayout'
 
 // 1. Define the validation schema for the sign-up form
 const signUpSchema = z.object({
@@ -38,7 +38,7 @@ const SignUpPage: React.FC = () => {
   }
 
   return (
-    <AuthLayout bgColor="bg-white">
+    <TestAuthLayout bgColor="bg-white">
       {/* Sign Up Card */}
 
       <div className="w-full max-w-md pb-4 bg-white rounded-lg ">
@@ -80,7 +80,7 @@ const SignUpPage: React.FC = () => {
           </Link>
           .
         </p>
-    </AuthLayout>
+    </TestAuthLayout>
   )
 }
 

@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import AuthLayout from './AuthLayout'
+import AuthLayout from './TestAuthLayout'
 
 const CheckInboxPage: React.FC = () => {
   // The useLocation hook allows us to access the state passed during navigation

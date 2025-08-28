@@ -2,8 +2,8 @@ import { Route, Routes } from 'react-router-dom'
 import { OnboardingLoginPage } from '../onboardingLoginPage'
 import { DashboardLayout } from '../../dashboard/dashboardLayout'
 import { Navigate } from 'react-router-dom'
-import SignUpPage from '../SignUpPage'
-import CheckInboxPage from '../CheckInboxPage'
+import SignUpPage from '../../auth/SignUpPage'
+import CheckInboxPage from '../../auth/CheckInboxPage'
 
 export default function OnboardingRoutes() {
   return (

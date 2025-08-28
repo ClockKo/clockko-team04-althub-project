@@ -9,7 +9,7 @@ type AuthLayoutProps = {
   bgColor?: string; // The '?' makes the prop optional
 };
 
-const AuthLayout: React.FC<AuthLayoutProps> = ({ children, bgColor = 'bg-white' }) => {
+const TestAuthLayout: React.FC<AuthLayoutProps> = ({ children, bgColor = 'bg-white' }) => {
   return (
     <div className={`flex flex-col min-h-screen ${bgColor}`}>
       {/* Header with Logo */}
@@ -27,4 +27,4 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children, bgColor = 'bg-white' 
   );
 };
 
-export default AuthLayout;
+export default TestAuthLayout;

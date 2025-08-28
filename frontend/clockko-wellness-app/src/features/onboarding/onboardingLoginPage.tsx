@@ -124,7 +124,7 @@ import { Button } from '../../components/ui/button'
 import google from '../../assets/images/google.png'
 import { Mail, LockKeyhole } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import AuthLayout from '../auth/TestAuthLayout'
+import TestAuthLayout from '../auth/TestAuthLayout'
 
 // 1. Define the validation schema and TypeScript type
 const loginSchema = z.object({
@@ -152,7 +152,7 @@ export function OnboardingLoginPage() {
   }
 
   return (
-    <AuthLayout bgColor="bg-gray-50">
+    <TestAuthLayout bgColor="bg-gray-50">
       <motion.div className="flex flex-col" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         {/* Login card */}
         <div className="flex-1 flex items-center justify-center flex-col">
@@ -232,7 +232,7 @@ export function OnboardingLoginPage() {
           {/* Sign Up Link */}
           <p className="mt-16 text-center text-sm text-gray-600">
             Don't have an account?{' '}
-            <Link to="/signup" className='ml-8'>
+            <Link to="/create-account" className='ml-8'>
               <Button
                 type="submit"
                 className="shadow-lg bg-blue1 text-white md:text-lg transition hover:-translate-y-1 hover:scale-100 hover:bg-blue1/80"
@@ -243,6 +243,6 @@ export function OnboardingLoginPage() {
           </p>
         </div>
       </motion.div>
-    </AuthLayout>
+    </TestAuthLayout>
   )
 }

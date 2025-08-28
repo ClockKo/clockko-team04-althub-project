@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import AuthLayout from './TestAuthLayout'
+import TestAuthLayout from './TestAuthLayout'
 
 const CheckInboxPage: React.FC = () => {
   // The useLocation hook allows us to access the state passed during navigation
@@ -8,7 +8,7 @@ const CheckInboxPage: React.FC = () => {
   const email = location.state?.email || 'your e-mail' // Get the email, with a fallback
 
   return (
-    <AuthLayout>
+    <TestAuthLayout>
       {/* Main Content */}
 
       <div className="w-full max-w-lg">
@@ -32,7 +32,7 @@ const CheckInboxPage: React.FC = () => {
           </p>
         </div>
       </div>
-    </AuthLayout>
+    </TestAuthLayout>
   )
 }
 

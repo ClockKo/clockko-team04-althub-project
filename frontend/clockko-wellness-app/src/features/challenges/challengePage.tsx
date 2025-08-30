@@ -187,14 +187,16 @@ function LeaderboardSkeleton() {
 function StatCard({ icon, value, label, color }: { icon: React.ReactNode; value: React.ReactNode; label: string; color?: string }) {
   return (
     <motion.div
-      className={cn("rounded-2xl bg-white p-4 flex flex-col gap-2 items-center shadow", color)}
+      className={cn("rounded-2xl bg-white p-4 flex flex-row gap-2 items-center shadow", color)}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <div className="text-3xl">{icon}</div>
-      <div className="font-bold text-2xl">{value}</div>
-      <div className="text-sm text-gray-500">{label}</div>
+      <div className="mx-4">
+        <div className="font-bold text-2xl">{value}</div>
+        <div className="text-sm text-gray-500">{label}</div>
+      </div>
     </motion.div>
   );
 }
@@ -319,7 +321,7 @@ export default function ChallengesPage() {
   }
 
   return (
-    <div className="min-h-screen w-screen bg-gray-50 md:px-2 xs:px-4 py-2 lg:w-[96vw] max-w-8xl">
+    <div className="min-h-screen w-screen bg-gray-50 md:px-2 xs:px-4 py-2 lg:w-[96vw] max-w-[1440px]">
       <div className="mb-6 p-8">
         <h1 className="text-2xl font-regular mb-2">Challenges & Rewards</h1>
         <div className="grid lg:grid-cols-4 xs:grid-cols-2 gap-4 mb-4 mt-8">

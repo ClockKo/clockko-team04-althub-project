@@ -60,3 +60,6 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     verification_token = Column(String, unique=True, nullable=True)
 
+    # Relationship
+    settings = relationship("UserSettings", back_populates="user", uselist=False)
+

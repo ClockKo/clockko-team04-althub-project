@@ -15,7 +15,9 @@ terraform {
 
 provider "aws" {
   region  = var.aws_region
-  profile = var.iam_profile
+
+  # Use profile locally, ignore in CI/CD
+  profile = length(trimspace(var.aws_profile)) > 0 ? var.aws_profile : null
 }
 
 data "aws_caller_identity" "current" {}

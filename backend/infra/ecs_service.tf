@@ -20,8 +20,9 @@ resource "aws_ecs_service" "backend" {
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
 
-  # Prevent Terraform from forcing redeployment every time
-  lifecycle {
-    ignore_changes = [task_definition]
+  # Safer deploys: enable circuit breaker to auto-rollback on failure
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
   }
 }

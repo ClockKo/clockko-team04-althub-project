@@ -8,3 +8,4 @@ override.tf.json
 terraform.tfvars
 terraform.tfvars.json
 outputs.json
+tfplan

@@ -8,9 +8,10 @@ variable "project_name" {
   default = "clockko"
 }
 
-variable "iam_profile" {
-  type    = string
-  default = "clockko-cloud-engineer"
+variable "aws_profile" {
+  description = "AWS profile to use locally (ignored in GitHub Actions OIDC)"
+  type        = string
+  default     = ""   # empty by default so CI won't use it
 }
 
 variable "create_rds" {
@@ -72,7 +73,6 @@ variable "task_memory" {
 }
 
 variable "image_tag" {
-  description = "Docker image tag for ECS (defaults to latest)"
+  description = "Docker image tag for ECS (must be provided by CI/CD)"
   type        = string
-  default     = "latest"
 }

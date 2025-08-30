@@ -1,0 +1,44 @@
+flowchart TD
+  %% High-level CI/CD and runtime architecture (No ALB in current deployment)
+
+  subgraph GH[GitHub]
+    A[Push to main / Workflow dispatch]
+    B[GitHub Actions\nDeploy Backend to ECS]
+  end
+  A --> B
+
+  subgraph IAMG[AWS IAM]
+    ROLE[OIDC-assumable Role\narn:aws:iam::474422890464:role/clockko-gha-role]
+  end
+
+  B -- OIDC JWT --> ROLE
+
+  B -- Build & tag image --> DOCKER[Docker Build]
+  DOCKER -- Push :immutable and :latest --> ECR[ECR Repository\nclockko-backend (eu-west-1)]
+
+  B -- terraform apply\nTF_VAR_image_tag --> TF[Terraform (backend/infra)]
+  TF -- Register/Deregister --> TDEF[ECS Task Definition]
+  TF -- Update Service (circuit breaker on) --> SERVICE[ECS Service (Fargate)]
+
+  subgraph VPC[VPC (eu-west-1)]
+    direction LR
+    IGW[Internet Gateway]
+    subgraph PUB[Public Subnets]
+      NAT[NAT Gateway]
+      %% No ALB due to account restrictions
+    end
+    subgraph PRIV[Private Subnets]
+      TASKS[ECS Tasks (Fargate)\nFastAPI container]
+    end
+    PUB --- IGW
+    PUB --> NAT
+    PRIV --> NAT
+  end
+
+  SERVICE --> TASKS
+  TASKS -->|Pull image| ECR
+  TASKS -->|Get env/secrets| SECRETS[AWS Secrets Manager]
+  TASKS -->|DB connections| RDS[(RDS PostgreSQL)]
+  TASKS -->|App/infra logs| LOGS[CloudWatch Logs]
+
+  classDef ecs fill:#e8f4ff,stroke:#1e90ff,color:#003a66;

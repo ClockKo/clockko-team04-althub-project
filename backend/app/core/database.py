@@ -37,17 +37,32 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Create Base class for models
 Base = declarative_base()
 
+
 def get_db():
     """
     Dependency to get database session
     Yields a database session and ensures it's closed after use
     """
-    
+
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+
+def get_db_session():
+    """
+    Utility to create a new Session for use in Celery tasks or other contexts.
+    Ensures fresh session for concurrency safety.
+    """
+    db = SessionLocal()
+    try:
+        db.begin()
+        yield db
+    finally:
+        db.close()
+
 
 def get_database_type():
     """

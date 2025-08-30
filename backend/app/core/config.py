@@ -1,5 +1,4 @@
 import os
-import boto3
 import json
 from dotenv import load_dotenv
 

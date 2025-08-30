@@ -62,7 +62,7 @@ export default function MainLayout() {
                     <SidebarMenuButton
                       asChild
                       isActive={isActive}
-                      className={isActive ? "bg-blue-50 text-blue-700 border-r-2 border-blue-700" : "hover:bg-gray-50"}
+                      className={isActive ? "bg-lightBlue! text-blue1! border-r-2 border-blue-700" : "hover:bg-gray-50"}
                     >
                       <Link to={item.path}>
                         <Icon className="h-5 w-5" />

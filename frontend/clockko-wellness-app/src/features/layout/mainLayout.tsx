@@ -43,7 +43,7 @@ export default function MainLayout() {
           <SidebarHeader className="p-4">
             <div className="flex items-center justify-between">
               <div className="">
-                <img src={frame1} alt="Frame" className="w-32 h-8" />
+                <img src={frame1} alt="ClockKo Wellness App Logo" className="w-32 h-8" />
               </div>
               <SidebarTrigger className="h-6 w-6 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
                 <X className="h-4 w-4" />

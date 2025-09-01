@@ -271,13 +271,14 @@ function ChallengeCard({
 function Leaderboard({ leaders }: { leaders: Leader[] }) {
   return (
     <motion.div
-      className="rounded-2xl bg-white p-4 shadow lg:max-w-lg"
+      className="rounded-2xl  p-4 lg:max-w-lg lg:bg-white lg:rounded-2xl lg:shadow"
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <div className="font-semibold text-lg mb-2 text-center">This Week's Leaders</div>
-      <div>
+      <div className="px-[1.5rem] bg-white rounded-2xl shadow p-4 lg:bg-transparent lg:rounded-none lg:shadow-none
+      ">
         {leaders.map((l) => (
           <div
             key={l.rank}
@@ -324,7 +325,7 @@ export default function ChallengesPage() {
     <div className="min-h-screen w-screen bg-gray-50 md:px-2 xs:px-4 py-2 lg:w-[96vw] max-w-[1440px]">
       <div className="mb-6 p-8">
         <h1 className="text-2xl font-regular mb-2">Challenges & Rewards</h1>
-        <div className="grid lg:grid-cols-4 xs:grid-cols-2 gap-4 mb-4 mt-8">
+        <div className="grid lg:grid-cols-4 sm:grid-cols-2 gap-4 mb-4 mt-8">
           <StatCard
             icon={<img src={greenlight} alt="green light icon" />}
             value={statsLoading ? "..." : displayStats.totalPoints}
@@ -352,7 +353,7 @@ export default function ChallengesPage() {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="text-center lg:text-left">
+        <div className="text-center lg:text-left px-[1.5rem]">
           <div className="font-semibold text-lg mb-2 text-center lg:text-left lg:mt-[-2rem]">This Week's Challenges</div>
           {challengesLoading ? (
             <>

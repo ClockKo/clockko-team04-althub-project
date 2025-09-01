@@ -9,7 +9,7 @@ import { AvatarModal } from "./modals/avatarModal";
 import { ReminderModal } from "./modals/reminderModal";
 
 export function OnboardingFlow() {
-  const [step, setStep] = useState(1); // 1: Welcome, 2: Work days...
+  const [step, setStep] = useState(0); // 0: Welcome, 1: Work days...
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [clockOut, setClockOut] = useState({ hour: '', minute: '' });
   const [ampm, setAmpm] = useState<'AM' | 'PM'>('PM');

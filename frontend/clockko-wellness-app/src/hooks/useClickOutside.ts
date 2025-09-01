@@ -1,6 +1,6 @@
 // This logic was adapted from this devto post https://dev.to/brdnicolas/click-outside-magic-a-new-custom-hook-4np4
 
-import{ useEffect, type RefObject } from 'react';
+import { useEffect, type RefObject } from 'react';
 
 // Custom hook to detect clicks/touches outside a referenced element
 export const useClickOutside = (

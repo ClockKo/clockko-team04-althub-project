@@ -6,7 +6,7 @@ export default function OnboardingRoutes() {
   return (
     <Routes>
       <Route path="dashboard" element={<DashboardLayout />} />
-      <Route path="/" element={<Navigate to="login" />} />
+      <Route path="/" element={<Navigate to="dashboard" />} />
     </Routes>
   )
 }

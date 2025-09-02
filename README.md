@@ -2,7 +2,7 @@
 
 **Team 04 - AltHub 3.0 Project**
 
-ClockKo is a comprehensive wellness-focused productivity web application designed for remote workers. It combines time tracking, task management, wellness monitoring, and gamification to promote healthy and effective work habits.
+ClockKo is a comprehensive wellness-driven productivity web application designed for remote workers. It combines time tracking, task management, wellness monitoring, and gamification to promote healthy and effective work habits.
 
 ---
 

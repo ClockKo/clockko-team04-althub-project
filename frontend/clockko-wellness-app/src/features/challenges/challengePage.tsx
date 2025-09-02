@@ -277,8 +277,7 @@ function Leaderboard({ leaders }: { leaders: Leader[] }) {
       transition={{ duration: 0.3 }}
     >
       <div className="font-semibold text-lg mb-2 text-center">This Week's Leaders</div>
-      <div className="px-[1.5rem] bg-white rounded-2xl shadow p-4 lg:bg-transparent lg:rounded-none lg:shadow-none
-      ">
+      <div className="px-[1.5rem] bg-white rounded-2xl shadow p-4 lg:bg-transparent lg:rounded-none lg:shadow-none">
         {leaders.map((l) => (
           <div
             key={l.rank}

@@ -85,15 +85,15 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
         )}
       </div>
 
-      <p className="text-sm text-gray-500 rounded-full bg-amber-200 w-fit py-0.5 px-2">
-        {task.tags
-          ? task.tags.map((tag) => (
-              <Badge key={tag} className="mr-1">
-                {tag}
-              </Badge>
-            ))
-          : null}
-      </p>
+      {Array.isArray(task.tags) && task.tags.length > 0 && (
+        <p className="text-sm text-gray-500 rounded-full bg-amber-200 w-fit py-0.5 px-2">
+          {task.tags.map((tag) => (
+            <Badge key={tag} className="mr-1">
+              {tag}
+            </Badge>
+          ))}
+        </p>
+      )}
 
       <EditTaskModal
         isOpen={isEditOpen}

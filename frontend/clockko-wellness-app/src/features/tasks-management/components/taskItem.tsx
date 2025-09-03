@@ -1,11 +1,11 @@
 /*TaskItem.tsx                # Individual task component with timer*/
 import React, { useRef } from 'react'
-import type { Task } from '../../../types'
-import { Checkbox } from '../../../components/ui/checkbox'
+import type { Task } from '@/types'
+import { Checkbox } from '@/components/ui/checkbox'
 import { MdDelete, MdEdit, MdMoreVert } from 'react-icons/md'
-import { useClickOutside } from '../../../hooks/useClickOutside'
-import { Button } from '../../../components/ui/button'
-import { Badge } from '../../../components/ui/badge'
+import { useClickOutside } from '@/hooks/useClickOutside'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import EditTaskModal from './EditTaskModal'
 import { useDeleteTask, useUpdateTask } from '../hooks/useTasks'
 

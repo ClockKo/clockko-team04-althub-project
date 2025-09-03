@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import type { Task } from '../../../types'
+import type { Task } from '@/types'
 import TaskList from './taskList'
-import { Collapsible, CollapsibleContent } from '../../../components/ui/collapsible'
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
 import CollapsibleHeader from './CollapsibleHeader'
 import clsx from 'clsx'
 

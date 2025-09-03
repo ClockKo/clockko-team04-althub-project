@@ -1,14 +1,14 @@
 /* TaskTrackerFeature.tsx          # Top-level feature entry point*/
 import React, { useState } from 'react'
-import { Button } from '../../components/ui/button'
+import { Button } from '@/components/ui/button'
 import TaskTrackerPanel from './components/taskTrackerPanel'
 import TabsUnderline from './components/TabsUnderline'
-import ListIcon from '../../components/Icons/ListIcon'
-import PlusIcon from '../../components/Icons/PlusIcon'
+import ListIcon from '@/components/Icons/ListIcon'
+import PlusIcon from '@/components/Icons/PlusIcon'
 import AddTaskModal from './components/AddTaskModal'
-import BoardIcon from '../../components/Icons/BoardIcon'
+import BoardIcon from '@/components/Icons/BoardIcon'
 import { useTasks } from './hooks/useTasks'
-import { LoadingSpinner } from '../../components/LoadingSpinner'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
 
 const TaskTrackerFeatures: React.FC = () => {
   const [showModal, setShowModal] = useState(false)

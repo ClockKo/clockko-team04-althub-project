@@ -1,7 +1,7 @@
 /*TaskList.tsx                # Displays tasks & timers*/
 import React from 'react'
 import TaskItem from './taskItem'
-import type { Task } from '../../../types'
+import type { Task } from '@/types'
 
 interface TaskListProps {
   tasks: Task[]

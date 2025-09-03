@@ -3,13 +3,13 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { format } from 'date-fns'
-import { Dialog, DialogContent, DialogHeader } from '../../../components/ui/dialog'
-import { Button } from '../../../components/ui/button'
-import { Input } from '../../../components/ui/input'
-import { Calendar } from '../../../components/ui/calendar'
-import { Popover, PopoverTrigger, PopoverContent } from '../../../components/ui/popover'
+import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { CalendarIcon, LoaderCircleIcon, X } from 'lucide-react'
-import { cn } from '../../../lib/utils'
+import { cn } from '@/lib/utils'
 import {
   Form,
   FormField,
@@ -17,8 +17,8 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-} from '../../../components/ui/form'
-import { Badge } from '../../../components/ui/badge'
+} from '@/components/ui/form'
+import { Badge } from '@/components/ui/badge'
 import { useCreateTask } from '../hooks/useTasks'
 
 // ✅ Validation schema

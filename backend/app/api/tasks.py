@@ -3,15 +3,13 @@ from typing import List
 from sqlalchemy.orm import Session
 from uuid import UUID
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TimeLogResponse
-# from app.models.task import Task
 from app.core.auth import get_current_user
 from app.core.database import get_db
-# from app.api import task as crud_task
 from app.models.user import User
 from app.services.taskservice import start_timer, stop_timer, get_time_logs, Task as crud_task
 
 
-router = APIRouter(prefix="/tasks", tags=["Tasks"])
+router = APIRouter(tags=["Tasks"])
 
 
 @router.post("/", response_model=TaskResponse)

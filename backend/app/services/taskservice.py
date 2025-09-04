@@ -6,8 +6,8 @@ from uuid import UUID
 import logging
 from app.core.celery import celery_app
 from app.core.database import SessionLocal, get_db_session
-from app.models.task import Task, TimeLog
-from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TimeLogResponse
+from app.models.task import Task, TimeLog, Tag
+from app.schemas.task import TagCreate, TaskCreate, TaskUpdate, TaskResponse, TimeLogResponse
 from kombu.exceptions import EncodeError
 
 logger = logging.getLogger(__name__)
@@ -82,6 +82,37 @@ def schedule_reminder(session: Session, task: Task):
             f"Failed to schedule reminder for task {task.id}: {str(e)}")
 
 
+def get_or_create_tag(session: Session, tag_data: TagCreate, user_id: UUID) -> Tag:
+    """
+    Get an existing tag or create a new one for the user.
+    """
+    try:
+        result = session.execute(
+            select(Tag).where(Tag.user_id == user_id, Tag.name == tag_data.name))
+        tag = result.scalar_one_or_none()
+        if tag:
+            # Update color if different
+            if tag.color != tag_data.color:
+                tag.color = tag_data.color
+                session.commit()
+            return tag
+
+        tag = Tag(
+            name=tag_data.name,
+            color=tag_data.color,
+            user_id=user_id
+        )
+        session.add(tag)
+        session.commit()
+        session.refresh(tag)
+        logger.info(f"Created tag {tag.name} for user {user_id}")
+        return tag
+    except Exception as e:
+        logger.error(f"Error creating tag {tag_data.name}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+
+
 def create_task(session: Session, task: TaskCreate, user_id: UUID) -> Task:
     try:
         db_task = Task(
@@ -91,6 +122,10 @@ def create_task(session: Session, task: TaskCreate, user_id: UUID) -> Task:
             reminder_enabled=task.reminder_enabled,
             reminder_time=task.reminder_time
         )
+        if task.tags:
+            for tag_data in task.tags:
+                tag = get_or_create_tag(session, tag_data, user_id)
+                db_task.tags.append(tag)
         session.add(db_task)
         session.commit()
         session.refresh(db_task)
@@ -132,16 +167,25 @@ def get_task(session: Session, task_id: UUID, user_id: UUID) -> Task:
 
 def update_task(session: Session, task_id: UUID, task_update: TaskUpdate, user_id: UUID) -> Task:
     try:
-        update_data = task_update.model_dump(exclude_unset=True)
-        if not update_data:
+        update_data = task_update.model_dump(
+            exclude_unset=True, exclude={'tags'})
+        if not update_data and not task_update.tags:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="No update data provided")
-        session.execute(
-            update(Task).where(Task.id == task_id,
-                               Task.user_id == user_id).values(**update_data)
-        )
-        session.commit()
         task = get_task(session, task_id, user_id)
+        if task_update.tags is not None:
+            # Clear existing tags and add new ones
+            task.tags.clear()
+            for tag_data in task_update.tags:
+                tag = get_or_create_tag(session, tag_data, user_id)
+                task.tags.append(tag)
+        if update_data:
+            session.execute(
+                update(Task).where(Task.id == task_id,
+                                   Task.user_id == user_id).values(**update_data)
+            )
+        session.commit()
+        session.refresh(task)
         schedule_reminder(session, task)
         logger.info(f"Task updated: {task_id}")
         return task

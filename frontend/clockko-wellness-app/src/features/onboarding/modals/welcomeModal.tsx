@@ -23,7 +23,7 @@ export function WelcomeModal({ onNext }: { onNext?: () => void }) {
         <div className="mt-16">
           <Button
             onClick={onNext}
-            className="mt-4 bg-blue1 px-8 cursor-pointer text-white float-right xs:px-6 xs:py-2 text-base rounded-lg transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-100 hover:bg-blue1/80"
+            className="w-full lg:w-auto mt-4 bg-blue1 px-8 cursor-pointer text-white lg:float-right sm:px-10 sm:py-2 text-base rounded-lg transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-100 hover:bg-blue1/80"
           >
             Next
           </Button>

@@ -123,16 +123,16 @@ export function AvatarModal({
           </button>
         </div>
         {/* Navigation buttons */}
-        <div className="flex justify-between gap-2 md:mt-[6rem]">
+        <div className="flex justify-between gap-2 md:mt-[6rem] flex-col flex-col-reverse lg:flex-row">
           <Button
             variant="ghost"
-            className="w-1/2 md:w-[20%] font-thin cursor-pointer text-blue1"
+            className="w-full md:w-[20%] font-thin cursor-pointer text-blue1 hover:bg-gray-200/50 hover:text-blue-900/80"
             onClick={onPrev}
           >
             Previous
           </Button>
           <Button
-            className="w-1/2 md:w-[20%] bg-blue1 text-white xs:px-6 xs:py-2 text-base rounded-lg hover:bg-blue-900/80 cursor-pointer font-thin"
+            className="w-full md:w-[20%] bg-blue1 text-white xs:px-6 xs:py-2 text-base rounded-lg hover:bg-blue-900/80 cursor-pointer font-thin"
             onClick={onNext}
             disabled={!avatar}
           >

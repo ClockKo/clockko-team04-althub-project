@@ -82,17 +82,17 @@ export function WorkDaysModal({
           ))}
         </div>
 
-        <div className="flex justify-between gap-2">
+        <div className="flex justify-between gap-2 flex-col flex-col-reverse lg:flex-row">
           <Button
             variant="ghost"
             onClick={onPrev}
-            className="w-1/2 md:w-[20%] text-blue1 font-thin cursor-pointer"
+            className="md:w-[20%] text-blue1 font-thin cursor-pointer hover:bg-gray-200/50 hover:text-blue-900/80 w-full text-center"
           >
             Previous
           </Button>
 
           <Button
-            className="w-1/2 md:w-[20%] bg-blue1 text-white xs:px-6 xs:py-2 text-base rounded-lg font-thin cursor-pointer hover:bg-blue-900/80"
+            className="md:w-[20%] bg-blue1 text-white xs:px-6 xs:py-2 text-base rounded-lg font-thin cursor-pointer hover:bg-blue-900/80 w-full"
             disabled={selectedDays.length === 0}
             onClick={onNext}
           >

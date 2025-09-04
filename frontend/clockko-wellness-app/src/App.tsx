@@ -1,8 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import OnboardingRoutes from './features/onboarding/routes/onboardingRoutes'
 import { LandingPage } from './pages/landingpage'
-// import TasksPage from './features/tasks-management/taskPages'
 import MainLayout from './features/layout/mainLayout'
 import { DashboardLayout } from './pages/dashboard'
 import  ChallengesPage  from "./features/challenges/challengePage";
@@ -15,7 +13,6 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/onboarding/*" element={<OnboardingRoutes />} />
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardLayout />} />
             <Route path="/tasks" element={<div className="p-6"><h1 className="text-2xl font-bold">Tasks</h1><p>Coming soon...</p></div>} />

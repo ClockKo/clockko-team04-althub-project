@@ -29,10 +29,10 @@ def register(user_data: schema.UserCreate, db: Session = Depends(get_db)):
         # Create new user
         db_user = User(
             id=user_id,
-            username=user_data.username,
-            full_name=user_data.full_name,
+            username=user_data.name,
+            full_name=user_data.name,
             email=user_data.email,
-            phone_number=user_data.phone_number,
+            # phone_number=user_data.phone_number,
             hashed_password=hashed_password,
             verification_token=verification_token,
             is_active=True,

@@ -15,10 +15,10 @@ jobs:
         with:
           version: 8
       - run: pnpm install
-        working-directory: frontend
+        working-directory: frontend/clockko-wellness-app
       - run: pnpm lint
-        working-directory: frontend
+        working-directory: frontend/clockko-wellness-app
       - run: pnpm test
-        working-directory: frontend
+        working-directory: frontend/clockko-wellness-app
       - run: pnpm build
-        working-directory: frontend
+        working-directory: frontend/clockko-wellness-app

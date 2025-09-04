@@ -9,3 +9,4 @@ export * from './test/challengeDetails.test';
 export * from './test/leaderBoard.test';
 export * from './test/challengeList.test';
 export * from './test/challengecard.test';
+export * from './challengePage'

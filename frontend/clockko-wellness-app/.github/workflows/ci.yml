@@ -9,16 +9,15 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/clockko-wellness-app
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
         with:
           version: 8
       - run: pnpm install
-        working-directory: frontend/clockko-wellness-app
       - run: pnpm lint
-        working-directory: frontend/clockko-wellness-app
       - run: pnpm test
-        working-directory: frontend/clockko-wellness-app
       - run: pnpm build
-        working-directory: frontend/clockko-wellness-app

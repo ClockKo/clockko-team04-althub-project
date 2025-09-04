@@ -69,8 +69,9 @@ export interface Task {
   id: string
   title: string
   description?: string
-  createdAt: Date
-  dueAt?: Date
+  createdAt: Date | string
+  updatedAt: Date | string
+  dueAt?: Date | string
   completed?: boolean
   timer?: TaskTimer
   reminderSet?: boolean

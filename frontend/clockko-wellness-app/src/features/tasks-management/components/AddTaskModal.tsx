@@ -1,15 +1,15 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { format } from 'date-fns'
-import { Dialog, DialogContent, DialogHeader } from '../../../components/ui/dialog'
-import { Button } from '../../../components/ui/button'
-import { Input } from '../../../components/ui/input'
-import { Calendar } from '../../../components/ui/calendar'
-import { Popover, PopoverTrigger, PopoverContent } from '../../../components/ui/popover'
+import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { CalendarIcon, LoaderCircleIcon, X } from 'lucide-react'
-import { cn } from '../../../lib/utils'
+import { cn } from '@/lib/utils'
 import {
   Form,
   FormField,
@@ -17,9 +17,11 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-} from '../../../components/ui/form'
-import { Badge } from '../../../components/ui/badge'
+} from '@/components/ui/form'
+import { Badge } from '@/components/ui/badge'
 import { useCreateTask } from '../hooks/useTasks'
+import { useClickOutside } from '@/hooks/useClickOutside'
+import { HexColorPicker } from 'react-colorful'
 
 // ✅ Validation schema
 const taskSchema = z.object({
@@ -43,7 +45,16 @@ interface AddTaskModalProps {
 export default function AddTaskModal({ showModal = false, setShowModal }: AddTaskModalProps) {
   const [tags, setTags] = useState(['WORK', 'PERSONAL PROJECT'])
   const [newTag, setNewTag] = useState('')
+  const [color, setColor] = useState('')
+  const [showColorPicker, setShowColorPicker] = useState(false)
   const { mutate: createTask, isPending } = useCreateTask()
+  const tagRef = useRef<HTMLDivElement>(null)
+  useClickOutside(tagRef, () => setShowColorPicker(false))
+
+  const handleTagClick = (tag: string) => {
+    setColor(tag)
+    setShowColorPicker(true)
+  }
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -187,18 +198,46 @@ export default function AddTaskModal({ showModal = false, setShowModal }: AddTas
                     <FormLabel>Tags</FormLabel>
                     <div className="flex flex-wrap gap-2">
                       {tags.map((tag, i) => (
-                        <Badge
+                        <Popover
                           key={i}
-                          variant="secondary"
-                          className="flex items-center gap-1 rounded-full px-3 py-1"
+                          open={showColorPicker && color === tag}
+                          onOpenChange={setShowColorPicker}
                         >
-                          {tag}
-                          <X
-                            className="h-3 w-3 cursor-pointer"
-                            onClick={() => handleRemoveTag(tag)}
-                          />
-                        </Badge>
+                          <PopoverTrigger asChild>
+                            <Badge
+                              variant="secondary"
+                              className="relative flex items-center gap-1 rounded-full px-3 py-1 cursor-pointer"
+                              onClick={() => {
+                                setColor(tag)
+                                setShowColorPicker(true)
+                              }}
+                            >
+                              <span
+                                className="h-3 w-3 rounded-full border"
+                                style={{ backgroundColor: color === tag ? color : '#ccc' }}
+                              />
+                              {tag}
+                              <X
+                                className="h-3 w-3 cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleRemoveTag(tag)
+                                }}
+                              />
+                            </Badge>
+                          </PopoverTrigger>
+
+                          <PopoverContent className="p-2 w-auto">
+                            <HexColorPicker
+                              color={color}
+                              onChange={(newColor) => setColor(newColor)}
+                              className="!w-40 !h-40"
+                            />
+                          </PopoverContent>
+                        </Popover>
                       ))}
+
+                      {/* Input for new tags */}
                       <Input
                         placeholder="Create tag"
                         value={newTag}

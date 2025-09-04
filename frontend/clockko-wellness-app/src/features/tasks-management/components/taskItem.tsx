@@ -85,7 +85,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
         )}
       </div>
 
-      <p className="text-sm text-gray-500 rounded-full bg-amber-200 w-fit py-0.5 px-2">
+      <p className="">
         {task.tags
           ? task.tags.map((tag) => (
               <Badge key={tag} className="mr-1">

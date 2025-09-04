@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchTasks, updateTask, deleteTask, createTask } from '../services/taskTrackerService'
-import type { Task } from '../../../types'
+import type { Task } from '@/types'
 import { isToday, isFuture, parseISO } from 'date-fns'
 
 const TASKS_KEY = ['tasks']

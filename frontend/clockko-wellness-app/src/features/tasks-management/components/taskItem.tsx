@@ -1,11 +1,11 @@
 /*TaskItem.tsx                # Individual task component with timer*/
 import React, { useRef } from 'react'
-import type { Task } from '../../../types'
-import { Checkbox } from '../../../components/ui/checkbox'
+import type { Task } from '@/types'
+import { Checkbox } from '@/components/ui/checkbox'
 import { MdDelete, MdEdit, MdMoreVert } from 'react-icons/md'
-import { useClickOutside } from '../../../hooks/useClickOutside'
-import { Button } from '../../../components/ui/button'
-import { Badge } from '../../../components/ui/badge'
+import { useClickOutside } from '@/hooks/useClickOutside'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import EditTaskModal from './EditTaskModal'
 import { useDeleteTask, useUpdateTask } from '../hooks/useTasks'
 
@@ -85,15 +85,15 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
         )}
       </div>
 
-      <p className="">
-        {task.tags
-          ? task.tags.map((tag) => (
-              <Badge key={tag} className="mr-1">
-                {tag}
-              </Badge>
-            ))
-          : null}
-      </p>
+      {Array.isArray(task.tags) && task.tags.length > 0 && (
+        <p className="text-sm text-gray-500 rounded-full bg-amber-200 w-fit py-0.5 px-2">
+          {task.tags.map((tag) => (
+            <Badge key={tag} className="mr-1">
+              {tag}
+            </Badge>
+          ))}
+        </p>
+      )}
 
       <EditTaskModal
         isOpen={isEditOpen}

@@ -7,8 +7,10 @@ import { ClockOutModal } from "./modals/clockOutModal";
 import { FocusModal } from "./modals/focusModal";
 import { AvatarModal } from "./modals/avatarModal";
 import { ReminderModal } from "./modals/reminderModal";
+import { useOnboarding } from "../../contexts/OnboardingContext";
 
 export function OnboardingFlow() {
+  const { completeOnboarding } = useOnboarding();
   const [step, setStep] = useState(0); // 0: Welcome, 1: Work days, 2: Clock out...
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [clockOut, setClockOut] = useState({ hour: '', minute: '' });
@@ -20,6 +22,10 @@ export function OnboardingFlow() {
     break: true,
     tasks: true,
   });
+
+  const handleOnboardingComplete = () => {
+    completeOnboarding();
+  };
 
   return (
     <>
@@ -73,7 +79,7 @@ export function OnboardingFlow() {
         <ReminderModal
           reminders={reminders}
           setReminders={setReminders}
-          onNext={() => {/* finalize onboarding or move to dashboard */}}
+          onNext={handleOnboardingComplete}
           onPrev={() => setStep(4)}
           step={5}
           totalSteps={5}

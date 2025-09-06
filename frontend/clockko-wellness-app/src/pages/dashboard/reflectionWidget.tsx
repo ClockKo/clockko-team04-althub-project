@@ -1,1 +1,0 @@
-/* ReflectionWidget.tsx // Widget: reflections on what went well for the day by the user*/

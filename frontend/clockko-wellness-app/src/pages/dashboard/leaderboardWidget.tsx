@@ -1,1 +1,0 @@
-/* LeaderboardWidget.tsx// Widget: leaderboard for challenge participation and points gained/reward*/

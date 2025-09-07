@@ -17,6 +17,11 @@
   --color-whitey: hsla(0, 0%, 100%, 1);
   --color-black: hsla(0, 0%, 0%, 1);
   --color-powderBlue:hsla(222, 33%, 94%, 1);
+  --color-lightGray: hsla(225, 17%, 95%, 1);
+  --color-successGreen: hsla(132, 88%, 84%, 1);
+  --color-lightGreen: hsla(130, 92%, 95%, 1);
+  --color-warningYellow: hsla(52, 88%, 84%, 1);
+  --color-errorRed: hsla(354, 73%, 88%, 1);
 
   --font-sans: 'Manrope', sans-serif;
   --font-serif: 'Merriweather', serif;

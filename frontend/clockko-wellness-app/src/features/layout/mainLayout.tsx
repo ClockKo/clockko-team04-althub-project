@@ -123,7 +123,7 @@ export default function MainLayout() {
                     isActive={isActive}
                     className={
                       isActive
-                        ? 'bg-blue1 !text-blue1 border-r-2 border-blue-700'
+                        ? '!bg-lightBlue !text-blue1 border-r-2 border-blue-700'
                         : 'hover:bg-gray-50'
                     }
                     onClick={() => {
@@ -155,6 +155,7 @@ export default function MainLayout() {
                     >
                       <Icon className="h-5 w-5" />
                       {isMobile && !collapsed && <span className="ml-2">{item.label}</span>}
+                      <span className="hidden md:block">{item.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )
@@ -166,7 +167,7 @@ export default function MainLayout() {
                     isActive={isActive}
                     className={
                       isActive
-                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                        ? '!bg-lightBlue !text-blue1 border-r-2 border-blue-700'
                         : 'hover:bg-gray-50'
                     }
                     onClick={() => setMobileSidebarOpen(false)}
@@ -174,6 +175,7 @@ export default function MainLayout() {
                     <Link to={item.path}>
                       <Icon className="h-5 w-5" />
                       {isMobile && !collapsed && <span className="ml-2">{item.label}</span>}
+                      <span className="hidden md:block">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

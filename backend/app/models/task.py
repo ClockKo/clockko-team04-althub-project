@@ -2,15 +2,8 @@ import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, Text, ForeignKey, DateTime, func, Boolean, Index, Table
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship, DeclarativeBase
+from sqlalchemy.orm import relationship
 from app.core.database import Base
-
-
-class Base(DeclarativeBase):
-    pass
-
-    class Config:
-        from_attributes = True
 
 
 # Association table for Task-Tag many-to-many relationship
@@ -69,7 +62,7 @@ class Task(Base):
 class TimeLog(Base):
     __tablename__ = "time_logs"
     __table_args__ = (
-        Index('idx_timelog_user_id_task_id', 'user_id', 'task_id'),)
+        Index('idx_timelog_user_id_task_id', 'user_id', 'task_id'), {'extend_existing': True},)
 
     id = Column(UUID(as_uuid=True), primary_key=True,
                 default=uuid.uuid4, index=True)
@@ -81,7 +74,3 @@ class TimeLog(Base):
     end_time = Column(DateTime, nullable=True)
 
     task = relationship("Task", back_populates="time_logs")
-
-
-class Config:
-    from_attributes = True

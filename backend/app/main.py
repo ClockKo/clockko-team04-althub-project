@@ -26,7 +26,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(timetracker.router, prefix="", tags=["time-log"])
 # app.include_router(user.router, prefix="/user", tags=["User"])
-app.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
+app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
 
 # If you have a reminder thread, import and start it here
 # from app.reminders import start_reminder_thread

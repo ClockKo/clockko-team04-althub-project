@@ -40,7 +40,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
             disabled={isUpdating}
             onCheckedChange={(checked) =>
               updateTask({
-                id: String(task.id),
+                id: task.id,
                 updates: { completed: Boolean(checked) },
               })
             }
@@ -164,7 +164,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
         task={task}
         onSave={(updatedTask) =>
           updateTask({
-            id: String(task.id),
+            id: task.id,
             updates: updatedTask,
           })
         }

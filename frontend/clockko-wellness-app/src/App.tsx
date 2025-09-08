@@ -6,6 +6,7 @@ import { DashboardLayout } from './pages/dashboard'
 import  ChallengesPage  from "./features/challenges/challengePage";
 import { OnboardingProvider } from './contexts/OnboardingContext';
 import { UserProvider } from './contexts/UserContext';
+import TaskTrackerFeatures from './features/tasks-management/taskTrackerFeatures'
 
 const queryClient = new QueryClient()
 
@@ -19,7 +20,7 @@ function App() {
               <Route path="/" element={<LandingPage />} />
               <Route element={<MainLayout />}>
                 <Route path="/dashboard" element={<DashboardLayout />} />
-                <Route path="/tasks" element={<div className="p-6"><h1 className="text-2xl font-bold">Tasks</h1><p>Coming soon...</p></div>} />
+                <Route path="/tasks" element={<TaskTrackerFeatures/>} />
                 <Route path="/time-tracker" element={<div className="p-6"><h1 className="text-2xl font-bold">Time Tracker</h1><p>Coming soon...</p></div>} />
                 <Route path="/co-working" element={<div className="p-6"><h1 className="text-2xl font-bold">Co-working Rooms</h1><p>Coming soon...</p></div>} />
                 <Route path="/reports" element={<div className="p-6"><h1 className="text-2xl font-bold">Reports</h1><p>Coming soon...</p></div>} />

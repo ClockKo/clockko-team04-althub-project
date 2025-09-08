@@ -21,14 +21,23 @@ import {
 import { useCreateTask } from '../hooks/useTasks'
 import TagSelector from './TagSelector'
 import FacesIcon from '@/components/Icons/FacesIcon'
-import type { Tag } from '@/types'
+import type { Tag, Task } from '@/types'
+
+
+const tagSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  color: z.string(),
+  // ...other properties
+})
+
 
 //  Validation schema
 const taskSchema = z.object({
   title: z.string().min(1, 'Task name is required'),
   startDate: z.date().optional(),
   dueAt: z.date().optional(),
-  tags: z.array(z.any()).optional(),
+  tags: z.array(tagSchema).optional(),
 })
 
 type TaskFormValues = z.infer<typeof taskSchema>
@@ -57,19 +66,24 @@ export default function AddTaskModal({ showModal = false, setShowModal }: AddTas
     form.setValue('tags', newTags, { shouldValidate: true })
   }
 
-  const onSubmit = (data: TaskFormValues) => {
-    const taskData = {
-      ...data,
-      tags,
-      startDate: data.startDate?.toISOString(),
-      dueAt: data.dueAt?.toISOString(),
-    }
-    
-    console.log('✅ Task submitted:', taskData)
-    createTask(taskData as any)
-    
-    handleClose()
+ const onSubmit = (data: TaskFormValues) => {
+  const taskData: Task = {
+    ...data,
+    tags,
+    startDate: data.startDate, // Date or undefined
+    dueAt: data.dueAt,         // Date or undefined
+    // Add required fields for Task type (id: '', description: '', completed: false, etc.)
+    id: '', // placeholder, backend will assign
+    description: '', // or null, or add to form
+    completed: false,
+    createdAt: new Date(), // optional, backend will set
+    updatedAt: new Date(), // optional, backend will set
   }
+
+  console.log('✅ Task submitted:', taskData)
+  createTask(taskData)
+  handleClose()
+}
 
   const handleClose = () => {
     setShowModal(false)
@@ -214,7 +228,7 @@ export default function AddTaskModal({ showModal = false, setShowModal }: AddTas
               <Button 
                 type="submit" 
                 disabled={isPending}
-                className="bg-blue-800 hover:bg-blue-900 text-white px-8 py-2 h-11 rounded-lg font-medium"
+                className="bg-blue1 hover:bg-blue-900/60 cursor-pointer text-white px-8 py-2 h-11 rounded-lg font-medium"
               >
                 {isPending ? (
                   <>

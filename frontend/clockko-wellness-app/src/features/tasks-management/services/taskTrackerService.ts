@@ -47,7 +47,7 @@ const transformTaskResponse = (task: TaskResponse): Task => ({
 })
 
 // Transform frontend task to server format
-const transformTaskRequest = (task: any): TaskCreateRequest => {
+const transformTaskRequest = (task: Task): TaskCreateRequest => {
   const existingTagIds: string[] = []
   const newTags: TagCreate[] = []
   
@@ -82,7 +82,7 @@ const transformTaskRequest = (task: any): TaskCreateRequest => {
 
 const fetchTasks = async (): Promise<Task[]> => {
   try {
-    const response = await api.get<TaskResponse[]>('/tasks')
+    const response = await api.get<TaskResponse[]>('/tasks/')
     return response.data.map(transformTaskResponse)
   } catch (error) {
     console.error('Error fetching tasks:', error)
@@ -90,10 +90,10 @@ const fetchTasks = async (): Promise<Task[]> => {
   }
 }
 
-const createTask = async (taskData: any): Promise<Task> => {
+const createTask = async (taskData: Task): Promise<Task> => {
   try {
     const requestData = transformTaskRequest(taskData)
-    const response = await api.post<TaskResponse>('/tasks', requestData)
+    const response = await api.post<TaskResponse>('/tasks/', requestData)
     return transformTaskResponse(response.data)
   } catch (error) {
     console.error('Error creating task:', error)

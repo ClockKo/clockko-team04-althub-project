@@ -3,6 +3,7 @@ import { fetchTasks, updateTask, deleteTask, createTask } from '../services/task
 import type { Task } from '@/types'
 import { isToday, isFuture, parseISO } from 'date-fns'
 
+// Define a constant key for tasks query
 const TASKS_KEY = ['tasks']
 
 export function useTasks() {

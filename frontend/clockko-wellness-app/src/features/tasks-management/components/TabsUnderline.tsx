@@ -24,17 +24,17 @@ export default function TabsUnderline({
             variant="ghost"
             key={tab.name}
             onClick={() => setActiveIndex(idx)}
-            className={`relative pb-2 font-poppins transition-colors ${
+            className={`relative pb-2 font-poppins text-blue1 transition-colors ${
               activeIndex === idx
-                ? 'text-blue-600 font-medium'
+                ? 'text-blue1 font-medium'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            {tab.icon && <span className="mr-2">{tab.icon}</span>}
+            {tab.icon && <span className="mr-2 text-blue1">{tab.icon}</span>}
             {tab.name}
 
             {activeIndex === idx && (
-              <span className="absolute bottom-[-2px] left-0 right-0 border-b-2 border-blue-500"></span>
+              <span className="absolute bottom-[-2px] left-0 right-0 border-b-2 border-blue1"></span>
             )}
           </Button>
         ))}

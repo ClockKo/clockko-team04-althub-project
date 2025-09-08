@@ -119,16 +119,16 @@ export default function TagSelector({ selectedTags, onTagsChange, className }: T
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="absolute right-6 top-1/2 -translate-y-1/2 h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute right-6 top-1/2 -translate-y-1/2 h-5 w-5 p-0 opacity-0 group-hover:opacity-80 transition-opacity"
                         onClick={(e) => {
                           e.stopPropagation()
                           setEditingTagId(tag.id)
                         }}
                       >
-                        <Palette className="h-3 w-3" style={{ color: tag.color }} />
+                        <Palette className="h-3 w-3 ml-4" style={{ color: tag.color }} />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-3" ref={colorPickerRef}>
+                    <PopoverContent className="w-auto p-3 ml-4" ref={colorPickerRef}>
                       <div className="space-y-3">
                         <div className="grid grid-cols-6 gap-2">
                           {DEFAULT_COLORS.map((color) => (

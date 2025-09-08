@@ -3,6 +3,7 @@ import type { Task } from '@/types'
 import clsx from 'clsx'
 import TaskColumn from './TaskColumn'
 
+// TaskTrackerPanel component to display tasks in columns based on their status
 const TaskTrackerPanel: React.FC<{
   tasks: { [key: string]: Task[] }
   type: 'list' | 'board'

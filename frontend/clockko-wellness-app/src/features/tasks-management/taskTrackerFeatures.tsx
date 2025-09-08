@@ -11,7 +11,7 @@ import { useTasks } from './hooks/useTasks'
 import { LoadingSpinner } from '../../components/LoadingSpinner'
 
 const TaskTrackerFeatures: React.FC = () => {
-  const [showModal, setShowModal] = useState(false)
+  const [showModal, setShowModal] = useState<boolean>(false)
   const { normalizedTasks, isLoading } = useTasks()
 
   const tabs = [
@@ -28,11 +28,11 @@ const TaskTrackerFeatures: React.FC = () => {
   ]
 
   return (
-    <div className="bg-blue-50 p-4">
+    <div className="bg-powderBlue p-4">
       <header className="mb-4 flex justify-between p-4">
         <h1 className="text-header font-semibold font-poppins">My Tasks</h1>
         <AddTaskModal showModal={showModal} setShowModal={setShowModal} />
-        <Button variant="default" onClick={() => setShowModal(true)} className="bg-blue-900">
+        <Button variant="default" onClick={() => setShowModal(true)} className="bg-blue1 hover:bg-blue-900/60 cursor-pointer text-white text-sm px-8 py-2 h-10 lg:w-[15%] rounded-4xl lg:rounded-lg font-medium">
           <PlusIcon />
           New Task
         </Button>

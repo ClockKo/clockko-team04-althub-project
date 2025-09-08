@@ -1,0 +1,480 @@
+:root{
+    --primaryColor : #FCFCFF;
+    --white : #fff;
+    --searchColor :#F8F9FC;
+    --buttonColor : #34559E; /* Your primary blue button color */
+    --textColor : #000208;
+    --textSubColor : #999A9C;
+}
+
+.panel{
+    display: flex;
+}
+/* navigation-panel styling */
+.navigation-panel{
+    width: 300px;
+    height: 100vh;
+    background-color: var(--white);
+    padding: 20px;
+}
+.main-icon img{
+    width: 120px;
+}
+.dashboard-icon {
+    padding-top: 5px;
+}
+.dashboard-icon img{
+    width: 20px;
+}
+
+/* main styling */
+.main-panel{
+    max-width: 1300px;
+    width: 1250px;
+    height: 100vh;
+    background-color: var(--primaryColor);
+    padding: 20px;
+}
+/* top nav styling */
+.top-nav{
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    padding-left: 40px;
+}
+/* search styling */
+#search{
+    background-color: var(--searchColor);
+    background-image: url("../../../assets/images/iconamoon_search.png"); /* Ensure this path is correct */
+    background-repeat: no-repeat;
+    background-size: 18px;
+    background-position: 10px 7px;
+    padding: 5px;
+    padding-left: 36px;
+    width: 496px;
+    border-radius: 10px;
+    border: 1px solid var(--searchColor); /* Added for better visibility */
+}
+
+#search::placeholder{
+    font-size: 13px;
+    color: #A0A4A8; /* Improved placeholder color */
+}
+
+/* profile styling */
+.profile-display{
+    display: flex;
+    align-items: center; /* Vertically align avatar and text */
+}
+.profile-display p{
+    padding-left: 7px;
+    font-size: 13px;
+    color: var(--textColor);
+}
+/*---------------- body ui styling------------------ */
+
+/* panel body styling */
+.panel-body{
+    height: 400px;
+}
+
+/* panel header styling */
+.panel-header{
+   padding: 10px;
+   margin: 20px 0px;
+   margin-left: 30px;
+}
+.panel-header h1{
+    color: var(--textColor);
+    font-size: 23px;
+    font-weight: bolder;
+}
+.panel-header p{
+    color: var(--textSubColor);
+    font-size: 11px;
+}
+/* panel main styling */
+.panel-main{
+    width: 880px;
+    display: flex;
+    justify-content: space-evenly;
+    padding: 20px;
+    align-items: flex-start; /* Align items to the top */
+}
+/* panel timer styling */
+.panel-timer{
+    width: 400px;
+    height: 250px;
+    background-color: var(--white);
+    border-radius: 25px;
+    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.05); /* Adjusted box-shadow for a softer look */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px; /* Space between timer and button group */
+    padding: 20px;
+    overflow: visible; /* Ensures dropdowns are not clipped */
+}
+
+.timer-display{
+    font-size: 80px; /* Larger font for the timer */
+    font-weight: bolder;
+    color: var(--textColor);
+    margin: 0;
+}
+
+/* Container for all timer control buttons */
+.timer-controls-group {
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically by default */
+    align-items: center;
+    gap: 10px; /* Space between buttons */
+}
+
+.timer-button {
+    background-color: var(--buttonColor);
+    color: var(--white);
+    border: none;
+    padding: 10px 30px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Space between text and icon/unicode */
+    transition: background-color 0.2s ease;
+    min-width: 150px; /* Ensure buttons have a consistent width */
+}
+
+.timer-button:hover {
+    background-color: #2a4783; /* Slightly darker on hover */
+}
+
+/* Styling for the combined Start/Resume button with dropdown arrow */
+.combined-timer-button-wrapper {
+    position: relative; /* For dropdown menu positioning */
+    display: flex;
+    flex-direction: column; /* Stack button and dropdown */
+    align-items: center;
+}
+
+.start-resume-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px; /* Space between text and arrow/icon */
+}
+
+/* Base style for any button icon */
+.button-icon {
+    width: 16px; /* Default size for icons */
+    height: 16px; /* Default size for icons */
+    object-fit: contain;
+    /* This rule is now removed from here, as icons are natively white or explicitly filtered below */
+}
+
+/* Specific styling for the dropdown arrow icon to fine-tune its position */
+.dropdown-arrow-icon {
+    margin-left: 5px; /* Adjust space between "Start" text and the arrow */
+    /* Assuming this icon is natively white, it stays white */
+}
+
+/* Style for the smaller pause icon */
+.button-icon.pause-icon {
+    width: 9px; /* Smaller width for pause icon */
+    height: 9px; /* Smaller height for pause icon */
+    filter: none; /* FIXED: Assuming 'bluepauseicon.png' is natively blue, no filter to keep it blue on white button */
+}
+
+/* Ensure pause icon inverts on hover of its button */
+.pause-button:hover .button-icon.pause-icon {
+    filter: invert(100%); /* FIXED: Invert blue icon to white on hover as button becomes blue */
+}
+
+
+/* Style for the resume icon */
+.button-icon.resume-icon {
+    width: 9px; /* Adjust size as desired for resume icon */
+    height: 9px; /* Adjust size as desired for resume icon */
+    /* Assuming this icon is natively white, it stays white */
+}
+
+
+/* --- Styling for the Pause button (matching Stop button) --- */
+.pause-button {
+    background-color: var(--white); /* White background */
+    color: var(--buttonColor); /* Text color from primary button color */
+    border: 1px solid var(--buttonColor); /* Border color from primary button color */
+    /* Inherits min-width, padding, border-radius, etc., from .timer-button */
+}
+
+.pause-button:hover {
+    background-color: var(--buttonColor); /* Blue background on hover */
+    color: var(--white); /* White text on hover */
+}
+
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%; /* Position directly below the combined button */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Adjust to true center */
+    background-color: var(--white);
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    z-index: 9999; /* Very high z-index to ensure it's on top */
+    min-width: 150px;
+    margin-top: 5px; /* Small gap between button and dropdown */
+    padding: 0px 15px; /* Your added padding */
+}
+
+.dropdown-menu button {
+    background-color: transparent;
+    color: var(--textColor);
+    border: none;
+    padding: 10px 15px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    width: 100%;
+    border-radius: 0; /* No individual button border radius */
+}
+
+.dropdown-menu button:first-child {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom: 1px solid #66676B; /* Your added border */
+}
+.dropdown-menu button:nth-child(2) {
+     border-bottom: 1px solid #66676B; /* Your added border */
+}
+.dropdown-menu button:last-of-type {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.dropdown-menu button:hover {
+    background-color: var(--searchColor);
+}
+
+.start-break-button {
+    background-color: #28a745; /* Green for break */
+}
+
+.start-break-button:hover {
+    background-color: #218838;
+}
+
+/* --- Styles for the button groups when running, paused, or completed --- */
+.active-running-controls,
+.active-paused-controls,
+.completed-session-controls {
+    display: flex;
+    gap: 10px; /* Space between buttons in the group */
+    align-items: center; /* Vertically align buttons */
+    flex-wrap: wrap; /* Allow wrapping if space is limited */
+    justify-content: center; /* Center buttons horizontally */
+}
+
+.take-break-dropdown-wrapper {
+    position: relative; /* For dropdown menu positioning */
+    display: flex;
+    flex-direction: column; /* Stack button and dropdown */
+    align-items: center;
+    z-index: 2; /* Establish a new stacking context for the wrapper */
+}
+
+.take-break-button {
+    min-width: 150px; /* Match other timer buttons for consistency */
+}
+
+.break-dropdown-menu button:first-child {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom: 1px solid #66676B;
+}
+.break-dropdown-menu button:nth-child(2) {
+     border-bottom: 1px solid #66676B;
+}
+.break-dropdown-menu button:last-of-type {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+
+/* --- Styling for the Stop button --- */
+.stop-button {
+    background-color: var(--white); /* White background */
+    color: var(--buttonColor); /* Text color from primary button color */
+    border: 1px solid var(--buttonColor); /* Border color from primary button color */
+    padding: 10px 30px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease; /* Smooth transition for hover effects */
+    min-width: 150px;
+}
+
+.stop-button:hover {
+    background-color: var(--buttonColor); /* Blue background on hover */
+    color: var(--white); /* White text on hover */
+}
+
+
+/* panel timer images styling */
+.panel-timer-images{
+    position: relative;
+    width: 380px; /* Increased width to make koala larger */
+    height: 380px; /* Increased height to make koala larger */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.koala-image {
+    object-fit: contain;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 210px;
+    height: 200px;
+}
+
+/* Base koola-box styling (This will apply when 'koola-box-initial-position' is NOT present) */
+.koola-box{
+    position: absolute;
+    top: 0px;    /* Default for active/paused states - high up */
+    left: 100%;   /* Default for active/paused states - far right */
+    width: 200px; /* Fixed width for the bubble */
+    text-align: center;
+    z-index: 10; /* Ensure speech bubble is above koala if needed */
+    transform: translateX(-50%); /* Always center the bubble relative to its left position */
+}
+.koola-box img{
+    width: 100%;
+    height: 90px;
+}
+.koola-box p{
+    color: var(--buttonColor);
+    text-align: center;
+    width: 80%;
+    font-size: 13px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    line-height: 1.3;
+}
+
+/* --- Conditional positioning for koola-box for initial state --- */
+.koola-box-initial-position {
+   /* These properties will override the base .koola-box when the class is applied */
+   top: 25px; /* Adjusted to bring it closer vertically for initial koala */
+   left: 69%; /* Adjusted to bring it closer horizontally for initial koala */
+   /* transform: translateX(-50%); is inherited from .koola-box base and still applies */
+}
+
+/* summarypanel styling */
+.summary-panel{
+    display: flex;
+    gap: 30px;
+    padding: 20px;
+    padding-left: 35px;
+}
+/* first summary panel styling */
+.first-panel{
+    display: flex;
+    background-color: var(--white);
+    border-radius: 25px;
+    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.05);
+    width: 270px;
+    height: 105px;
+    padding: 20px;
+    padding-top: 25px;
+}
+/* first-panel-image styling */
+.first-panel-image{
+    width: 30px;
+}
+/* first panel text styling */
+.first-panel-text{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  margin-left: 15px;
+  margin-top: 1px;
+}
+.first-panel-text p:nth-of-type(1){
+  font-weight: bolder;
+}
+.first-panel-text p:nth-of-type(2){
+  font-size: 13px;
+}
+/* second summary panel styling */
+.second-panel{
+    display: flex;
+    background-color: var(--white);
+    border-radius: 25px;
+    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.05);
+    width: 270px;
+    height: 105px;
+    padding: 20px;
+    padding-top: 25px;
+}
+/* second-panel-image styling */
+.second-panel-image{
+    width: 30px;
+}
+/* second panel text styling */
+.second-panel-text{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  margin-left: 15px;
+  margin-top: 1px;
+}
+.second-panel-text p:nth-of-type(1){
+  font-weight: bolder;
+}
+.second-panel-text p:nth-of-type(2){
+  font-size: 13px;
+}
+/* third summary panel styling */
+.third-panel{
+    display: flex;
+    background-color: var(--white);
+    border-radius: 25px;
+    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.05);
+    width: 270px;
+    height: 105px;
+    padding: 20px;
+    padding-top: 25px;
+}
+/* third-panel-image styling */
+.third-panel-image{
+    width: 30px;
+}
+/* third panel text styling */
+.third-panel-text{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  margin-left: 15px;
+  margin-top: 1px;
+}
+.third-panel-text p:nth-of-type(1){
+  font-weight: bolder;
+}
+.third-panel-text p:nth-of-type(2){
+  font-size: 13px;
+}

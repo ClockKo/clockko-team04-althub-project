@@ -3,15 +3,7 @@ TimeTrackerPanel.tsx
   # Main panel integrating all time tracking features
 */
 import { useState, useEffect, useRef } from "react";
-import "./timeTrackerPanel.css"; // Main CSS for this panel (renamed from index.css)
-import Avata from "../../../../assets/images/3d_avatar_21.png" // Assuming this is your profile avatar
-
-// UI components
-import { Avatar, AvatarImage, AvatarFallback } from '../../../../components/ui/avatar';
-
-// Images for navigation
-import mainIcon from "../../../../assets/images/frame1.png";
-import dashBoard from "../../../../assets/images/cuida_sidebar-collapse-outline.png";
+import "./timeTrackerPanel.css"; // Main CSS for this panel 
 
 // Koala images for different states
 import koalaInitial from "../../../../assets/images/Poses.png"; // Koala on tree, sleeping (Initial)
@@ -19,7 +11,7 @@ import koalaSpeechBubble from "../../../../assets/images/Koala Speech Bubble.png
 import koalaFocus from "../../../../assets/images/Poses2.png"; // Koala focused (Running Focus ONLY)
 import koalaHappy from "../../../../assets/images/Poses3.png";   // Koala happy (Paused, Running Break, Completed)
 
-// --- Imported Components ---
+// Imported Components 
 import ClockInOutButton from "../clock-in-out-button/clockInOutButton";
 import BreakTracker from "../break-tracker/breaktracker";
 import DailySummary from "../daily-summary/dailysummary";
@@ -28,9 +20,6 @@ import DailySummary from "../daily-summary/dailysummary";
 import { FOCUS_DEFAULT_DURATION, BREAK_DEFAULT_DURATION, formatTime, formatTotalTime } from "../../utils/timeUtils"; // **UPDATED IMPORT**
 
 function TimeTrackerPanel() {
-
-    const [avatarImage, setAvatarImage] = useState(Avata);
-    const [name, setName] = useState("Sophie"); // Changed to Sophie for speech bubble example
 
     // --- Timer State ---
     const [timeLeft, setTimeLeft] = useState(FOCUS_DEFAULT_DURATION); // Current time left on the timer
@@ -170,32 +159,8 @@ function TimeTrackerPanel() {
     return (
         <>
             <div className="panel">
-                <div className="navigation-panel">
-                    <div className="top-nav">
-                        <div className="main-icon">
-                            <img src={mainIcon} alt="clockKo" />
-                        </div>
-                        <div className="dashboard-icon">
-                            <img src={dashBoard} alt="dashBoard" />
-                        </div>
-                    </div>
-                </div>
 
                 <div className="main-panel">
-                    {/* topnav ui */}
-                    <div className="top-nav">
-                        <div className="search-bar">
-                            <input type="text" id="search" placeholder="Search..." />
-                        </div>
-                        <div className="profile-display">
-                            <Avatar>
-                                <AvatarImage src={avatarImage} alt="User avatar" />
-                                <AvatarFallback>AB</AvatarFallback>
-                            </Avatar>
-                            <p>{name}</p>
-                        </div>
-                    </div>
-
                     {/* body ui */}
                     <div className="panel-body">
                         <div className="panel-header">

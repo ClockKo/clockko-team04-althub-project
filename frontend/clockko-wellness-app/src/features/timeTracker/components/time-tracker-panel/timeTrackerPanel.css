@@ -10,69 +10,14 @@
     --textSubColor : #999A9C;
 }
 
-.panel{
-    display: flex;
-}
-/* navigation-panel styling */
-.navigation-panel{
-    width: 300px;
-    height: 100vh;
-    background-color: var(--white);
-    padding: 20px;
-}
-.main-icon img{
-    width: 120px;
-}
-.dashboard-icon {
-    padding-top: 5px;
-}
-.dashboard-icon img{
-    width: 20px;
-}
-
 /* main styling */
 .main-panel{
     max-width: 1300px;
     width: 1250px;
-    height: 100vh;
-    background-color: var(--primaryColor);
-    padding: 20px;
-}
-/* top nav styling */
-.top-nav{
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    padding-left: 40px;
-}
-/* search styling */
-#search{
-    background-color: var(--searchColor);
-    background-image: url("../../../../assets/images/iconamoon_search.png"); /* Ensure this path is correct */
-    background-repeat: no-repeat;
-    background-size: 18px;
-    background-position: 10px 7px;
-    padding: 5px;
-    padding-left: 36px;
-    width: 496px;
-    border-radius: 10px;
-    border: 1px solid var(--searchColor); /* Added for better visibility */
-}
-
-#search::placeholder{
-    font-size: 13px;
-    color: #A0A4A8; /* Improved placeholder color */
-}
-
-/* profile styling */
-.profile-display{
-    display: flex;
-    align-items: center; /* Vertically align avatar and text */
-}
-.profile-display p{
-    padding-left: 7px;
-    font-size: 13px;
-    color: var(--textColor);
+    /* height: 100vh; */
+    /* background-color: var(--primaryColor); */
+    padding-left: 30px;
+    margin: 0px;
 }
 /*---------------- body ui styling------------------ */
 
@@ -80,7 +25,6 @@
 .panel-body{
     height: 400px;
 }
-
 /* panel header styling */
 .panel-header{
    padding: 10px;

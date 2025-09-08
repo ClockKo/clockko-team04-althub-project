@@ -4,10 +4,11 @@ from typing import Optional, Union
 import uuid
 
 class UserCreate(BaseModel):
-    username: str
+    # username: str
+    name: str
     email: EmailStr
-    full_name: Optional[str] = None
-    phone_number: Optional[str] = None
+    # full_name: Optional[str] = None
+    # phone_number: Optional[str] = None
     password: str
 
 class UserResponse(BaseModel):
@@ -17,7 +18,7 @@ class UserResponse(BaseModel):
     username: str
     email: EmailStr
     full_name: Optional[str] = None
-    phone_number: Optional[str] = None
+    # phone_number: Optional[str] = None
     created_at: datetime
     is_verified: bool = False
     is_active: bool = True

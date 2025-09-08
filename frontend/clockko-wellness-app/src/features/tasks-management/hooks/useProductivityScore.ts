@@ -1,1 +1,0 @@
-/*useProductivityScore.ts     # Hook for score calculation*/ 

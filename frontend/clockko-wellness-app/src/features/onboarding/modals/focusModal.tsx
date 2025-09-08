@@ -94,9 +94,9 @@ export function FocusModal({
             />
           </div>
 
-          <div className="mt-4">
+          <div className="mt-4 w-full max-w-[300px] lg:max-w-[100px] mx-auto">
             <Button
-              className="rounded-full bg-mint hover:bg-mint/80 cursor-pointer text-black px-7 py-1 mb-3 font-medium"
+              className="w-full lg:rounded-full bg-mint hover:bg-mint/80 cursor-pointer text-black px-7 py-1 mb-3 font-medium"
               type="button"
               onClick={handleSet}
               disabled={!editing}
@@ -106,16 +106,16 @@ export function FocusModal({
           </div>
         </div>
         {/* Navigation buttons */}
-        <div className="flex justify-between gap-2">
+        <div className="flex justify-between gap-2 flex-col flex-col-reverse lg:flex-row">
           <Button
             variant="ghost"
-            className="w-1/2 md:w-[20%] font-thin cursor-pointer text-blue1"
+            className="md:w-[20%] font-thin cursor-pointer text-blue1 hover:bg-gray-200/50 hover:text-blue-900/80 w-full text-center"
             onClick={onPrev}
           >
             Previous
           </Button>
           <Button
-            className="w-1/2 md:w-[20%] bg-blue1 text-white xs:px-6 xs:py-2 text-base rounded-lg font-thin cursor-pointer hover:bg-blue-900/80"
+            className="w-full md:w-[20%] bg-blue1 text-white xs:px-6 xs:py-2 text-base rounded-lg font-thin cursor-pointer hover:bg-blue-900/80"
             disabled={!focusTimer.hour || !focusTimer.minute}
             onClick={onNext}
           >

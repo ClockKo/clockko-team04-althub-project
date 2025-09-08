@@ -116,11 +116,11 @@ export function ClockOutModal({
         </div>
 
         {/* Navigation Button */}
-        <div className="flex justify-between gap-2">
+        <div className="flex justify-between gap-2 flex-col flex-col-reverse lg:flex-row">
           <Button
             variant="ghost"
             onClick={onPrev}
-            className="w-1/2 md:w-[20%] text-dark hover:text-blue1 hover:border-blue1 transition-all duration-200 scale-100 ease-in-out font-thin cursor-pointer"
+            className="w-full md:w-[20%] text-dark hover:text-blue1 hover:border-blue1 transition-all duration-200 scale-100 ease-in-out font-thin cursor-pointer"
           >
             Previous
           </Button>
@@ -128,7 +128,7 @@ export function ClockOutModal({
             variant="ghost"
             onClick={onNext}
             disabled={!clockOut.hour || !clockOut.minute}
-            className="w-1/2 md:w-[20%] bg-blue1 text-white xs:px-6 xs:py-2 text-base rounded-lg hover:bg-blue-900/80 transition duration-200 scale-100 ease-in-out shadow-md cursor-pointer"
+            className="w-full md:w-[20%] bg-blue1 text-white xs:px-6 xs:py-2 text-base rounded-lg hover:bg-blue-900/80 transition duration-200 scale-100 ease-in-out shadow-md cursor-pointer"
           >
             Next
           </Button>

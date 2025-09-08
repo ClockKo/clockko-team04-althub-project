@@ -31,11 +31,12 @@ const TaskTrackerFeatures: React.FC = () => {
     <div className="bg-blue-50 p-4">
       <header className="mb-4 flex justify-between p-4">
         <h1 className="text-header font-semibold font-poppins">My Tasks</h1>
-        <AddTaskModal showModal={showModal} setShowModal={setShowModal} />
-        <Button variant="default" onClick={() => setShowModal(true)} className="bg-blue-900">
-          <PlusIcon />
-          New Task
-        </Button>
+        <AddTaskModal showModal={showModal} setShowModal={setShowModal} trigger={
+          <Button variant="default" onClick={() => setShowModal(true)} className="bg-blue-900">
+            <PlusIcon />
+            New Task
+          </Button>
+        } />
       </header>
       <main>{isLoading ? <LoadingSpinner /> : <TabsUnderline tabs={tabs} />}</main>
     </div>

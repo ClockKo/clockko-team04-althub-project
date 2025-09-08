@@ -1,103 +1,162 @@
 // taskService.ts
-import type { Task } from '../../../types'
+import api from './api'
+import type { Task, Tag, TagCreate } from '../../../types'
 
-// Utility to add days to today
-const addDays = (days: number) => {
-  const date = new Date()
-  date.setDate(date.getDate() + days)
-  return date.toISOString()
+interface TaskCreateRequest {
+  title: string
+  description?: string | null
+  start_date?: string | null
+  due_at?: string | null
+  tag_ids: string[]
+  new_tags?: TagCreate[]
 }
 
-// Mock data store
-let mockTasks: Task[] = [
-  {
-    id: '1',
-    title: 'Finish React project',
-    description: 'Complete the React todo app for AltSchool exam',
-    completed: false,
-    createdAt: new Date().toISOString() as unknown as Date,
-    updatedAt: new Date().toISOString() as unknown as Date,
-    dueAt: addDays(0), // today
-    tags: ['school', 'coding', 'urgent'],
-  },
-  {
-    id: '2',
-    title: 'Write documentation',
-    description: 'Prepare documentation for the API service',
-    completed: false,
-    createdAt: new Date().toISOString() as unknown as Date,
-    updatedAt: new Date().toISOString() as unknown as Date,
-    dueAt: addDays(3), // upcoming
-    tags: ['work', 'writing'],
-  },
-  {
-    id: '3',
-    title: 'Morning workout',
-    description: '30 minutes of exercise',
-    completed: true,
-    createdAt: new Date().toISOString() as unknown as Date,
-    updatedAt: new Date().toISOString() as unknown as Date,
-    dueAt: addDays(-1), // yesterday but done
-    tags: ['fitness', 'health'],
-  },
-  {
-    id: '4',
-    title: 'Team meeting',
-    description: 'Stand-up meeting with the dev team',
-    completed: false,
-    createdAt: new Date().toISOString() as unknown as Date,
-    updatedAt: new Date().toISOString() as unknown as Date,
-    dueAt: addDays(0), // today
-    tags: ['work', 'meeting'],
-  },
-  {
-    id: '5',
-    title: 'Plan weekend trip',
-    description: 'Look up destinations and book accommodation',
-    completed: false,
-    createdAt: new Date().toISOString() as unknown as Date,
-    updatedAt: new Date().toISOString() as unknown as Date,
-    dueAt: addDays(5), // upcoming
-    tags: ['personal', 'leisure', 'travel'],
-  },
-]
+interface TaskUpdateRequest {
+  title?: string
+  description?: string | null
+  start_date?: string | null
+  due_at?: string | null
+  completed?: boolean
+  tag_ids?: string[]
+  new_tags?: TagCreate[]
+}
 
-// Simulate API delay
-const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
+interface TaskResponse {
+  id: string
+  title: string
+  description?: string
+  completed: boolean
+  start_date?: string
+  due_at?: string
+  tags: Tag[]
+  created_at: string
+  updated_at: string
+}
+
+// Transform server response to frontend format
+const transformTaskResponse = (task: TaskResponse): Task => ({
+  id: task.id,
+  title: task.title,
+  description: task.description,
+  completed: task.completed,
+  startDate: task.start_date ? new Date(task.start_date) : undefined,
+  dueAt: task.due_at ? new Date(task.due_at) : undefined,
+  tags: task.tags,
+  createdAt: new Date(task.created_at),
+  updatedAt: new Date(task.updated_at),
+})
+
+// Transform frontend task to server format
+const transformTaskRequest = (task: any): TaskCreateRequest => {
+  const existingTagIds: string[] = []
+  const newTags: TagCreate[] = []
+  
+  if (task.tags) {
+    task.tags.forEach((tag: Tag) => {
+      if (tag.id.startsWith('temp-') || tag.id.startsWith('tag-')) {
+        newTags.push({
+          name: tag.name,
+          color: tag.color
+        })
+      } else {
+        existingTagIds.push(tag.id)
+      }
+    })
+  }
+  
+  const requestData: TaskCreateRequest = {
+    title: task.title,
+    description: task.description || null,
+    start_date: task.startDate ? (task.startDate instanceof Date ? task.startDate.toISOString() : task.startDate) : null,
+    due_at: task.dueAt ? (task.dueAt instanceof Date ? task.dueAt.toISOString() : task.dueAt) : null,
+    tag_ids: existingTagIds,
+  }
+  
+  if (newTags.length > 0) {
+    requestData.new_tags = newTags
+  }
+  
+  return requestData
+}
+
 
 const fetchTasks = async (): Promise<Task[]> => {
-  await delay(500) // simulate network delay
-  return [...mockTasks]
+  try {
+    const response = await api.get<TaskResponse[]>('/tasks')
+    return response.data.map(transformTaskResponse)
+  } catch (error) {
+    console.error('Error fetching tasks:', error)
+    throw new Error('Failed to fetch tasks')
+  }
 }
 
-const createTask = async (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): Promise<Task> => {
-  await delay(500)
-  const newTask: Task = {
-    ...task,
-    id: (mockTasks.length + 1).toString(),
-    createdAt: new Date().toISOString() as unknown as Date,
-    updatedAt: new Date().toISOString() as unknown as Date,
-    completed: false,
+const createTask = async (taskData: any): Promise<Task> => {
+  try {
+    const requestData = transformTaskRequest(taskData)
+    const response = await api.post<TaskResponse>('/tasks', requestData)
+    return transformTaskResponse(response.data)
+  } catch (error) {
+    console.error('Error creating task:', error)
+    throw new Error('Failed to create task')
   }
-  mockTasks.push(newTask)
-  return newTask
 }
 
 const updateTask = async (id: string, updates: Partial<Task>): Promise<Task> => {
-  await delay(500)
-  const idx = mockTasks.findIndex((t) => t.id === id)
-  if (idx === -1) throw new Error('Task not found')
-  mockTasks[idx] = {
-    ...mockTasks[idx],
-    ...updates,
-    updatedAt: new Date().toISOString() as unknown as Date,
+  try {
+    const requestData: TaskUpdateRequest = {}
+    
+    if (updates.title !== undefined) requestData.title = updates.title
+    if (updates.description !== undefined) requestData.description = updates.description || null
+    if (updates.startDate !== undefined) {
+      requestData.start_date = updates.startDate 
+        ? (updates.startDate instanceof Date ? updates.startDate.toISOString() : updates.startDate)
+        : null
+    }
+    if (updates.dueAt !== undefined) {
+      requestData.due_at = updates.dueAt 
+        ? (updates.dueAt instanceof Date ? updates.dueAt.toISOString() : updates.dueAt)
+        : null
+    }
+    if (updates.completed !== undefined) requestData.completed = updates.completed
+    
+    if (updates.tags !== undefined) {
+      const existingTagIds: string[] = []
+      const newTags: TagCreate[] = []
+      
+      if (updates.tags) {
+        updates.tags.forEach((tag: Tag) => {
+          if (tag.id.startsWith('temp-') || tag.id.startsWith('tag-')) {
+            newTags.push({
+              name: tag.name,
+              color: tag.color
+            })
+          } else {
+            existingTagIds.push(tag.id)
+          }
+        })
+      }
+      
+      requestData.tag_ids = existingTagIds
+      if (newTags.length > 0) {
+        requestData.new_tags = newTags
+      }
+    }
+
+    const response = await api.put<TaskResponse>(`/tasks/${id}`, requestData)
+    return transformTaskResponse(response.data)
+  } catch (error) {
+    console.error('Error updating task:', error)
+    throw new Error('Failed to update task')
   }
-  return mockTasks[idx]
 }
 
 const deleteTask = async (id: string): Promise<void> => {
-  await delay(500)
-  mockTasks = mockTasks.filter((t) => t.id !== id)
+  try {
+    await api.delete(`/tasks/${id}`)
+  } catch (error) {
+    console.error('Error deleting task:', error)
+    throw new Error('Failed to delete task')
+  }
 }
 
 export { fetchTasks, createTask, updateTask, deleteTask }

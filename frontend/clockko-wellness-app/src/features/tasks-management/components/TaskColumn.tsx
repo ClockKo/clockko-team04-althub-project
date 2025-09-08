@@ -16,8 +16,9 @@ const TaskColumn: React.FC<TaskColumnProps> = ({ status, tasks, type }) => {
 
   return (
     <div
-      className={clsx('p-6 bg-white w-full shadow-md rounded-3xl font-poppins', {
-        'max-w-md': type === 'board',
+      className={clsx('p-6 bg-white shadow-md rounded-3xl font-poppins', {
+        'w-full': type === 'list',
+        'flex-1 min-w-0': type === 'board',
       })}
     >
       <Collapsible open={open} onOpenChange={setOpen}>

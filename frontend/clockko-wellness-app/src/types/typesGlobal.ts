@@ -69,13 +69,23 @@ export interface Task {
   id: string
   title: string
   description?: string
-  createdAt: Date | string
-  updatedAt: Date | string
-  dueAt?: Date | string
+  createdAt?: Date 
+  updatedAt?: Date 
+  dueAt?: Date
   completed?: boolean
+  startDate?: Date
   timer?: TaskTimer
   reminderSet?: boolean
-  tags?: string[]
+  tags?: Tag[]
+}
+export interface Tag {
+  id: string
+  name: string
+  color: string
+}
+export interface TagCreate {
+  name: string
+  color: string
 }
 
 // Timer details for a task

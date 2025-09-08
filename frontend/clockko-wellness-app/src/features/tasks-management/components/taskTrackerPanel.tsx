@@ -11,7 +11,7 @@ const TaskTrackerPanel: React.FC<{
     <div
       className={clsx('flex gap-4 p-4', {
         'flex-col': type === 'list',
-        'grid grid-cols-3 gap-4': type === 'board',
+        'flex-row items-start': type === 'board',
       })}
     >
       {Object.entries(tasks).map(([status, tasksList]) => (

@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { format } from 'date-fns'
-import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Calendar } from '@/components/ui/calendar'
@@ -18,21 +18,17 @@ import {
   FormControl,
   FormMessage,
 } from '@/components/ui/form'
-import { Badge } from '@/components/ui/badge'
 import { useCreateTask } from '../hooks/useTasks'
-import { useClickOutside } from '@/hooks/useClickOutside'
-import { HexColorPicker } from 'react-colorful'
+import TagSelector from './TagSelector'
+import FacesIcon from '@/components/Icons/FacesIcon'
+import type { Tag } from '@/types'
 
-// ✅ Validation schema
+//  Validation schema
 const taskSchema = z.object({
-  title: z.string().min(3, 'Task name must be at least 3 characters'),
-  startDate: z.date({
-    error: 'Start date is required',
-  }),
-  dueAt: z.date({
-    error: 'Due date is required',
-  }),
-  tags: z.array(z.string()).min(1, 'At least one tag is required'),
+  title: z.string().min(1, 'Task name is required'),
+  startDate: z.date().optional(),
+  dueAt: z.date().optional(),
+  tags: z.array(z.any()).optional(),
 })
 
 type TaskFormValues = z.infer<typeof taskSchema>
@@ -43,18 +39,8 @@ interface AddTaskModalProps {
 }
 
 export default function AddTaskModal({ showModal = false, setShowModal }: AddTaskModalProps) {
-  const [tags, setTags] = useState(['WORK', 'PERSONAL PROJECT'])
-  const [newTag, setNewTag] = useState('')
-  const [color, setColor] = useState('')
-  const [showColorPicker, setShowColorPicker] = useState(false)
+  const [tags, setTags] = useState<Tag[]>([])
   const { mutate: createTask, isPending } = useCreateTask()
-  const tagRef = useRef<HTMLDivElement>(null)
-  useClickOutside(tagRef, () => setShowColorPicker(false))
-
-  const handleTagClick = (tag: string) => {
-    setColor(tag)
-    setShowColorPicker(true)
-  }
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -62,205 +48,187 @@ export default function AddTaskModal({ showModal = false, setShowModal }: AddTas
       title: '',
       startDate: undefined,
       dueAt: undefined,
-      tags: ['WORK'],
+      tags: [],
     },
   })
 
-  const handleAddTag = () => {
-    if (newTag && !tags.includes(newTag)) {
-      const updated = [...tags, newTag]
-      setTags(updated)
-      form.setValue('tags', updated, { shouldValidate: true })
-      setNewTag('')
-    }
-  }
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    const updated = tags.filter((tag) => tag !== tagToRemove)
-    setTags(updated)
-    form.setValue('tags', updated, { shouldValidate: true })
+  const handleTagsChange = (newTags: Tag[]) => {
+    setTags(newTags)
+    form.setValue('tags', newTags, { shouldValidate: true })
   }
 
   const onSubmit = (data: TaskFormValues) => {
-    console.log('✅ Task submitted:', data)
-    createTask(data)
+    const taskData = {
+      ...data,
+      tags,
+      startDate: data.startDate?.toISOString(),
+      dueAt: data.dueAt?.toISOString(),
+    }
+    
+    console.log('✅ Task submitted:', taskData)
+    createTask(taskData as any)
+    
+    handleClose()
+  }
+
+  const handleClose = () => {
     setShowModal(false)
-    form.reset()
-    setTags(['WORK', 'PERSONAL PROJECT'])
+    form.reset({
+      title: '',
+      startDate: undefined,
+      dueAt: undefined,
+      tags: [],
+    })
+    setTags([])
   }
 
   return (
-    <>
-      <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="sm:max-w-[500px] rounded-2xl">
-          <DialogHeader className="flex flex-row items-center justify-between">
-            <Button variant="ghost" size="icon" onClick={() => setShowModal(false)}>
-              <X className="h-5 w-5" />
-            </Button>
-          </DialogHeader>
+    <Dialog open={showModal} onOpenChange={handleClose} aria-describedby="add-task-modal">
+      <DialogContent aria-describedby="add-task-modal" className="sm:max-w-[600px] rounded-2xl p-6" showCloseButton={false}>
+        <DialogHeader className="flex flex-row items-start justify-between pb-6">
+          <div className="flex items-center gap-3">
+            <FacesIcon width={56} height={34} className="flex-shrink-0" />
+            <DialogTitle className="text-xl font-semibold text-gray-900">Add New Task</DialogTitle>
+          </div>
+          <Button variant="ghost" size="icon" onClick={handleClose} className="text-gray-400 hover:text-gray-600">
+            <X className="h-5 w-5 rounded-full bg-gray-500" />
+          </Button>
+        </DialogHeader>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Task Name */}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Task Name */}
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-700">Task Name</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="e.g. Design onboarding screens" 
+                      className="mt-1 h-11 text-sm"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Start Date and Due Date */}
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="title"
+                name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Task Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Design onboarding screens" {...field} />
-                    </FormControl>
+                    <FormLabel className="text-sm font-medium text-gray-700">Start Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              'w-full h-11 justify-start text-left font-normal mt-1',
+                              !field.value && 'text-gray-400'
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value ? format(field.value, 'MM/dd/yy') : 'MM/DD/YY'}
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="p-0">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          autoFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* Dates */}
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                'w-full justify-start text-left font-normal',
-                                !field.value && 'text-muted-foreground'
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {field.value ? format(field.value, 'MM/dd/yy') : 'MM/DD/YY'}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent align="start" className="p-0">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="dueAt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Due Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                'w-full justify-start text-left font-normal',
-                                !field.value && 'text-muted-foreground'
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {field.value ? format(field.value, 'MM/dd/yy') : 'MM/DD/YY'}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent align="start" className="p-0">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Tags */}
               <FormField
                 control={form.control}
-                name="tags"
-                render={() => (
+                name="dueAt"
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tags</FormLabel>
-                    <div className="flex flex-wrap gap-2">
-                      {tags.map((tag, i) => (
-                        <Popover
-                          key={i}
-                          open={showColorPicker && color === tag}
-                          onOpenChange={setShowColorPicker}
-                        >
-                          <PopoverTrigger asChild>
-                            <Badge
-                              variant="secondary"
-                              className="relative flex items-center gap-1 rounded-full px-3 py-1 cursor-pointer"
-                              onClick={() => {
-                                setColor(tag)
-                                setShowColorPicker(true)
-                              }}
-                            >
-                              <span
-                                className="h-3 w-3 rounded-full border"
-                                style={{ backgroundColor: color === tag ? color : '#ccc' }}
-                              />
-                              {tag}
-                              <X
-                                className="h-3 w-3 cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleRemoveTag(tag)
-                                }}
-                              />
-                            </Badge>
-                          </PopoverTrigger>
-
-                          <PopoverContent className="p-2 w-auto">
-                            <HexColorPicker
-                              color={color}
-                              onChange={(newColor) => setColor(newColor)}
-                              className="!w-40 !h-40"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      ))}
-
-                      {/* Input for new tags */}
-                      <Input
-                        placeholder="Create tag"
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                        className="w-32"
-                      />
-                    </div>
+                    <FormLabel className="text-sm font-medium text-gray-700">Due Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              'w-full h-11 justify-start text-left font-normal mt-1',
+                              !field.value && 'text-gray-400'
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value ? format(field.value, 'MM/dd/yy') : 'MM/DD/YY'}
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="p-0">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          autoFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </div>
 
-              {/* Submit */}
-              <div className="flex justify-end pt-4">
-                <Button type="submit" className="rounded-xl px-6" disabled={isPending}>
-                  {isPending ? <LoaderCircleIcon /> : 'Add Task'}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-    </>
+            {/* Tags */}
+            <FormField
+              control={form.control}
+              name="tags"
+              render={() => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-700">Tags</FormLabel>
+                  <FormControl>
+                    <div className="mt-2">
+                      <TagSelector
+                        selectedTags={tags}
+                        onTagsChange={handleTagsChange}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Submit Button */}
+            <div className="flex justify-end pt-4">
+              <Button 
+                type="submit" 
+                disabled={isPending}
+                className="bg-blue-800 hover:bg-blue-900 text-white px-8 py-2 h-11 rounded-lg font-medium"
+              >
+                {isPending ? (
+                  <>
+                    <LoaderCircleIcon className="w-4 h-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  'Add Task'
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   )
 }

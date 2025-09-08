@@ -91,7 +91,7 @@ export default function AddTaskModal({ showModal = false, setShowModal }: AddTas
             <DialogTitle className="text-xl font-semibold text-gray-900">Add New Task</DialogTitle>
           </div>
           <Button variant="ghost" size="icon" onClick={handleClose} className="text-gray-400 hover:text-gray-600">
-            <X className="h-5 w-5 rounded-full bg-gray-500" />
+            <X className="h-5 w-5" />
           </Button>
         </DialogHeader>
 

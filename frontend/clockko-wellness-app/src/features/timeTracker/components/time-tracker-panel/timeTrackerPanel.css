@@ -1,0 +1,199 @@
+/* TimeTrackerPanel.css */
+/* This file contains global styles and styles specific to the main TimeTrackerPanel layout */
+
+:root{
+    --primaryColor : #FCFCFF;
+    --white : #fff;
+    --searchColor :#F8F9FC;
+    --buttonColor : #34559E; /* Your primary blue button color */
+    --textColor : #000208;
+    --textSubColor : #999A9C;
+}
+
+/* main styling */
+.main-panel{
+    max-width: 1300px;
+    width: 1250px;
+    /* height: 100vh; */
+    /* background-color: var(--primaryColor); */
+    padding-left: 30px;
+    margin: 0px;
+}
+/*---------------- body ui styling------------------ */
+
+/* panel body styling */
+.panel-body{
+    height: 400px;
+}
+/* panel header styling */
+.panel-header{
+   padding: 10px;
+   margin: 20px 0px;
+   margin-left: 30px;
+}
+.panel-header h1{
+    color: var(--textColor);
+    font-size: 23px;
+    font-weight: bolder;
+}
+.panel-header p{
+    color: var(--textSubColor);
+    font-size: 11px;
+}
+/* panel main styling */
+.panel-main{
+    width: 880px;
+    display: flex;
+    justify-content: space-evenly;
+    padding: 20px;
+    align-items: flex-start; /* Align items to the top */
+}
+/* panel timer styling */
+.panel-timer{
+    width: 400px;
+    height: 250px;
+    background-color: var(--white);
+    border-radius: 25px;
+    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.05); /* Adjusted box-shadow for a softer look */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px; /* Space between timer and button group */
+    padding: 20px;
+    overflow: visible; /* Ensures dropdowns are not clipped */
+}
+
+.timer-display{
+    font-size: 80px; /* Larger font for the timer */
+    font-weight: bolder;
+    color: var(--textColor);
+    margin: 0;
+}
+
+/* Base style for any button icon (This will be inherited by buttons in ClockInOutButton and BreakTracker) */
+.button-icon {
+    width: 16px; /* Default size for icons */
+    height: 16px; /* Default size for icons */
+    object-fit: contain;
+}
+
+/* Base styling for .dropdown-menu (This will be inherited by dropdowns in ClockInOutButton and BreakTracker) */
+.dropdown-menu {
+    position: absolute;
+    top: 100%; /* Position directly below the combined button */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Adjust to true center */
+    background-color: var(--white);
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    z-index: 9999; /* Very high z-index to ensure it's on top */
+    min-width: 150px;
+    margin-top: 5px; /* Small gap between button and dropdown */
+    padding: 0px 15px; /* Your added padding */
+}
+
+.dropdown-menu button {
+    background-color: transparent;
+    color: var(--textColor);
+    border: none;
+    padding: 10px 15px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    width: 100%;
+    border-radius: 0; /* No individual button border radius */
+}
+
+.dropdown-menu button:first-child {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom: 1px solid #66676B; /* Your added border */
+}
+.dropdown-menu button:nth-child(2) {
+     border-bottom: 1px solid #66676B; /* Your added border */
+}
+.dropdown-menu button:last-of-type {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.dropdown-menu button:hover {
+    background-color: var(--searchColor);
+}
+
+.start-break-button {
+    background-color: #28a745; /* Green for break */
+}
+
+.start-break-button:hover {
+    background-color: #218838;
+}
+
+/* --- Styles for the button groups when running, paused, or completed --- */
+.active-running-controls,
+.active-paused-controls,
+.completed-session-controls {
+    display: flex;
+    gap: 10px; /* Space between buttons in the group */
+    align-items: center; /* Vertically align buttons */
+    flex-wrap: wrap; /* Allow wrapping if space is limited */
+    justify-content: center; /* Center buttons horizontally */
+}
+
+/* panel timer images styling */
+.panel-timer-images{
+    position: relative;
+    width: 380px;
+    height: 380px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.koala-image {
+    object-fit: contain;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 210px;
+    height: 200px;
+}
+
+/* Base koola-box styling (This will apply when 'koola-box-initial-position' is NOT present) */
+.koola-box{
+    position: absolute;
+    top: 0px;    /* Default for active/paused states - high up */
+    left: 100%;   /* Default for active/paused states - far right */
+    width: 200px; /* Fixed width for the bubble */
+    text-align: center;
+    z-index: 10; /* Ensure speech bubble is above koala if needed */
+    transform: translateX(-50%); /* Always center the bubble relative to its left position */
+}
+.koola-box img{
+    width: 100%;
+    height: 90px;
+}
+.koola-box p{
+    color: var(--buttonColor);
+    text-align: center;
+    width: 80%;
+    font-size: 13px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    line-height: 1.3;
+}
+
+/* --- Conditional positioning for koola-box for initial state --- */
+.koola-box-initial-position {
+   /* These properties will override the base .koola-box when the class is applied */
+   top: 25px; /* Adjusted to bring it closer vertically for initial koala */
+   left: 69%; /* Adjusted to bring it closer horizontally for initial koala */
+   /* transform: translateX(-50%); is inherited from .koola-box base and still applies */
+}

@@ -1,0 +1,26 @@
+/* BreakTracker.css */
+
+.take-break-dropdown-wrapper {
+    position: relative; /* For dropdown menu positioning */
+    display: flex;
+    flex-direction: column; /* Stack button and dropdown */
+    align-items: center;
+    z-index: 2; /* Establish a new stacking context for the wrapper */
+}
+
+.take-break-button {
+    min-width: 150px; /* Match other timer buttons for consistency */
+    /* Inherits background-color, color, border from .timer-button defined in TimeTrackerPanel.css */
+}
+.break-dropdown-menu button:first-child {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom: 1px solid #66676B;
+}
+.break-dropdown-menu button:nth-child(2) {
+     border-bottom: 1px solid #66676B;
+}
+.break-dropdown-menu button:last-of-type {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}

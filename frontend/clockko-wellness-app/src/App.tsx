@@ -7,8 +7,11 @@ import  ChallengesPage  from "./features/challenges/challengePage";
 import { OnboardingProvider } from './contexts/OnboardingContext';
 import { UserProvider } from './contexts/UserContext';
 import TaskTrackerFeatures from './features/tasks-management/taskTrackerFeatures'
+import TimeTrackerFeatures from './features/timeTracker/timetrackerfeatures';
 
 const queryClient = new QueryClient()
+
+
 
 function App() {
   return (
@@ -16,12 +19,12 @@ function App() {
       <UserProvider>
         <OnboardingProvider>
           <BrowserRouter>
-            <Routes>
+            <Routes>   
               <Route path="/" element={<LandingPage />} />
               <Route element={<MainLayout />}>
                 <Route path="/dashboard" element={<DashboardLayout />} />
                 <Route path="/tasks" element={<TaskTrackerFeatures/>} />
-                <Route path="/time-tracker" element={<div className="p-6"><h1 className="text-2xl font-bold">Time Tracker</h1><p>Coming soon...</p></div>} />
+                <Route path="/time-tracker" element={<TimeTrackerFeatures />} />
                 <Route path="/co-working" element={<div className="p-6"><h1 className="text-2xl font-bold">Co-working Rooms</h1><p>Coming soon...</p></div>} />
                 <Route path="/reports" element={<div className="p-6"><h1 className="text-2xl font-bold">Reports</h1><p>Coming soon...</p></div>} />
                 <Route path="/challenges" element={<ChallengesPage/>} />

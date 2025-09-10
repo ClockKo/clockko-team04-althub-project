@@ -1,0 +1,22 @@
+# Team-specific additions
+
+# Personal environment files
+.env.maureen
+.env.john
+.env.jane
+.env.admin
+
+# Personal developer files
+dev_notes.md
+personal_notes.txt
+team_secrets.txt
+local_config.py
+
+# Database backups and dumps
+backups/
+backup/
+*.dump
+*.pg_dump
+
+# Development databases
+clockko_dev_*

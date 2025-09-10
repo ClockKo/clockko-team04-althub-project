@@ -237,3 +237,21 @@ Dockerfile
 # Backup files
 *.bak
 *.backup
+
+# Team collaboration
+team_database_*.sql
+*.local
+.env.team*
+
+# Developer-specific files
+.env.dev_*
+database_setup_*.sql
+dev_notes_*.md
+
+# Migration backup files
+alembic/versions/*.backup
+migration_backup_*.py
+
+# Team testing
+test_data_*.json
+team_test_*.py

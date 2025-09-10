@@ -1,7 +1,7 @@
 /*
-timeUtils.ts              
-   # Time calculations, formatting, helpers
-*/ 
+ * timeUtils.ts
+ * Time calculations, formatting, helpers
+ */
 
 // Define timer durations in seconds
 export const FOCUS_DEFAULT_DURATION: number = 30 * 60; // 30 minutes

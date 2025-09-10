@@ -83,7 +83,7 @@ const ClockInOutButton: React.FC<ClockInOutButtonProps> = ({
     else if (mode === 'completed' && !isRunning) {
       return (
         <div className="completed-session-controls">
-          <button className="timer-button start-break-button" onClick={() => startBreak(BREAK_DEFAULT_DURATION)}>
+          <button className="timer-button start-break-button" onClick={() => startBreak(BREAK_DEFAULT_DURATION / 60)}>
             Start Break
           </button>
           <button className="timer-button stop-button" onClick={stopTimer}>

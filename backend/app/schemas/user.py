@@ -4,11 +4,8 @@ from typing import Optional, Union
 import uuid
 
 class UserCreate(BaseModel):
-    # username: str
-    name: str
+    name: str  # Frontend sends "name" - we'll map this to both username and full_name
     email: EmailStr
-    # full_name: Optional[str] = None
-    # phone_number: Optional[str] = None
     password: str
 
 class UserResponse(BaseModel):

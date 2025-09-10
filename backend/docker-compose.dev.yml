@@ -1,0 +1,58 @@
+# Docker Compose for ClockKo Team Development
+version: '3.8'
+
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:15
+    container_name: clockko_postgres_dev
+    environment:
+      POSTGRES_DB: clockko_main
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: clockko_dev_pass
+      POSTGRES_MULTIPLE_DATABASES: clockko_dev_maureen,clockko_dev_john,clockko_dev_mary,clockko_test,clockko_staging
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-multiple-db.sh:/docker-entrypoint-initdb.d/init-multiple-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: clockko_redis_dev
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: clockko_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@clockko.dev
+      PGADMIN_DEFAULT_PASSWORD: clockko_admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+  # Email testing with Gmail SMTP (smtp.gmail.com:587)
+  # No additional email service needed - using team Gmail account
+  # See GMAIL_TESTING_GUIDE.md for email testing instructions
+    
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: clockko_dev_network

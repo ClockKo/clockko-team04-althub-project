@@ -5,6 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from email.utils import formataddr
 from typing import List, Optional
 import logging
+import os
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -18,15 +19,64 @@ class EmailService:
         self.smtp_password = settings.SMTP_PASSWORD
         self.smtp_from = settings.SMTP_FROM
         self.smtp_from_name = settings.SMTP_FROM_NAME
+        
+        # Auto-detect email service type
+        self.is_mailhog = self._is_mailhog_config()
+        self.is_gmail = self._is_gmail_config()
+        
+        # Log which service we're using
+        if self.is_mailhog:
+            logger.info("📧 Email Service: MailHog (Development Mode)")
+        elif self.is_gmail:
+            logger.info("📧 Email Service: Gmail (Production Mode)")
+        else:
+            logger.warning("📧 Email Service: Unknown configuration")
+    
+    def _is_mailhog_config(self) -> bool:
+        """Check if current config is for MailHog"""
+        return (
+            self.smtp_host == "localhost" and 
+            self.smtp_port == 1025 and
+            not self.smtp_user and 
+            not self.smtp_password
+        )
+    
+    def _is_gmail_config(self) -> bool:
+        """Check if current config is for Gmail"""
+        return (
+            self.smtp_host == "smtp.gmail.com" and
+            self.smtp_port == 587 and
+            self.smtp_user and
+            self.smtp_password
+        )
     
     def _create_connection(self):
-        """Create SMTP connection"""
+        """Create SMTP connection based on service type"""
         try:
-            context = ssl.create_default_context()
             server = smtplib.SMTP(self.smtp_host, self.smtp_port)
-            server.starttls(context=context)
-            server.login(self.smtp_user, self.smtp_password)
-            return server
+            
+            if self.is_mailhog:
+                # MailHog doesn't need authentication or TLS
+                logger.debug("🔧 Connected to MailHog")
+                return server
+            
+            elif self.is_gmail:
+                # Gmail requires TLS and authentication
+                context = ssl.create_default_context()
+                server.starttls(context=context)
+                server.login(self.smtp_user, self.smtp_password)
+                logger.debug("🔧 Connected to Gmail")
+                return server
+            
+            else:
+                # Generic SMTP (try TLS if user/password provided)
+                if self.smtp_user and self.smtp_password:
+                    context = ssl.create_default_context()
+                    server.starttls(context=context)
+                    server.login(self.smtp_user, self.smtp_password)
+                logger.debug("🔧 Connected to generic SMTP")
+                return server
+                
         except Exception as e:
             logger.error(f"Failed to create SMTP connection: {e}")
             raise
@@ -40,6 +90,11 @@ class EmailService:
     ) -> bool:
         """Send an email"""
         try:
+            # Log service being used
+            service_name = "MailHog" if self.is_mailhog else "Gmail" if self.is_gmail else "Generic SMTP"
+            logger.info(f"📧 Sending email via {service_name}")
+            logger.debug(f"To: {to_email}, Subject: {subject}")
+            
             # Create message
             message = MIMEMultipart("alternative")
             message["Subject"] = subject
@@ -59,11 +114,16 @@ class EmailService:
             with self._create_connection() as server:
                 server.send_message(message)
             
-            logger.info(f"Email sent successfully to {to_email}")
+            logger.info(f"✅ Email sent successfully to {to_email}")
+            
+            # Log additional info for development
+            if self.is_mailhog:
+                logger.info("🔍 Check MailHog web interface at http://localhost:8025 to view email")
+            
             return True
             
         except Exception as e:
-            logger.error(f"Failed to send email to {to_email}: {e}")
+            logger.error(f"❌ Failed to send email to {to_email}: {e}")
             if settings.DEBUG:
                 print(f"Email sending failed: {e}")
                 print(f"Would have sent to: {to_email}")

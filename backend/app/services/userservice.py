@@ -19,9 +19,10 @@ def create_user(db: Session, user_data: UserCreate) -> User:
         verification_token = str(uuid.uuid4())
         
         user = User(
-            username=user_data.full_name,  # Map full_name to username
+            username=user_data.name,  # Map name to username
             email=user_data.email,
-            phone_number=user_data.phone_number,
+            full_name=user_data.name,  # Also use name as full_name
+            phone_number=None,  # Frontend doesn't provide phone number
             hashed_password=hashed,
             verification_token=verification_token,
             is_verified=False

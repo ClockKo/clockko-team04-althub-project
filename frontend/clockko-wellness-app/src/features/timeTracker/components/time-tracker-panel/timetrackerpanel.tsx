@@ -17,7 +17,7 @@ import BreakTracker from "../break-tracker/breaktracker";
 import DailySummary from "../daily-summary/dailysummary";
 
 // --- Time Utilities ---
-import { FOCUS_DEFAULT_DURATION, BREAK_DEFAULT_DURATION, formatTime, formatTotalTime } from "../../utils/timeutils"; // **UPDATED IMPORT**
+import { FOCUS_DEFAULT_DURATION, BREAK_DEFAULT_DURATION, formatTime, formatTotalTime } from "../../utils/timeUtils"; // **UPDATED IMPORT**
 
 function TimeTrackerPanel() {
 

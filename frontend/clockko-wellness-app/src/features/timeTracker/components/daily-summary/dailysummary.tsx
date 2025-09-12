@@ -2,7 +2,7 @@
 /* DailySummary.tsx             # Displays daily hours summary */
 import React from 'react';
 import './dailySummary.css'; // Dedicated CSS for daily summary
-import { formatTotalTime } from '../../utils/timeutils'; 
+import { formatTotalTime } from '../../utils/timeUtils'; // **UPDATED IMPORT**
 
 // Import session summary images 
 import thunderBolt from "../../../../assets/images/frame3.png";

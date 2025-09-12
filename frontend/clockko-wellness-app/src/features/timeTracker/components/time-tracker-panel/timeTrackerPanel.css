@@ -73,26 +73,26 @@
 
 /* Base style for any button icon (This will be inherited by buttons in ClockInOutButton and BreakTracker) */
 .button-icon {
-    width: 16px; /* Default size for icons */
-    height: 16px; /* Default size for icons */
+    width: 16px; 
+    height: 16px; 
     object-fit: contain;
 }
 
 /* Base styling for .dropdown-menu (This will be inherited by dropdowns in ClockInOutButton and BreakTracker) */
 .dropdown-menu {
     position: absolute;
-    top: 100%; /* Position directly below the combined button */
-    left: 50%; /* Center horizontally */
-    transform: translateX(-50%); /* Adjust to true center */
+    top: 100%; 
+    left: 50%; 
+    transform: translateX(-50%);
     background-color: var(--white);
     box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    z-index: 9999; /* Very high z-index to ensure it's on top */
+    z-index: 9999; 
     min-width: 150px;
-    margin-top: 5px; /* Small gap between button and dropdown */
-    padding: 0px 15px; /* Your added padding */
+    margin-top: 5px; 
+    padding: 0px 15px; 
 }
 
 .dropdown-menu button {

@@ -10,10 +10,22 @@ const TaskTrackerPanel: React.FC<{
 }> = ({ tasks, type }) => {
   return (
     <div
-      className={clsx('flex gap-4 p-4', {
-        'flex-col': type === 'list',
-        'flex-row items-start': type === 'board',
+      className={clsx('gap-4 p-4', {
+        'flex-col flex': type === 'list',
+        'flex-row items-start flex': type === 'board',
       })}
+      style={
+        type === 'board'
+          ? {
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              // Only enable horizontal scroll on mobile
+              ...(window.innerWidth < 1024
+                ? { display: 'flex', flexWrap: 'nowrap' }
+                : {}),
+            }
+          : undefined
+      }
     >
       {Object.entries(tasks).map(([status, tasksList]) => (
         <TaskColumn key={status} status={status} tasks={tasksList} type={type} />

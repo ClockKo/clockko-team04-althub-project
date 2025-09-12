@@ -15,12 +15,29 @@ const TaskColumn: React.FC<TaskColumnProps> = ({ status, tasks, type }) => {
   const [open, setOpen] = useState(true)
 
   return (
-    <div
-      className={clsx('p-6 bg-white shadow-md rounded-3xl font-poppins', {
-        'w-full': type === 'list',
-        'flex-1 min-w-0': type === 'board',
-      })}
-    >
+      <div
+        className={clsx(
+          'p-6 bg-white shadow-md rounded-3xl font-poppins',
+          {
+            'w-full': type === 'list',
+            // Responsive board column width for mobile
+            'flex-1 min-w-0': type === 'board',
+          }
+        )}
+        style={
+          type === 'board'
+            ? {
+                minWidth: '280px', // fallback for desktop
+                width: '100%',
+                maxWidth: '420px',
+                // Mobile: wider columns
+                ...(window.innerWidth < 768
+                  ? { minWidth: '80vw', maxWidth: '90vw' }
+                  : {}),
+              }
+            : undefined
+        }
+      >
       <Collapsible open={open} onOpenChange={setOpen}>
         <CollapsibleHeader
           title={status}

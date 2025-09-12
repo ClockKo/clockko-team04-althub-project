@@ -1,3 +1,4 @@
+from datetime import date # For date handling
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -42,7 +43,13 @@ def get_logs(user_id: str, db: Session = Depends(get_db)):
 def get_summary(session_id: str, db: Session = Depends(get_db)):
     return timetrackerservice.get_summary(db, session_id)
 
-
+# New endpoint: daily summary for a user and date
+@router.get("/time-logs/daily-summary")
+def get_daily_summary(user_id: str, summary_date: str, db: Session = Depends(get_db)):
+    """
+    Returns total focus sessions, total focus time, total break time for a user on a given date (YYYY-MM-DD).
+    """
+    return timetrackerservice.get_daily_summary(db, user_id, summary_date)
 
 @router.get("/time-logs/current", response_model=TimeLogResponse)
 def current_session(user_id: str, db: Session = Depends(get_db)):

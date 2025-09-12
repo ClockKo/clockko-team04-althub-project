@@ -1,3 +1,4 @@
+# Database service for time tracking
 from sqlalchemy.orm import Session
 from app.models.timelog import Timelog
 from app.models.user import User
@@ -103,7 +104,30 @@ def get_current_session(db: Session, user_id):
     ).order_by(Timelog.start_time.desc()).first()
 
 
+# Daily summary aggregation function
+def get_daily_summary(db, user_id, summary_date):
+    # Query all logs for user and date
+    logs = db.query(Timelog).filter(
+        Timelog.user_id == user_id,
+        Timelog.start_time.startswith(summary_date)
+    ).all()
 
+    total_focus_sessions = 0
+    total_focus_time = 0
+    total_break_time = 0
+
+    for log in logs:
+        if log.session_type == "work":
+            total_focus_sessions += 1
+            total_focus_time += log.duration
+        elif log.session_type == "break":
+            total_break_time += log.duration
+
+    return {
+        "totalFocusSessions": total_focus_sessions,
+        "totalFocusTime": total_focus_time,
+        "totalBreakTime": total_break_time,
+    }
 
 
 

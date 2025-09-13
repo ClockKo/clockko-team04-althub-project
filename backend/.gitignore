@@ -230,9 +230,10 @@ POSTGRESQL_SETUP.md
 # Alembic version files (keep structure but ignore generated migrations if needed)
 # alembic/versions/*.py
 
-# Docker files for development
-docker-compose.yml
-Dockerfile
+# Docker files for development (keep main ones tracked)
+# Ignore only local overrides or dev-specific compose files
+docker-compose.override.yml
+docker-compose.dev.yml
 
 # Backup files
 *.bak

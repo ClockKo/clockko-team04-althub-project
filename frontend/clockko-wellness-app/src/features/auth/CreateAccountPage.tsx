@@ -65,13 +65,16 @@ const CreateAccountPage: React.FC = () => {
             {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>}
           </div>
 
-          <div className="flex items-center space-x-3 pt-2 mb-10">
-            <Checkbox id="agree" {...register('agree')} />
-            <label htmlFor="agree" className="text-sm text-gray-600">
-              I agree to ClockKo's <Link to="/privacy" className="underline hover:text-gray-800">Privacy Policy</Link> and <Link to="/terms" className="underline hover:text-gray-800">Terms of Use</Link>
-            </label>
+          <div>
+            <div className="flex items-center space-x-3 pt-2">
+              <Checkbox id="agree" {...register('agree')} />
+              <label htmlFor="agree" className="text-sm text-gray-600">
+                I agree to ClockKo's <Link to="/privacy" className="underline hover:text-gray-800">Privacy Policy</Link> and <Link to="/terms" className="underline hover:text-gray-800">Terms of Use</Link>
+              </label>
+            </div>
+            {/* The error message is now correctly placed inside the parent div */}
+            {errors.agree && <p className="text-red-600 text-sm mt-1">{errors.agree.message}</p>}
           </div>
-          {errors.agree && <p className="text-red-600 text-sm">{errors.agree.message}</p>}
 
           <Button type="submit" className="w-full bg-[#34559E] hover:bg-[#2c4885] py-6 text-md mt-4 rounded-[24px]">
             Sign Up

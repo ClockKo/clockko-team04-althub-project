@@ -30,11 +30,11 @@ const SignInPage: React.FC = () => {
 
   // 3. Handle form submission
   const onSubmit = (data: SignInFormData) => {
-    console.log('Sign in data:', data)
-    // TODO: Call API to log in the user
-    navigate('/dashboard')
-  }
+  console.log('Data to be sent to backend:', data);
+  
+  navigate('/dashboard');
 
+};
   return (
     <AuthLayout hideHeader={true}>
       <div className="w-full text-left">

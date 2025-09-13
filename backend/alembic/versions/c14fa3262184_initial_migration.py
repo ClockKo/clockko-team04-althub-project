@@ -5,11 +5,11 @@ Revises:
 Create Date: 2025-08-18 12:22:31.242144
 
 """
-from app.models.user import GUID
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.

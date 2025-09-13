@@ -21,6 +21,15 @@ def register(user_data: schema.UserCreate, db: Session = Depends(get_db)):
         if existing_user:
             raise HTTPException(status_code=400, detail="Email already registered")
         
+        # Check if username already exists (since we're using name as username)
+        existing_username = db.query(User).filter(User.username == user_data.name).first()
+        if existing_username:
+            # Generate unique username by appending timestamp
+            import time
+            unique_username = f"{user_data.name}_{int(time.time())}"
+        else:
+            unique_username = user_data.name
+        
         # Hash password and generate tokens
         hashed_password = hash_password(user_data.password)
         verification_token = str(uuid.uuid4())
@@ -29,10 +38,10 @@ def register(user_data: schema.UserCreate, db: Session = Depends(get_db)):
         # Create new user
         db_user = User(
             id=user_id,
-            username=user_data.username,
-            full_name=user_data.full_name,
+            username=unique_username,  # Use the unique username we generated
+            full_name=user_data.name,  # Store original name as full_name
             email=user_data.email,
-            phone_number=user_data.phone_number,
+            # phone_number=user_data.phone_number,
             hashed_password=hashed_password,
             verification_token=verification_token,
             is_active=True,
@@ -55,9 +64,10 @@ def register(user_data: schema.UserCreate, db: Session = Depends(get_db)):
         except Exception as email_error:
             print(f"Welcome email sending error: {email_error}")
             # Continue with registration even if email fails
-        
-        # Return user data (convert to UserResponse for proper serialization)
-        return schema.UserResponse.model_validate(db_user)
+
+        # Return user data using custom mapping to ensure frontend compatibility
+        user_resp = schema.UserResponse.from_user_model(db_user)
+        return user_resp.model_dump()
         
     except HTTPException:
         # Re-raise HTTP exceptions (like duplicate email)
@@ -96,7 +106,8 @@ async def login(user_credentials: schema.UserLogin, db: Session = Depends(get_db
 @router.get("/user", response_model=schema.UserResponse)
 def get_user(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Get current user information"""
-    return current_user
+    user_resp = schema.UserResponse.from_user_model(current_user)
+    return user_resp.model_dump()
 
 @router.post("/send-verification-email")
 def send_verification_email(payload: schema.SendOTPRequest, db: Session = Depends(get_db)):

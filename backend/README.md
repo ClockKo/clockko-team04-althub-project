@@ -50,7 +50,7 @@ A FastAPI-based backend application for ClockKo - Authentication and user manage
 
    ```bash
    python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   source venv/bin/activate  # On Windows: venv/Scripts/activate
    ```
 
 3. **Install dependencies**
@@ -65,12 +65,12 @@ A FastAPI-based backend application for ClockKo - Authentication and user manage
    ```env
    # Database
    DATABASE_URL=postgresql://username:password@localhost/clockko_db
-   
+
    # JWT
    SECRET_KEY=my-secret-key
    ALGORITHM=HS256
    ACCESS_TOKEN_EXPIRE_MINUTES=30
-   
+
    # Email Configuration
    SMTP_HOST=smtp.gmail.com
    SMTP_PORT=587
@@ -78,10 +78,10 @@ A FastAPI-based backend application for ClockKo - Authentication and user manage
    SMTP_PASSWORD=my-app-password
    SMTP_FROM=your-email@gmail.com
    SMTP_FROM_NAME=ClockKo
-   
+
    # OTP Settings
    OTP_EXPIRE_MINUTES=5
-   
+
    # App Settings
    APP_NAME=ClockKo
    FRONTEND_URL=http://localhost:3000

@@ -11,7 +11,7 @@ from app.models.user import User
 from app.services.taskservice import start_timer, stop_timer, get_time_logs, Task as crud_task
 
 
-router = APIRouter(prefix="/tasks", tags=["Tasks"])
+router = APIRouter(tags=["Tasks"])
 
 
 @router.post("/", response_model=TaskResponse)

@@ -6,7 +6,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from './AuthLayout';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import google from '../../assets/images/google.png';
+import { GoogleLogin } from '@react-oauth/google';
+import type { CredentialResponse } from '@react-oauth/google';
 
 // 1. Define the validation schema for the sign-in form
 const signInSchema = z.object({
@@ -30,11 +31,15 @@ const SignInPage: React.FC = () => {
 
   // 3. Handle form submission
   const onSubmit = (data: SignInFormData) => {
-  console.log('Data to be sent to backend:', data);
-  
-  navigate('/dashboard');
+    console.log('Data to be sent to backend:', data);
 
-};
+    navigate('/dashboard');
+  };
+  const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
+    console.log('Google credential:', credentialResponse.credential);
+    // TODO: Send this credential to your backend for verification
+  };
+
   return (
     <AuthLayout hideHeader={true}>
       <div className="w-full text-left">
@@ -66,7 +71,7 @@ const SignInPage: React.FC = () => {
             </Link>
           </div>
 
-            {/* Sign In Button */}
+          {/* Sign In Button */}
 
           <Button
             type="submit"
@@ -84,13 +89,23 @@ const SignInPage: React.FC = () => {
         </div>
 
         {/* Google Sign In Button */}
-        <Button
+        {/* <Button
           variant="outline"
           className="w-full flex items-center justify-center text-gray-700 py-6 text-md"
         >
           <img src={google} alt="Google logo" className="h-5 w-5 mr-3" />
           Sign in with Google
-        </Button>
+        </Button> */}
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => console.log('Google Login Failed')}
+            theme="outline"
+            size="large"
+            shape="pill"
+            width="400px"
+          />
+        </div>
 
         <p className="mt-8 text-center text-sm text-gray-600">
           Don't have an account?{' '}

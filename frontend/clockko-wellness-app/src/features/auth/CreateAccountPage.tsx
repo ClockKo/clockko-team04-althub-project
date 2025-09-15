@@ -4,10 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from './AuthLayout';
-import google from '../../assets/images/google.png'
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Checkbox } from '../../components/ui/checkbox';
+import { GoogleLogin } from '@react-oauth/google';
+import type { CredentialResponse } from '@react-oauth/google';
 
 
 // 1. Define the validation schema
@@ -39,6 +40,11 @@ const CreateAccountPage: React.FC = () => {
     console.log('Create account data:', data);
     // TODO: Call API to register the user
     navigate('/dashboard');
+  };
+
+  const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
+    console.log('Google credential:', credentialResponse.credential);
+    // TODO: Send this credential to your backend for verification
   };
 
   return (
@@ -89,11 +95,23 @@ const CreateAccountPage: React.FC = () => {
         </div>
 
         {/* Google Sign Up Button */}
-        <Button variant="outline" className="w-full flex items-center justify-center text-gray-700 py-6 text-md rounded-[16px]">
+        {/* <Button variant="outline" className="w-full flex items-center justify-center text-gray-700 py-6 text-md rounded-[16px]">
           <img src={google} alt="Google logo" className="h-5 w-5 mr-3" />
           Sign up with Google
-        </Button>
+        </Button> */}
+         <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => console.log('Google Login Failed')}
+            theme="outline"
+            size="large"
+            shape="pill"
+            width="400px"
+            text="signup_with" // 👈 Add this prop
+          />
+        </div>
 
+        {/* Link to Sign In */}
         <p className="mt-8 text-center text-sm text-gray-600">
           Already have an account? <Link to="/signin" className="font-semibold text-indigo-600 hover:text-indigo-500">Log in</Link>
         </p>

@@ -20,8 +20,8 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children, hideHeader = false })
           style={{ backgroundImage: `url(${authImage})` }}
         ></div>
         <div className="relative z-10 text-center">
-          <img src={frame1} alt="ClockKo Logo" className="w-48 mx-auto mb-4" />
-          <h1 className="text-4xl font-bold">
+          <img src={frame1} alt="ClockKo Logo" className="w-48 mx-auto -mt-8" />
+          <h1 className="text-4xl font-bold mt-8">
             Work effectively, clock out guilt-free
           </h1>
         </div>

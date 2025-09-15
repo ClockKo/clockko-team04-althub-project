@@ -61,7 +61,7 @@ const SignInPage: React.FC = () => {
             {errors.password && (
               <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
             )}
-            <Link to="/forgot-password" className="text-sm text-indigo-600 hover:underline block mt-4">
+            <Link to="/reset-password" className="text-sm text-indigo-600 hover:underline block mt-4">
               Forgot password?
             </Link>
           </div>

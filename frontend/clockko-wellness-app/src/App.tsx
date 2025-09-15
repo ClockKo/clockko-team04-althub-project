@@ -8,6 +8,9 @@ import { OnboardingProvider } from './contexts/OnboardingContext';
 import { UserProvider } from './contexts/UserContext';
 import TaskTrackerFeatures from './features/tasks-management/taskTrackerFeatures'
 import TimeTrackerFeatures from './features/timeTracker/timetrackerfeatures';
+import CreateAccountPage from './features/auth/CreateAccountPage';
+import SignInPage from './features/auth/SignInPage';
+import ResetPasswordPage from './features/auth/ResetPasswordPage';
 
 const queryClient = new QueryClient()
 
@@ -33,6 +36,9 @@ function App() {
               </Route>
               {/* Add other routes like login, dashboard, etc. */}
               <Route path="*" element={<Navigate to="/" />} />
+              <Route path="/create-account" element={<CreateAccountPage />} />
+              <Route path="/signin" element={<SignInPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
             </Routes>
           </BrowserRouter>
         </OnboardingProvider>

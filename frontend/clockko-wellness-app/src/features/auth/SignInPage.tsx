@@ -96,14 +96,13 @@ const SignInPage: React.FC = () => {
           <img src={google} alt="Google logo" className="h-5 w-5 mr-3" />
           Sign in with Google
         </Button> */}
-        <div className="flex justify-center">
+        <div className="[&>div]:w-full">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => console.log('Google Login Failed')}
             theme="outline"
             size="large"
             shape="pill"
-            width="400px"
           />
         </div>
 

@@ -38,6 +38,30 @@ export const registerUser = async (data: RegistrationFormData) => {
 };
 
 /**
+ * Fetches the current user's data from the backend.
+ */
+export const fetchUserData = async () => {
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      throw new Error('No auth token found');
+    }
+
+    const response = await axios.get(`${API_URL}/users/profile`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Fetch user data failed:', error);
+    // Remove invalid token if the request fails
+    localStorage.removeItem('authToken');
+    throw error;
+  }
+};
+
+/**
  * Logs the user out by removing the token from storage.
  */
 export const logoutUser = () => {

@@ -271,7 +271,7 @@ export default function MainLayout() {
             <div className="flex items-center justify-between px-8 py-4 rounded-lg mb-6">
               <div className="flex-1 mx-8 relative">
                 {/* input search bar */}
-                <label htmlFor="search" sr-only></label>
+                <label htmlFor="search" className="sr-only"></label>
                 {searchTerm === '' && (
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                     <Search className="text-gray-400" />

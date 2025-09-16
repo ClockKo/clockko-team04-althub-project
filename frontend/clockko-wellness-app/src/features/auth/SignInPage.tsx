@@ -35,9 +35,28 @@ const SignInPage: React.FC = () => {
 
     navigate('/dashboard');
   };
-  const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
-    console.log('Google credential:', credentialResponse.credential);
-    // TODO: Send this credential to your backend for verification
+
+  // const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
+  //   console.log('Google credential:', credentialResponse.credential);
+  //   // TODO: Send this credential to your backend for verification
+  // };
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    try {
+      const response = await fetch('http://localhost:8000/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: credentialResponse.credential }),
+      });
+      if (response.ok) {
+        // Optionally store token or user info here
+        navigate('/dashboard');
+      } else {
+        // Handle error (show message, etc.)
+        console.error('Google login failed');
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
+    }
   };
 
   return (

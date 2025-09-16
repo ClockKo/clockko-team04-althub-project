@@ -6,7 +6,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from './AuthLayout'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
-import { Checkbox } from '../../components/ui/checkbox'
+// import { Checkbox } from '../../components/ui/checkbox'
 import { GoogleLogin } from '@react-oauth/google'
 import type { CredentialResponse } from '@react-oauth/google'
 import { registerUser } from './api'
@@ -94,7 +94,13 @@ const CreateAccountPage: React.FC = () => {
 
           <div>
             <div className="flex items-center space-x-3 pt-2">
-              <Checkbox id="agree" {...register('agree')} />
+              {/* <Checkbox id="agree" {...register('agree')} /> */}
+              <input
+                type="checkbox"
+                id="agree"
+                {...register('agree')}
+                className="mr-2"
+              />
               <label htmlFor="agree" className="text-sm text-gray-600">
                 I agree to ClockKo's{' '}
                 <Link to="/privacy" className="underline hover:text-gray-800">

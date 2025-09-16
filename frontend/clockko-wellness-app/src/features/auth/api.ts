@@ -2,14 +2,16 @@ import axios from 'axios';
 import type { LoginFormData, RegistrationFormData } from './validation';
 
 // store this in a .env file for security
-const API_URL = 'http://localhost:8000/api/auth';
+// const API_URL = 'http://localhost:8000/api/auth';
+// const API_URL = 'http://localhost:8000';
+const API_URL = 'http://localhost:8000/api'; 
 
 /**
  * Sends a login request to the backend.
  */
 export const loginUser = async (data: LoginFormData) => {
   try {
-    const response = await axios.post(`${API_URL}/login`, data);
+    const response = await axios.post(`${API_URL}/auth/login`, data);
     // If the backend sends back a token, store it
     if (response.data.access_token) {
       localStorage.setItem('authToken', response.data.access_token);
@@ -27,7 +29,7 @@ export const loginUser = async (data: LoginFormData) => {
  */
 export const registerUser = async (data: RegistrationFormData) => {
   try {
-    const response = await axios.post(`${API_URL}/register`, data);
+    const response = await axios.post(`${API_URL}/auth/register`, data);
     return response.data;
   } catch (error) {
     console.error('Registration API call failed:', error);

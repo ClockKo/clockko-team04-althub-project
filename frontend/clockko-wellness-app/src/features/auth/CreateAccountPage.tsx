@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/button'
 import { GoogleLogin } from '@react-oauth/google'
 import type { CredentialResponse } from '@react-oauth/google'
 import { registerUser } from './api'
+import { useAuth } from './authcontext'
 
 // 1. Define the validation schema
 const createAccountSchema = z.object({
@@ -25,8 +26,9 @@ type CreateAccountFormData = z.infer<typeof createAccountSchema>
 
 const CreateAccountPage: React.FC = () => {
   const navigate = useNavigate()
+  const { setAuthToken } = useAuth(); // Get the setAuthToken function
 
-  // 2. Set up react-hook-form
+  // Set up react-hook-form
   const {
     register,
     handleSubmit,
@@ -35,20 +37,27 @@ const CreateAccountPage: React.FC = () => {
     resolver: zodResolver(createAccountSchema),
   })
 
-  // 3. Handle form submission
+  // Handle form submission
   const onSubmit = async (data: CreateAccountFormData) => {
-    // 👇 ADD this line to define registrationData
-    const { agree, ...registrationData } = data
-
+    const { agree, ...registrationData } = data;
     try {
-      // This will now work correctly
-      const response = await registerUser(registrationData)
-      console.log('Registration successful:', response)
-      navigate('/dashboard')
+      const response = await registerUser(registrationData);
+      console.log('Registration successful:', response);
+      
+      // 👇 3. Store the token from the registration response
+      if (response.access_token) {
+        setAuthToken(response.access_token);
+        // 4. Now navigate to the dashboard
+        navigate('/dashboard');
+      } else {
+        // If no token, maybe send to a "please log in" page
+        navigate('/signin');
+      }
     } catch (error: any) {
-      console.error('Registration failed:', error)
+      console.error('Registration failed:', error);
+      // Handle and display error
     }
-  }
+  };
 
   const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
     console.log('Google credential:', credentialResponse.credential)

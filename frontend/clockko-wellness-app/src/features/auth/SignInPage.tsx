@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,8 +8,10 @@ import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { GoogleLogin } from '@react-oauth/google';
 import type { CredentialResponse } from '@react-oauth/google';
+import { loginUser } from './api';
+import { useAuth } from './authcontext';
 
-// 1. Define the validation schema for the sign-in form
+// Validation schema for the sign-in form
 const signInSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email' }),
   password: z.string().min(1, { message: 'Password is required' }),
@@ -18,9 +20,11 @@ const signInSchema = z.object({
 type SignInFormData = z.infer<typeof signInSchema>
 
 const SignInPage: React.FC = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { setAuthToken } = useAuth(); // 👈 3. Get setAuthToken
+  const [apiError, setApiError] = useState<string | null>(null);
 
-  // 2. Set up react-hook-form
+  // React-hook-form
   const {
     register,
     handleSubmit,
@@ -29,11 +33,27 @@ const SignInPage: React.FC = () => {
     resolver: zodResolver(signInSchema),
   })
 
-  // 3. Handle form submission
-  const onSubmit = (data: SignInFormData) => {
-    console.log('Data to be sent to backend:', data);
+  // Handle form submission
+  // const onSubmit = (data: SignInFormData) => {
+  //   console.log('Data to be sent to backend:', data);
 
-    navigate('/dashboard');
+  //   navigate('/dashboard');
+  // };
+  const onSubmit = async (data: SignInFormData) => {
+    setApiError(null);
+    try {
+      // We can now use 'data' directly
+      const response = await loginUser(data); 
+      console.log('Login successful:', response);
+      
+      if (response.access_token) {
+        setAuthToken(response.access_token);
+        navigate('/dashboard');
+      }
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      setApiError(error.response?.data?.detail || 'Incorrect email or password.');
+    }
   };
 
   // const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
@@ -99,6 +119,10 @@ const SignInPage: React.FC = () => {
             Sign In
           </Button>
         </form>
+
+        {/* API error display */}
+        {apiError && <p className="text-red-600 text-sm mt-4 text-center">{apiError}</p>}
+
 
         {/* OR Separator */}
         <div className="flex items-center my-6">

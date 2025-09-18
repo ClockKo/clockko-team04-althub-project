@@ -15,6 +15,8 @@ import {
   startChallenge,
 } from '../challenges/api'
 import type { Challenge, Leader, ChallengeStats } from '../challenges/api'
+import ChallengePoses from '../../assets/images/ChallengePoses.png'
+import { useState, useEffect } from 'react'
 
 // ---- DEMO DATA (for when backend API is not available) ----
 const DEMO_CHALLENGES: Challenge[] = [
@@ -284,15 +286,75 @@ function Leaderboard({ leaders }: { leaders: Leader[] }) {
 
 // Main Page
 export default function ChallengesPage() {
+  // Store previous leader data for fallback
+  const [prevLeaderData, setPrevLeaderData] = useState<Leader[]>([])
+
   const { data: stats, isLoading: statsLoading } = useChallengeStats()
   const { data: challenges, isLoading: challengesLoading } = useChallenges()
-  const { data: leaders, isLoading: leadersLoading } = useLeaders()
+  const { data: leaders, isLoading: leadersLoading, refetch: refetchLeaders } = useLeaders()
   const startChallengeMutation = useStartChallenge()
 
   // Use demo data as fallback when API calls fail or are loading
   const displayStats = stats || DEMO_STATS
   const displayChallenges = challenges || DEMO_CHALLENGES
-  const displayLeaders = leaders || DEMO_LEADERS
+  // Leaderboard state logic
+  const [showKoalaEmpty, setShowKoalaEmpty] = useState(false)
+  const [showSkeleton, setShowSkeleton] = useState(false)
+  const [showLeaderboard, setShowLeaderboard] = useState(false)
+  const [leaderData, setLeaderData] = useState<Leader[]>([])
+
+  // Show koala empty state if user hasn't started any challenges
+  useEffect(() => {
+    if (displayStats.challengesDone === 0) {
+      setShowKoalaEmpty(true)
+      setShowSkeleton(false)
+      setShowLeaderboard(false)
+      setLeaderData([])
+      // After 3.5 seconds, show skeleton and try to fetch leaders
+      const timer = setTimeout(() => {
+        setShowKoalaEmpty(false)
+        setShowSkeleton(true)
+        refetchLeaders()
+      }, 3500)
+      return () => clearTimeout(timer)
+    } else {
+      setShowKoalaEmpty(false)
+      setShowSkeleton(false)
+      setShowLeaderboard(true)
+    }
+  }, [displayStats.challengesDone, refetchLeaders])
+
+  // When leaders data is fetched, show leaderboard or fallback
+  useEffect(() => {
+    if (showSkeleton && !leadersLoading) {
+      setShowSkeleton(false)
+      if (leaders && leaders.length > 0) {
+        setLeaderData(leaders)
+        setPrevLeaderData(leaders)
+      } else {
+        setLeaderData(DEMO_LEADERS)
+        setPrevLeaderData(DEMO_LEADERS)
+      }
+      setShowLeaderboard(true)
+    }
+  }, [leaders, leadersLoading, showSkeleton])
+
+  // Refresh leaderboard every 1 hour
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchLeaders().then((result) => {
+        const newLeaders = result.data
+        if (newLeaders && newLeaders.length > 0) {
+          setLeaderData(newLeaders)
+          setPrevLeaderData(newLeaders)
+        } else {
+          // fallback to previous result
+          setLeaderData(prevLeaderData.length > 0 ? prevLeaderData : DEMO_LEADERS)
+        }
+      })
+    }, 3600000) // 1 hour in ms
+    return () => clearInterval(interval)
+  }, [refetchLeaders, prevLeaderData])
 
   function handleStartChallenge(id: string) {
     startChallengeMutation.mutate(id)
@@ -302,35 +364,39 @@ export default function ChallengesPage() {
     <div className="min-h-screen w-screen bg-powderBlue md:px-2 xs:px-4 py-2 lg:w-[80vw] max-w-[1440px]">
       <div className="mb-6 p-8">
         <h1 className="text-2xl font-regular mb-2">Challenges & Rewards</h1>
-        <div className="grid lg:grid-cols-4 sm:grid-cols-2 gap-4 mb-4 mt-8 lg:gap-2">
-          <StatCard
-            icon={<img src={greenlight} alt="green light icon" />}
-            value={statsLoading ? '...' : displayStats.totalPoints}
-            label="Total Points"
-            color="bg-white"
-            width="w-full"
-          />
-          <StatCard
-            icon={<img src={checkmark} alt="checkmark icon" />}
-            value={statsLoading ? '...' : displayStats.challengesDone}
-            label="Challenges Done"
-            color="bg-white"
-            width="w-full"
-          />
-          <StatCard
-            icon={<img src={flame} alt="yellow flame icon" />}
-            value={statsLoading ? '...' : displayStats.shutdownStreak}
-            label="Shutdown Streak"
-            color="bg-white"
-            width="w-full"
-          />
-          <StatCard
-            icon={<img src={teacup} alt="tea cup icon" />}
-            value={statsLoading ? '...' : displayStats.avgShutdownTime}
-            label="Avg Shutdown Time"
-            color="bg-white"
-            width="w-full"
-          />
+        <div className="grid grid-rows-2 lg:grid-cols-4 gap-4 mb-4 mt-8 lg:gap-2">
+          <div className="lg:col-span-2 grid grid-cols-2 gap-4 mb-4 lg:mb-0">
+            <StatCard
+              icon={<img src={greenlight} alt="green light icon" />}
+              value={statsLoading ? '...' : displayStats.totalPoints}
+              label="Total Points"
+              color="bg-white"
+              width="w-full"
+            />
+            <StatCard
+              icon={<img src={checkmark} alt="checkmark icon" />}
+              value={statsLoading ? '...' : displayStats.challengesDone}
+              label="Challenges Done"
+              color="bg-white"
+              width="w-full"
+            />
+          </div>
+          <div className="lg:col-span-2 grid grid-cols-2 gap-4">
+            <StatCard
+              icon={<img src={flame} alt="yellow flame icon" />}
+              value={statsLoading ? '...' : displayStats.shutdownStreak}
+              label="Shutdown Streak"
+              color="bg-white"
+              width="w-full"
+            />
+            <StatCard
+              icon={<img src={teacup} alt="tea cup icon" />}
+              value={statsLoading ? '...' : displayStats.avgShutdownTime}
+              label="Avg Shutdown Time"
+              color="bg-white"
+              width="w-full"
+            />
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -350,7 +416,16 @@ export default function ChallengesPage() {
             ))
           )}
         </div>
-        {leadersLoading ? <LeaderboardSkeleton /> : <Leaderboard leaders={displayLeaders} />}
+        {/* Leaderboard logic: koala empty, skeleton, or leaderboard */}
+        {showKoalaEmpty ? (
+          <div className="flex flex-col items-center justify-center h-full py-12">
+            <img src={ChallengePoses} alt="Koala pose" className="w-[80%] mb-4" />
+          </div>
+        ) : showSkeleton ? (
+          <LeaderboardSkeleton />
+        ) : showLeaderboard ? (
+          <Leaderboard leaders={leaderData} />
+        ) : null}
       </div>
     </div>
   )

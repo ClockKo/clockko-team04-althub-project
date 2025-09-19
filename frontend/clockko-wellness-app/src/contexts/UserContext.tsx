@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { fetchUserData } from '../pages/dashboard/api';
+import { fetchUserData } from '@/features/auth/api';
+import { useAuth } from '@/features/auth/authcontext';
 import type { User } from '../types/typesGlobal';
 
 interface UserContextType {
@@ -12,30 +13,54 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
+  const { isAuthenticated } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUser = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const userData = await fetchUserData();
-      setUser(userData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch user data');
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchUser = async () => {
+      // Only try to fetch data if the user is authenticated
+      if (isAuthenticated) {
+        try {
+          setIsLoading(true);
+          setError(null);
+          const userData = await fetchUserData();
+          setUser(userData);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Failed to fetch user data');
+          setUser(null);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        // If not authenticated, clear user data
+        setUser(null);
+        setIsLoading(false);
+      }
+    };
+
     fetchUser();
-  }, []);
+  }, [isAuthenticated]); // This effect runs when the component mounts and whenever isAuthenticated changes
 
   const refetchUser = () => {
-    fetchUser();
+    // This function can be called manually to re-fetch user data
+    if (isAuthenticated) {
+        const fetchUser = async () => {
+            try {
+              setIsLoading(true);
+              setError(null);
+              const userData = await fetchUserData();
+              setUser(userData);
+            } catch (err) {
+              setError(err instanceof Error ? err.message : 'Failed to fetch user data');
+              setUser(null);
+            } finally {
+              setIsLoading(false);
+            }
+        };
+        fetchUser();
+    }
   };
 
   return (

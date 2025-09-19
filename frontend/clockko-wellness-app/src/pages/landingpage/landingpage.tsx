@@ -61,12 +61,12 @@ export const LandingPage: React.FC = () => {
             <img src={frame1} alt="Logo" className="w-20 md:w-30 md:translate-x-[50%]" />
               {/* login/sign up button */}
             <div className="text-[.7rem] p-2 z-10">
-              <Link to="login" className="mr-[5px]">
+              <Link to="/signin" className="mr-[5px]">
                 <Button variant="outline" className="border-blue1 text-blue1 px-6 py-2 rounded-[50px] md:px-10">
                   Log In
                 </Button>
               </Link>
-              <Link to="signup" className="">
+              <Link to="/create-account" className="">
                 <Button className="bg-blue1 text-white px-6 py-2 rounded-[50px] md:px-10">
                   Sign Up
                 </Button>

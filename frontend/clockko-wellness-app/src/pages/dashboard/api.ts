@@ -1,4 +1,3 @@
-/*api.ts               // API functions to fetch dashboard data*/
 import axios from 'axios'
 
 export async function fetchCurrentSession() {

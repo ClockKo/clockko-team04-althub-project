@@ -7,7 +7,7 @@ import AuthLayout from './AuthLayout';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 
-// 1. Define the validation schema
+// Define the validation schema
 const resetPasswordSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
 });
@@ -17,7 +17,7 @@ type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 const ResetPasswordPage: React.FC = () => {
 //   const navigate = useNavigate();
 
-  // 2. Set up react-hook-form
+  // Set up react-hook-form
   const {
     register,
     handleSubmit,
@@ -26,7 +26,7 @@ const ResetPasswordPage: React.FC = () => {
     resolver: zodResolver(resetPasswordSchema),
   });
 
-  // 3. Handle form submission
+  // Handle form submission
   const onSubmit = (data: ResetPasswordFormData) => {
     console.log('Password reset requested for:', data.email);
     // TODO: Call API to send password reset link

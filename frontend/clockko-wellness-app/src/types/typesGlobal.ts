@@ -147,12 +147,17 @@ export type Message = {
 };
 
 export type Room = {
-  id: string;
-  name: string;
-  description: string;
-  participants: Participant[];
-  messages: Message[];
-};
+  id: string
+  name: string
+  participants: Participant[]
+  messages?: Message[]
+  tasksCompleted?: number
+  tasksTotal?: number
+  focusTime?: number
+  focusGoal?: number
+  description?: string
+  color?: string
+}
 /*************************************************************/
 
 // Monthly Wellness Reports

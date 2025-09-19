@@ -2,10 +2,10 @@ import type { RoomSummary, Room } from "../../types/typesGlobal";
 
 // Demo Data
 export const DEMO_ROOMS: RoomSummary[] = [
-  { id: "focus", name: "Focus Zone", description: "Deep Work", status: "rooms", count: 12, color: "bg-blue-50" },
-  { id: "pomodoro", name: "Pomodoro Power", description: "30 min Sessions", status: "active", count: 15, color: "bg-green-50" },
-  { id: "slowstart-1", name: "Slow Start", description: "Light work", status: "active", count: 8, color: "bg-green-50" },
-  { id: "slowstart-2", name: "Slow Start", description: "Light work", status: "active", count: 8, color: "bg-blue-50" },
+  { id: "focus", name: "Focus Zone", description: "Deep Work", status: "rooms", count: 12, color: "bg-grayBlue" },
+  { id: "pomodoro", name: "Pomodoro Power", description: "30 min Sessions", status: "rooms", count: 15, color: "bg-green-50" },
+  { id: "slowstart-1", name: "Slow Start", description: "Light work", status: "rooms", count: 8, color: "bg-green-50" },
+  { id: "slowstart-2", name: "Slow Start", description: "Light work", status: "rooms", count: 8, color: "bg-grayBlue" },
 ];
 
 export const DEMO_ROOM: Room = {
@@ -26,6 +26,7 @@ export const DEMO_ROOM: Room = {
   ],
 };
 
+
 export async function fetchRooms(): Promise<RoomSummary[]> {
   try {
     const res = await fetch("/api/rooms");
@@ -42,6 +43,14 @@ export async function fetchRoom(roomId: string): Promise<Room> {
     if (!res.ok) throw new Error("API not ready");
     return await res.json();
   } catch {
-    return DEMO_ROOM;
+    // Find the room info from DEMO_ROOMS for correct name/id/description
+    const fallbackRoom = DEMO_ROOMS.find(r => r.id === roomId);
+    return {
+      id: fallbackRoom?.id || DEMO_ROOM.id,
+      name: fallbackRoom?.name || DEMO_ROOM.name,
+      description: fallbackRoom?.description || DEMO_ROOM.description,
+      participants: DEMO_ROOM.participants,
+      messages: DEMO_ROOM.messages,
+    };
   }
 }

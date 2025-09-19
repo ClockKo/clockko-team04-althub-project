@@ -4,25 +4,34 @@ import type { RoomSummary } from "../../types/typesGlobal";
 import RoomView from "./roomView";
 import { Button } from "../../components/ui/button";
 import Poses from '../../assets/images/KoPoses.png'
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CoWorkingRoomsPage() {
   const [rooms, setRooms] = useState<RoomSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<RoomSummary | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+    setLoading(true);
     fetchRooms().then((data) => {
-      if (isMounted) {
-        setRooms(data);
-        setLoading(false);
-      }
+      const processedRooms = data.map(room => ({
+        ...room,
+        count: room.status && room.status.toLowerCase() === "active" ? room.count : 0,
+      }));
+      setTimeout(() => {
+        if (isMounted) {
+          setRooms(processedRooms);
+          setLoading(false);
+        }
+      }, 3000); // 3 seconds skeleton loading
     });
     return () => { isMounted = false; };
   }, []);
 
   if (selectedRoom) {
-    return <RoomView roomId={selectedRoom} />;
+    // Pass selected room data for correct name and leave handler
+    return <RoomView roomId={selectedRoom.id} roomName={selectedRoom.name} onLeaveRoom={() => setSelectedRoom(null)} />;
   }
 
   return (
@@ -38,23 +47,33 @@ export default function CoWorkingRoomsPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="rounded-2xl p-6 bg-gray-200 shadow h-32 animate-pulse" />
+            <Skeleton key={i} className="rounded-2xl px-6 py-8 bg-grayBlue shadow-lg h-32" />
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {rooms.map((room) => (
-            <div key={room.id} className={`rounded-2xl p-6 shadow flex flex-col justify-between ${room.color}`}>
-              <div>
-                <div className="font-bold text-xl">{room.name}</div>
-                <div className="text-gray-500 mb-2">{room.description}</div>
-                <div className="text-gray-600 text-sm">{room.count} {room.status}</div>
+          {rooms.length === 0 ? (
+            // Show skeleton if no rooms after loading
+            [...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="rounded-2xl px-6 py-8 bg-grayBlue shadow-lg h-32" />
+            ))
+          ) : (
+            rooms.map((room) => (
+              <div key={room.id} className={`rounded-3xl p-6 shadow flex flex-col justify-between ${room.color}`}>
+                <div>
+                  <div className="font-bold text-xl">{room.name}</div>
+                  <div className="text-gray-500 mb-2">{room.description}</div>
+                </div>
+                {/* button and active room */}
+                <div className="flex items-center justify-between">
+                  <div className="text-gray-600 text-sm">{room.count} {room.status}</div>
+                  <Button className="mt-4 bg-blue1 hover:bg-blue-800/70" onClick={() => setSelectedRoom(room)}>
+                    Join
+                  </Button>
+                </div>
               </div>
-              <Button className="mt-4" onClick={() => setSelectedRoom(room.id)}>
-                Join
-              </Button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       )}
     </div>

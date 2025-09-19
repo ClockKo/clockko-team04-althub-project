@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { fetchRoom } from './api'
 import type { Room, Message } from '../../types/typesGlobal'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -25,33 +25,176 @@ const avatars = [
   { src: Ellipse10, alt: 'Avatar 5' },
 ]
 
-const EMOJIS = ['💜', '😂', '🙂', '👏', '👍', '🎉']
+const EMOJIS = ['💜', '😂', '🙂', '👏', '👍', '🎉','🤣','😊']
 
-export default function RoomView({ roomId }: { roomId: string }) {
+export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: string, roomName?: string, onLeaveRoom?: () => void }) {
+  const [isMuted, setIsMuted] = useState(true);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  useEffect(() => {
+    if (!isMuted) {
+      // Request microphone access and play audio
+      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+        streamRef.current = stream;
+        if (audioRef.current) {
+          audioRef.current.srcObject = stream;
+          audioRef.current.play();
+        }
+      }).catch((err) => {
+        // Handle error (mic denied)
+        console.error('Microphone access denied:', err);
+      });
+    } else {
+      // Stop audio stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      if (audioRef.current) {
+        audioRef.current.srcObject = null;
+      }
+    }
+    // Cleanup on unmount
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      if (audioRef.current) {
+        audioRef.current.srcObject = null;
+      }
+    };
+  }, [isMuted]);
+  // Removed duplicate isMuted declaration
   const [showChat, setShowChat] = useState(false)
   const [showProgressDropdown, setShowProgressDropdown] = useState(false)
   const [room, setRoom] = useState<Room | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showSkeleton, setShowSkeleton] = useState(true)
+  const [showEmojis, setShowEmojis] = useState(false)
   const [emojiReactions, setEmojiReactions] = useState<{ [key: string]: string }>({})
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
+  const [displayRoomName, setDisplayRoomName] = useState<string>(roomName || "");
+  const hasFetched = useRef(false);
 
   useEffect(() => {
-    let isMounted = true
+    let isMounted = true;
+    setLoading(true);
+    setShowSkeleton(true);
+    hasFetched.current = false;
+    // Set initial room name from props or demo data
+    if (roomName) {
+      setDisplayRoomName(roomName);
+    } else {
+      import('./api').then(mod => {
+        const demoRoom = mod.DEMO_ROOMS?.find(r => r.id === roomId);
+        if (demoRoom) setDisplayRoomName(demoRoom.name);
+      });
+    }
+    // Always show skeleton while fetching
     fetchRoom(roomId).then((data) => {
       if (isMounted) {
-        setRoom(data)
-        setMessages(data.messages)
-        setLoading(false)
+        hasFetched.current = true;
+        if (data && Array.isArray(data.participants) && data.participants.length > 0) {
+          setRoom(data);
+          setDisplayRoomName(d => data.name || d);
+          setMessages(Array.isArray(data.messages) ? data.messages : []);
+        } else {
+          import('./api').then(mod => {
+            // Use selected room name for fallback
+            const fallbackRoom = mod.DEMO_ROOMS?.find(r => r.id === roomId);
+            setRoom({ ...mod.DEMO_ROOM, name: fallbackRoom?.name || mod.DEMO_ROOM.name });
+            setDisplayRoomName(fallbackRoom?.name || mod.DEMO_ROOM.name);
+            setMessages(Array.isArray(mod.DEMO_ROOM.messages) ? mod.DEMO_ROOM.messages : []);
+          });
+        }
+        setLoading(false);
       }
-        
-    })
+    });
+    // Timer for skeleton loading (3 seconds)
+    const timer = setTimeout(() => {
+      if (isMounted) setShowSkeleton(false);
+    }, 3000);
     return () => {
-      isMounted = false
-    }
-  }, [roomId])
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [roomId, roomName]);
 
-  if (loading || !room) return <Skeleton />
+    // Progress skeleton bar
+  function ProgressSkeleton() {
+    return (
+      <div className="rounded-xl bg-white p-4 shadow">
+        <div className="font-semibold text-lg mb-3">Today's Progress</div>
+        <div className="mb-2">
+          <div className="text-sm mb-1">Tasks completed</div>
+          <Skeleton className="w-full h-2 rounded-full bg-gray-200" />
+        </div>
+        <div>
+          <div className="text-sm mb-1">Focus Time</div>
+          <Skeleton className="w-full h-2 rounded-full bg-gray-200" />
+        </div>
+      </div>
+    );
+  }
+
+  // In-call messages skeleton
+  function MessagesSkeleton() {
+    return (
+      <div className="mb-4 bg-white rounded-2xl p-4 shadow w-full">
+        <div className="font-semibold text-lg mb-2">In-call messages</div>
+        <div className="text-gray-400 text-xs mb-2">
+          Messages can be seen only during the call by people in this call
+        </div>
+        <div className="flex flex-col gap-2 mb-2 max-h-40 overflow-y-auto">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Skeleton className="w-6 h-6 rounded-full" />
+              <Skeleton className="w-32 h-4 rounded bg-gray-200" />
+              <Skeleton className="w-10 h-4 rounded bg-gray-200" />
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2 mt-2">
+          <Skeleton className="flex-1 h-8 rounded-lg bg-gray-200" />
+          <Skeleton className="w-16 h-8 rounded bg-gray-200" />
+        </div>
+      </div>
+    );
+  }
+
+  function leaveRoom() {
+  // when user clicks leave room button it should take them back to the rooms list page
+  if (onLeaveRoom) {
+    onLeaveRoom();
+  }
+  }
+
+
+  if (loading || showSkeleton) {
+    // Show skeleton for up to 3 seconds or while loading
+    return (
+      <div className="min-h-screen bg-powderBlue py-4 px-2 xs:px-4 flex flex-col md:flex-row gap-6">
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="text-2xl font-bold mb-4">{displayRoomName || "Loading Room..."}</div>
+          <div className="w-full max-w-md">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="rounded-2xl px-6 py-8 bg-grayBlue shadow-lg h-24 animate-pulse mb-4" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (!room) return (
+    <div className="min-h-screen bg-powderBlue py-4 px-2 xs:px-4 flex flex-col md:flex-row gap-6">
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <Skeleton />
+      </div>
+    </div>
+  );
 
   // Responsive grid logic
   const isMobile = window.innerWidth < 768
@@ -68,6 +211,7 @@ export default function RoomView({ roomId }: { roomId: string }) {
           <div className="text-2xl font-bold mb-4">{room.name}</div>
         )}
         {/* Progress card with chevron dropdown (mobile top) */}
+        {/* progress  */}
         {isMobile && (
           <div className="mb-4 relative">
             <div className="flex items-center justify-between">
@@ -81,8 +225,12 @@ export default function RoomView({ roomId }: { roomId: string }) {
               </button>
             </div>
             {showProgressDropdown && (
+              loading || showSkeleton ? <ProgressSkeleton /> :
               <div className="mt-2">
-                <ProgressCard tasksCompleted={5} tasksTotal={10} focusTime={60} focusGoal={120} />
+                {(room && typeof room.tasksCompleted === 'number' && typeof room.tasksTotal === 'number' && typeof room.focusTime === 'number' && typeof room.focusGoal === 'number')
+                  ? <ProgressCard tasksCompleted={room.tasksCompleted} tasksTotal={room.tasksTotal} focusTime={room.focusTime} focusGoal={room.focusGoal} />
+                  : <ProgressCard tasksCompleted={0} tasksTotal={0} focusTime={0} focusGoal={0} />
+                }
               </div>
             )}
           </div>
@@ -143,45 +291,49 @@ export default function RoomView({ roomId }: { roomId: string }) {
 
         {/* Emoji reactions and controls (desktop below grid, mobile bottom bar) */}
         {!isMobile && (
-          <div className="flex flex-col items-center">
-            <div className="flex gap-2 mb-4">
-              {EMOJIS.map((emoji) => (
-                <button
-                  key={emoji}
-                  className="text-2xl p-2 rounded-full hover:bg-gray-200 transition"
-                  onClick={() => setEmojiReactions((prev) => ({ ...prev, [Date.now().toString()]: emoji }))}
-                >
-                  {emoji}
-                </button>
-              ))}
-              <div className="flex gap-1 ml-4">
-                {Object.values(emojiReactions)
-                  .slice(-4)
-                  .map((emoji, i) => (
-                    <motion.span
-                      key={i}
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.2 }}
-                      className="text-2xl"
-                    >
-                      {emoji}
-                    </motion.span>
-                  ))}
+          <div className="flex flex-col items-center mb-6 mt-[20px]">
+            {showEmojis && (
+              <div className="flex gap-2 mb-4">
+                {EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    className="text-2xl p-2 rounded-full hover:bg-gray-200 transition"
+                    onClick={() => setEmojiReactions((prev) => ({ ...prev, [Date.now().toString()]: emoji }))}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+                <div className="flex gap-1 ml-4">
+                  {Object.values(emojiReactions)
+                    .slice(-4)
+                    .map((emoji, i) => (
+                      <motion.span
+                        key={i}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-2xl"
+                      >
+                        {emoji}
+                      </motion.span>
+                    ))}
+                </div>
               </div>
-            </div>
-            <div className="flex gap-4 mb-6">
-              <Button variant="destructive" className="flex gap-2">
-                <MicOff className="h-5 w-5" /> Mute
+            )}
+            <div className="flex gap-25 mb-6 bg-snow p-4 rounded-2xl shadow-md  w-full max-w-xl items-center justify-center">
+              <Button variant="destructive" className="flex gap-2 rounded-2xl px-6 bg-errorRed" onClick={() => setIsMuted((prev) => !prev)}>
+                {isMuted ? <MicOff className="h-5 w-5 text-red-500" /> : <Mic className="h-5 w-5 text-blue-600" />}
               </Button>
-              <Button variant="outline" className="flex gap-2" onClick={() => setShowChat((prev) => !prev)}>
-                <MessageSquare className="h-5 w-5" /> Chat
+              {/* Hidden audio element for local playback */}
+              <audio ref={audioRef} style={{ display: 'none' }} autoPlay />
+              <Button variant="outline" className={`flex gap-2 bg-powderBlue cursor-pointer ${showChat ? 'bg-blue1 hover:bg-blue-800/50' : 'bg-powderBlue'}`} onClick={() => setShowChat((prev) => !prev)}>
+             <MessageSquare className={`h-5 w-5 ${showChat ? 'text-white hover:text-black' : ''}`} /> 
               </Button>
-              <Button variant="outline" className="flex gap-2">
-                <Smile className="h-5 w-5" /> Emoji
+              <Button variant="outline" className={`flex gap-2 cursor-pointer ${showEmojis ? 'bg-blue1 hover:bg-blue-800/50' : 'bg-powderBlue'}`} onClick={() => setShowEmojis((prev) => !prev)}>
+                <Smile className={`h-5 w-5 ${showEmojis ? 'text-white hover:text-black' : ''}`} /> 
               </Button>
-              <Button variant="destructive" className="flex gap-2">
-                <Phone className="h-5 w-5" /> Leave
+              <Button variant="destructive" className="flex gap-2" onClick={() => leaveRoom()}>
+                <Phone className="h-5 w-5" /> 
               </Button>
             </div>
           </div>
@@ -209,33 +361,39 @@ export default function RoomView({ roomId }: { roomId: string }) {
             </div>
             {showProgressDropdown && (
               <div className="mt-2">
-                <ProgressCard tasksCompleted={5} tasksTotal={10} focusTime={60} focusGoal={120} />
+                {(room && typeof room.tasksCompleted === 'number' && typeof room.tasksTotal === 'number' && typeof room.focusTime === 'number' && typeof room.focusGoal === 'number')
+                  ? <ProgressCard tasksCompleted={room.tasksCompleted} tasksTotal={room.tasksTotal} focusTime={room.focusTime} focusGoal={room.focusGoal} />
+                  : <ProgressCard tasksCompleted={0} tasksTotal={0} focusTime={0} focusGoal={0} />
+                }
               </div>
             )}
           </div>
         )}
         {/* In-call messages: only show when chat is open */}
         {showChat && (
+          loading || showSkeleton ? <MessagesSkeleton /> :
           <div className="mb-4 bg-white rounded-2xl p-4 shadow w-full">
             <div className="font-semibold text-lg mb-2">In-call messages</div>
             <div className="text-gray-400 text-xs mb-2">
               Messages can be seen only during the call by people in this call
             </div>
             <div className="flex flex-col gap-2 mb-2 max-h-40 overflow-y-auto">
-              {messages.map((msg) => (
-                <div key={msg.id} className="flex items-center gap-2">
-                  <Avatar>
-                    <AvatarImage
-                      src={msg.avatar || 'https://avatar.iran.liara.run/public'}
-                      alt={msg.user}
-                      className="w-6 h-6 rounded-full"
-                    />
-                    <AvatarFallback>{msg.user.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-gray-800 text-sm">{msg.text}</span>
-                  <span className="text-gray-400 text-xs">{msg.time}</span>
-                </div>
-              ))}
+              {messages.length === 0
+                ? <div className="flex flex-col items-center justify-center h-24 text-gray-400 text-sm italic">start a conversation</div>
+                : messages.map((msg) => (
+                  <div key={msg.id} className="flex items-center gap-2">
+                    <Avatar>
+                      <AvatarImage
+                        src={msg.avatar || 'https://avatar.iran.liara.run/public'}
+                        alt={msg.user}
+                        className="w-6 h-6 rounded-full"
+                      />
+                      <AvatarFallback>{msg.user.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-gray-800 text-sm">{msg.text}</span>
+                    <span className="text-gray-400 text-xs">{msg.time}</span>
+                  </div>
+                ))}
             </div>
             <form
               className="flex gap-2 mt-2"

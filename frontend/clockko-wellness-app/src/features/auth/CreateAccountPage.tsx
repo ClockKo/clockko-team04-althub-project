@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -6,13 +6,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from './AuthLayout'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
-// import { Checkbox } from '../../components/ui/checkbox'
-import { GoogleLogin } from '@react-oauth/google'
-import type { CredentialResponse } from '@react-oauth/google'
 import { registerUser } from './api'
 import { useAuth } from './authcontext'
+import { useGoogleLogin } from '@react-oauth/google'
+import googleLogo from '../../assets/images/google.png'
 
-// 1. Define the validation schema
+// Validation schema
 const createAccountSchema = z.object({
   name: z.string().min(2, { message: 'Please enter your name' }),
   email: z.string().email({ message: 'Please enter a valid email' }),
@@ -26,7 +25,8 @@ type CreateAccountFormData = z.infer<typeof createAccountSchema>
 
 const CreateAccountPage: React.FC = () => {
   const navigate = useNavigate()
-  const { setAuthToken } = useAuth(); // Get the setAuthToken function
+  const { setAuthToken } = useAuth() // Get the setAuthToken function
+  const [apiError, setApiError] = useState<string | null>(null)
 
   // Set up react-hook-form
   const {
@@ -39,30 +39,47 @@ const CreateAccountPage: React.FC = () => {
 
   // Handle form submission
   const onSubmit = async (data: CreateAccountFormData) => {
-    const { agree, ...registrationData } = data;
+    const { agree, ...registrationData } = data
     try {
-      const response = await registerUser(registrationData);
-      console.log('Registration successful:', response);
-      
-      // 👇 3. Store the token from the registration response
+      const response = await registerUser(registrationData)
+      console.log('Registration successful:', response)
+
+      // Store the token from the registration response
       if (response.access_token) {
-        setAuthToken(response.access_token);
-        // 4. Now navigate to the dashboard
-        navigate('/dashboard');
+        setAuthToken(response.access_token)
+        // Navigate to the dashboard
+        navigate('/dashboard')
       } else {
         // If no token, maybe send to a "please log in" page
-        navigate('/signin');
+        navigate('/signin')
       }
     } catch (error: any) {
-      console.error('Registration failed:', error);
+      console.error('Registration failed:', error)
       // Handle and display error
     }
-  };
-
-  const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
-    console.log('Google credential:', credentialResponse.credential)
-    // TODO: Send this credential to your backend for verification
   }
+
+  const handleGoogleSuccess = async (tokenResponse: any) => {
+    const accessToken = tokenResponse.access_token
+    console.log('Google Access Token:', accessToken)
+
+    try {
+      // TODO: Send this access token to your backend for verification and user creation
+      // const response = await fetch('http://localhost:8000/api/auth/google-signup', { ... });
+      // const data = await response.json();
+      // setAuthToken(data.access_token);
+      navigate('/dashboard')
+    } catch (error) {
+      console.error('Google sign-up failed:', error)
+      setApiError('An error occurred during Google sign-up.')
+    }
+  }
+
+  // Google login popup
+  const googleLogin = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: () => console.error('Google Login Failed'),
+  })
 
   return (
     <AuthLayout hideHeader={true}>
@@ -104,12 +121,7 @@ const CreateAccountPage: React.FC = () => {
           <div>
             <div className="flex items-center space-x-3 pt-2">
               {/* <Checkbox id="agree" {...register('agree')} /> */}
-              <input
-                type="checkbox"
-                id="agree"
-                {...register('agree')}
-                className="mr-2"
-              />
+              <input type="checkbox" id="agree" {...register('agree')} className="mr-2" />
               <label htmlFor="agree" className="text-sm text-gray-600">
                 I agree to ClockKo's{' '}
                 <Link to="/privacy" className="underline hover:text-gray-800">
@@ -133,6 +145,8 @@ const CreateAccountPage: React.FC = () => {
           </Button>
         </form>
 
+        {apiError && <p className="text-red-600 text-sm mt-4 text-center">{apiError}</p>}
+
         {/* OR Separator */}
         <div className="flex items-center my-6">
           <div className="flex-grow border-t border-gray-200"></div>
@@ -141,11 +155,7 @@ const CreateAccountPage: React.FC = () => {
         </div>
 
         {/* Google Sign Up Button */}
-        {/* <Button variant="outline" className="w-full flex items-center justify-center text-gray-700 py-6 text-md rounded-[16px]">
-          <img src={google} alt="Google logo" className="h-5 w-5 mr-3" />
-          Sign up with Google
-        </Button> */}
-        <div className="[&>div]:w-full">
+        {/* <div className="[&>div]:w-full">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => console.log('Google Login Failed')}
@@ -154,7 +164,16 @@ const CreateAccountPage: React.FC = () => {
             shape="pill"
             text="signup_with" // 👈 Add this prop
           />
-        </div>
+        </div> */}
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full flex items-center justify-center text-gray-700 py-6 text-md rounded-[24px]"
+          onClick={() => googleLogin()}
+        >
+          <img src={googleLogo} alt="Google logo" className="mr-3 h-6 w-6" />
+          Sign up with Google
+        </Button>
 
         {/* Link to Sign In */}
         <p className="mt-8 text-center text-sm text-gray-600">

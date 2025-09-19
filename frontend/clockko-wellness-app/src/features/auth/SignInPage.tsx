@@ -6,10 +6,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from './AuthLayout';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { GoogleLogin } from '@react-oauth/google';
-import type { CredentialResponse } from '@react-oauth/google';
+import { useGoogleLogin } from '@react-oauth/google';
 import { loginUser } from './api';
 import { useAuth } from './authcontext';
+import googleLogo from '../../assets/images/google.png';
 
 // Validation schema for the sign-in form
 const signInSchema = z.object({
@@ -34,18 +34,13 @@ const SignInPage: React.FC = () => {
   })
 
   // Handle form submission
-  // const onSubmit = (data: SignInFormData) => {
-  //   console.log('Data to be sent to backend:', data);
-
-  //   navigate('/dashboard');
-  // };
   const onSubmit = async (data: SignInFormData) => {
     setApiError(null);
     try {
       // We can now use 'data' directly
-      const response = await loginUser(data); 
+      const response = await loginUser(data);
       console.log('Login successful:', response);
-      
+
       if (response.access_token) {
         setAuthToken(response.access_token);
         navigate('/dashboard');
@@ -56,28 +51,40 @@ const SignInPage: React.FC = () => {
     }
   };
 
-  // const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
-  //   console.log('Google credential:', credentialResponse.credential);
-  //   // TODO: Send this credential to your backend for verification
-  // };
-  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+  // Google Sign-In handler
+  const handleGoogleSuccess = async (tokenResponse: any) => {
+    const accessToken = tokenResponse.access_token;
+    console.log('Google Access Token:', accessToken);
+
     try {
-      const response = await fetch('http://localhost:8000/auth/google', {
+      // Send the access token to your backend for verification
+      const response = await fetch('http://localhost:8000/api/auth/google', { // Ensure this URL is correct
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: credentialResponse.credential }),
+        body: JSON.stringify({ token: accessToken }),
       });
+
       if (response.ok) {
-        // Optionally store token or user info here
+        const data = await response.json();
+        // Assuming your backend returns its own token upon success
+        if (data.access_token) {
+          setAuthToken(data.access_token);
+        }
         navigate('/dashboard');
       } else {
-        // Handle error (show message, etc.)
-        console.error('Google login failed');
+        console.error('Google login failed on the backend');
+        setApiError('Google login failed. Please try again.');
       }
     } catch (error) {
       console.error('Google login error:', error);
+      setApiError('An error occurred during Google login.');
     }
   };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: () => console.error('Google Login Failed'),
+  });
 
   return (
     <AuthLayout hideHeader={true}>
@@ -132,22 +139,29 @@ const SignInPage: React.FC = () => {
         </div>
 
         {/* Google Sign In Button */}
-        {/* <Button
-          variant="outline"
-          className="w-full flex items-center justify-center text-gray-700 py-6 text-md"
-        >
-          <img src={google} alt="Google logo" className="h-5 w-5 mr-3" />
-          Sign in with Google
-        </Button> */}
-        <div className="[&>div]:w-full">
+
+        {/* <div className="[&>div]:w-full">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => console.log('Google Login Failed')}
             theme="outline"
             size="large"
             shape="pill"
+            containerProps={{
+              style: { width: '100%', display: 'block' }, // Forces full width and block display
+            }}
           />
-        </div>
+        </div> */}
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full flex items-center justify-center text-gray-700 py-6 text-md rounded-[24px]"
+          onClick={() => googleLogin()}
+        >
+          <img src={googleLogo} alt="Google logo" className="mr-3 h-6 w-6" />
+          Sign in with Google
+        </Button>
 
         <p className="mt-8 text-center text-sm text-gray-600">
           Don't have an account?{' '}

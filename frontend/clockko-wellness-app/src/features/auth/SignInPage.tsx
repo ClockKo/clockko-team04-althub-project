@@ -21,7 +21,7 @@ type SignInFormData = z.infer<typeof signInSchema>
 
 const SignInPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setAuthToken } = useAuth(); // 👈 3. Get setAuthToken
+  const { setAuthToken } = useAuth(); // Get setAuthToken
   const [apiError, setApiError] = useState<string | null>(null);
 
   // React-hook-form
@@ -37,7 +37,6 @@ const SignInPage: React.FC = () => {
   const onSubmit = async (data: SignInFormData) => {
     setApiError(null);
     try {
-      // We can now use 'data' directly
       const response = await loginUser(data);
       console.log('Login successful:', response);
 
@@ -139,20 +138,6 @@ const SignInPage: React.FC = () => {
         </div>
 
         {/* Google Sign In Button */}
-
-        {/* <div className="[&>div]:w-full">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => console.log('Google Login Failed')}
-            theme="outline"
-            size="large"
-            shape="pill"
-            containerProps={{
-              style: { width: '100%', display: 'block' }, // Forces full width and block display
-            }}
-          />
-        </div> */}
-
         <Button
           type="button"
           variant="outline"

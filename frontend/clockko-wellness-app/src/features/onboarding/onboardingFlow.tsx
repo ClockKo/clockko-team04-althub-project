@@ -8,7 +8,6 @@ import { FocusModal } from "./modals/focusModal";
 import { AvatarModal } from "./modals/avatarModal";
 import { ReminderModal } from "./modals/reminderModal";
 import { useOnboarding } from "../../contexts/OnboardingContext";
-import { useNavigate } from "react-router-dom";
 
 export function OnboardingFlow() {
   const { completeOnboarding } = useOnboarding();
@@ -23,12 +22,9 @@ export function OnboardingFlow() {
     break: true,
     tasks: true,
   });
-  const navigate = useNavigate();
 
   const handleOnboardingComplete = () => {
     completeOnboarding();
-    // Optionally, redirect to dashboard or another page
-    navigate('/dashboard');
   };
 
   return (

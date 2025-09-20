@@ -1,15 +1,37 @@
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import auth, timetracker, tasks, users, dashboard
+from app.api import auth_google  # Google ID token verification endpoints
+from app.core.config import settings
 from app.core.database import Base, engine
 
 # Create all tables (if using without Alembic migrations)
 Base.metadata.create_all(bind=engine)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    try:
+        google_client_id = getattr(settings, 'GOOGLE_CLIENT_ID', None)
+        if not google_client_id:
+            import logging
+            logging.getLogger("uvicorn.warning").warning(
+                "GOOGLE_CLIENT_ID is not set. /api/auth/google/verify will return 500 until configured."
+            )
+    except Exception as e:
+        import logging
+        logging.getLogger("uvicorn.error").error(f"Error checking GOOGLE_CLIENT_ID: {e}")
+    
+    yield
+    # Shutdown
+
+
 app = FastAPI(
     title="ClockKo API",
     description="Authentication and user management system for ClockKo.",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 
@@ -28,6 +50,7 @@ app.include_router(timetracker.router, prefix="", tags=["time-log"])
 app.include_router(users.router, prefix="/api/users", tags=["User Management"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+app.include_router(auth_google.router)  # router has its own prefix
 
 # If you have a reminder thread, import and start it here
 # from app.reminders import start_reminder_thread
@@ -47,3 +70,9 @@ def read_root():
 @app.get("/healthz")
 def health():
     return {"status": "ok", "service": "clockko-api", "version": app.version}
+
+
+@app.get("/health/google")
+def google_health():
+    configured = bool(getattr(settings, 'GOOGLE_CLIENT_ID', ''))
+    return {"google_sign_in_configured": configured}

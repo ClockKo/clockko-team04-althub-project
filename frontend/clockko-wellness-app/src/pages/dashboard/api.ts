@@ -5,11 +5,6 @@ function getToken() {
   return localStorage.getItem('authToken') || '';
 }
 
-// const token = getToken();
-
-// if (!token) {
-//   throw new Error('No auth token found'); // Handle missing token appropriately
-// }
 
 export async function fetchCurrentSession() {
   const token = getToken(); // Get token inside the function

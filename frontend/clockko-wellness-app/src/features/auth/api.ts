@@ -83,6 +83,18 @@ export const fetchUserData = async () => {
   }
 };
 
+export const googleSignUp = async (googleToken: string) => {
+  try {
+    // This endpoint must exist on your backend
+    const response = await axios.post(`${API_URL}/auth/google/verify`, {
+      token: googleToken,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Google Sign-Up API call failed:', error);
+    throw error;
+  }
+};
 
 /**
  * Logs the user out by removing the token from storage.

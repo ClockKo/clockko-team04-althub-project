@@ -6,10 +6,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from './AuthLayout'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
-import { registerUser } from './api'
+import { registerUser, googleSignUp } from './api'
 import { useAuth } from './authcontext'
 import { useGoogleLogin } from '@react-oauth/google'
 import googleLogo from '../../assets/images/google.png'
+
 
 // Validation schema
 const createAccountSchema = z.object({
@@ -59,21 +60,43 @@ const CreateAccountPage: React.FC = () => {
     }
   }
 
+  // const handleGoogleSuccess = async (tokenResponse: any) => {
+  //   const accessToken = tokenResponse.access_token
+  //   console.log('Google Access Token:', accessToken)
+
+  //   try {
+  //     // TODO: Send this access token to your backend for verification and user creation
+  //     const response = await googleSignUp(accessToken);
+  //     setAuthToken(response.access_token);
+  //     navigate('/dashboard');
+  //   } catch (error) {
+  //     console.error('Google sign-up failed:', error)
+  //     setApiError('An error occurred during Google sign-up.')
+  //   }
+  // }
+
   const handleGoogleSuccess = async (tokenResponse: any) => {
-    const accessToken = tokenResponse.access_token
-    console.log('Google Access Token:', accessToken)
+    const googleAccessToken = tokenResponse.access_token;
+    console.log('Google Access Token:', googleAccessToken);
 
     try {
-      // TODO: Send this access token to your backend for verification and user creation
-      // const response = await fetch('http://localhost:8000/api/auth/google-signup', { ... });
-      // const data = await response.json();
-      // setAuthToken(data.access_token);
-      navigate('/dashboard')
+      // Send Google token to your backend and get your app's token
+      const response = await googleSignUp(googleAccessToken);
+
+      // Check if you received your app's access token
+      if (response.access_token) {
+        // Set the auth state in your app
+        setAuthToken(response.access_token);
+        // Now navigate to the dashboard
+        navigate('/dashboard');
+      } else {
+        setApiError('Failed to log in after Google sign-up.');
+      }
     } catch (error) {
-      console.error('Google sign-up failed:', error)
-      setApiError('An error occurred during Google sign-up.')
+      console.error('Google sign-up failed:', error);
+      setApiError('An error occurred during Google sign-up.');
     }
-  }
+  };
 
   // Google login popup
   const googleLogin = useGoogleLogin({

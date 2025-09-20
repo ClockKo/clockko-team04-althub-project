@@ -42,7 +42,7 @@ const SignInPage: React.FC = () => {
 
       if (response.access_token) {
         setAuthToken(response.access_token);
-        navigate('/dashboard');
+        navigate('/onboarding'); // Redirect to onboarding after login
       }
     } catch (error: any) {
       console.error('Login failed:', error);

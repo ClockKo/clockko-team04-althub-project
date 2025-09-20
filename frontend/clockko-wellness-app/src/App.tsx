@@ -13,6 +13,7 @@ import CreateAccountPage from './features/auth/CreateAccountPage';
 import SignInPage from './features/auth/SignInPage';
 import ResetPasswordPage from './features/auth/ResetPasswordPage';
 import ProtectedRoutes from './features/auth/protectedroutes'
+import { OnboardingFlow } from './features/onboarding'
 
 const queryClient = new QueryClient()
 
@@ -31,7 +32,7 @@ function App() {
                 <Route path="/create-account" element={<CreateAccountPage />} />
                 <Route path="/signin" element={<SignInPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
-
+                <Route path="/onboarding" element={<OnboardingFlow />} />
                 <Route element={<ProtectedRoutes />}>
                   <Route element={<MainLayout />}>
                     <Route path="/dashboard" element={<DashboardLayout />} />

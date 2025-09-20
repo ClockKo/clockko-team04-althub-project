@@ -256,3 +256,8 @@ migration_backup_*.py
 # Team testing
 test_data_*.json
 team_test_*.py
+
+# Debug and temporary files
+debug_*.py
+*_test.py
+*test*.py.tmp

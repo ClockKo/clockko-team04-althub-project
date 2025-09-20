@@ -1,8 +1,7 @@
 import os
+import boto3
 import json
 from dotenv import load_dotenv
-
-load_dotenv()
 
 def get_secret(secret_name: str, region_name: str = "eu-west-1"):
     """
@@ -14,6 +13,9 @@ def get_secret(secret_name: str, region_name: str = "eu-west-1"):
 
 class Settings:
     def __init__(self):
+        # Load environment variables first
+        load_dotenv()
+        
         # ====================
         # Database
         # ====================
@@ -63,6 +65,11 @@ class Settings:
         # ====================
         self.OTP_EXPIRE_MINUTES = int(os.getenv("OTP_EXPIRE_MINUTES", "5"))
         self.OTP_LENGTH = 6
+
+        # ====================
+        # Google OAuth
+        # ====================
+        self.GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 
 
 settings = Settings()

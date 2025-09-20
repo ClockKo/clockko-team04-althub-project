@@ -59,12 +59,12 @@ const CreateAccountPage: React.FC = () => {
     }
   }
 
-  const handleGoogleSuccess = async (tokenResponse: any) => {
-    const accessToken = tokenResponse.access_token
-    console.log('Google Access Token:', accessToken)
+  const handleGoogleSuccess = async (codeResponse: any) => {
+    const code = codeResponse.code;
+    console.log('Google Auth Code for Sign-Up:', code);
 
     try {
-      // TODO: Send this access token to your backend for verification and user creation
+      // TODO: Send this auth code to your backend for verification and user creation
       // const response = await fetch('http://localhost:8000/api/auth/google-signup', { ... });
       // const data = await response.json();
       // setAuthToken(data.access_token);
@@ -79,7 +79,8 @@ const CreateAccountPage: React.FC = () => {
   const googleLogin = useGoogleLogin({
     onSuccess: handleGoogleSuccess,
     onError: () => console.error('Google Login Failed'),
-  })
+    flow: 'auth-code', 
+  });
 
   return (
     <AuthLayout hideHeader={true}>

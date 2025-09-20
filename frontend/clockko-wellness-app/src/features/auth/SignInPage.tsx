@@ -51,16 +51,16 @@ const SignInPage: React.FC = () => {
   };
 
   // Google Sign-In handler
-  const handleGoogleSuccess = async (tokenResponse: any) => {
-    const accessToken = tokenResponse.access_token;
-    console.log('Google Access Token:', accessToken);
+  const handleGoogleSuccess = async (codeResponse: any) => {
+    const code = codeResponse.code;
+    console.log('Google Auth Code:', code);
 
     try {
-      // Send the access token to your backend for verification
+      // Send the auth code to your backend for verification
       const response = await fetch('http://localhost:8000/api/auth/google', { // Ensure this URL is correct
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: accessToken }),
+        body: JSON.stringify({ code }),
       });
 
       if (response.ok) {
@@ -83,6 +83,7 @@ const SignInPage: React.FC = () => {
   const googleLogin = useGoogleLogin({
     onSuccess: handleGoogleSuccess,
     onError: () => console.error('Google Login Failed'),
+    flow: 'auth-code',
   });
 
   return (

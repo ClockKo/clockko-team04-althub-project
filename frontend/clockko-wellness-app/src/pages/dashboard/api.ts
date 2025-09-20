@@ -5,13 +5,16 @@ function getToken() {
   return localStorage.getItem('authToken') || '';
 }
 
-const token = getToken();
+// const token = getToken();
 
-if (!token) {
-  throw new Error('No auth token found'); // Handle missing token appropriately
-}
+// if (!token) {
+//   throw new Error('No auth token found'); // Handle missing token appropriately
+// }
 
 export async function fetchCurrentSession() {
+  const token = getToken(); // Get token inside the function
+  if (!token) return null; // Return null if no token
+
   try {
     const res = await axios.get('/api/dashboard/current-session', {
       headers: { Authorization: `Bearer ${token}` },
@@ -27,6 +30,9 @@ export async function fetchCurrentSession() {
 }
 
 export async function clockIn() {
+  const token = getToken(); // Get token inside the function
+  if (!token) throw new Error('You must be logged in to clock in.');
+
   try {
     const res = await axios.post('/api/dashboard/clock-in', {}, {
       headers: { Authorization: `Bearer ${token}` },
@@ -42,6 +48,9 @@ export async function clockIn() {
 }
 
 export async function clockOut() {
+  const token = getToken(); // Get token inside the function
+  if (!token) throw new Error('You must be logged in to clock out.');
+
   try {
     const res = await axios.post('/api/dashboard/clock-out', {}, {
       headers: { Authorization: `Bearer ${token}` },
@@ -57,6 +66,9 @@ export async function clockOut() {
 }
 
 export async function fetchUserData() {
+  const token = getToken(); // Get token inside the function
+  if (!token) return null;
+
   try {
     const res = await axios.get('/api/user/profile', {
       headers: { Authorization: `Bearer ${token}` },
@@ -72,6 +84,9 @@ export async function fetchUserData() {
 }
 
 export async function fetchDashboardData() {
+  const token = getToken(); // Get token inside the function
+  if (!token) return null;
+
   try {
     const res = await axios.get('/api/dashboard/data', {
       headers: { Authorization: `Bearer ${token}` },

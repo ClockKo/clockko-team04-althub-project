@@ -61,6 +61,7 @@ export const fetchUserData = async () => {
   }
 };
 
+
 /**
  * Logs the user out by removing the token from storage.
  */

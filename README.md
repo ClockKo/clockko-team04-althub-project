@@ -41,6 +41,54 @@ ClockKo addresses the need for wellness-oriented productivity tools in the remot
 
 ---
 
+## ✨ Recent Features & Contributions
+
+### Frontend
+- Responsive landing page and sidebar navigation ([Landing PR](https://github.com/ClockKo/clockko-team04-althub-project/pull/38), [Sidebar PR](https://github.com/ClockKo/clockko-team04-althub-project/pull/40))
+- Task Management UI implemented ([Task Management PR](https://github.com/ClockKo/clockko-team04-althub-project/pull/41))
+- Challenge feature in progress ([Challenge PR](https://github.com/ClockKo/clockko-team04-althub-project/pull/42))
+- Time Tracker UI and responsiveness ([TimeTracker PRs](https://github.com/ClockKo/clockko-team04-althub-project/pull/49), [PR#52](https://github.com/ClockKo/clockko-team04-althub-project/pull/52))
+- CI/CD pipeline setup and README update ([CI/CD PRs](https://github.com/ClockKo/clockko-team04-althub-project/pull/32), [README Update PR](https://github.com/ClockKo/clockko-team04-althub-project/pull/33))
+
+### Backend
+- Authentication system cleaned up ([Auth PRs](https://github.com/ClockKo/clockko-team04-althub-project/pull/51), [PR#53](https://github.com/ClockKo/clockko-team04-althub-project/pull/53))
+- Team database collaboration framework ([Team DB PR](https://github.com/ClockKo/clockko-team04-althub-project/pull/50))
+- RESTful API endpoints for time tracking, user and task management ([Backend PRs](https://github.com/ClockKo/clockko-team04-althub-project/pull/25), [PR#22](https://github.com/ClockKo/clockko-team04-althub-project/pull/22))
+
+### Cloud & DevOps
+- Cache optimization for workflows ([Cache PR](https://github.com/ClockKo/clockko-team04-althub-project/pull/48))
+- Infrastructure setup with Terraform ([Infra PR](https://github.com/ClockKo/clockko-team04-althub-project/pull/27))
+
+### Cybersecurity
+- Security objectives documented ([Security PR](https://github.com/ClockKo/clockko-team04-althub-project/pull/45))
+- Privacy compliance and vulnerability assessment ([Access Control PR](https://github.com/ClockKo/clockko-team04-althub-project/pull/36))
+
+---
+
+## 👥 Notable Contributors
+
+- Onovae: Backend Auth, Team DB, User Management
+- Abujaipaul: Time Tracker features
+- pelsdev: Task Management UI, DevOps
+- mariamALLI: Dashboard, Sidebar, Challenges, Documentation
+- Bamidele0102: Infrastructure, CI/CD, README updates
+- Uforo-A: Security, Auth documentation
+- Benjamin-BIC: Backend task management
+- muhdfawwazbashir: Time tracker, API integration
+
+---
+
+## 🆕 What’s Next
+
+- Finalize dashboard and challenge features
+- Expand backend analytics and wellness endpoints
+- Continue cloud infrastructure and security refinement
+- Advance onboarding and user management flows
+
+For full details and ongoing updates, see [recent pull requests](https://github.com/ClockKo/clockko-team04-althub-project/pulls) and [open issues](https://github.com/ClockKo/clockko-team04-althub-project/issues).
+
+---
+
 ## 👩‍💻 Team Structure & Contributions
 
 ### 🎨 Frontend Development

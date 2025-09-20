@@ -7,7 +7,7 @@ export * from './hooks/useTimeTracking'
 export * from './hooks/useDailySummary'
 export * from './hooks/useBreaks'
 export * from './services/timetrackerservice'
-export * from './utils/timeUtils'
+
 export * from './timetrackerfeatures'
 export * from './test/breaktracker.test'
 export * from './test/clockInOutButton.test'

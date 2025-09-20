@@ -265,7 +265,7 @@ export default function MainLayout() {
           </div>
         )}
         {/* Main Content */}
-        <main className="flex-1 min-w-0 bg-powderBlue">
+        <main className="flex-1 min-w-0 bg-powderBlue overflow-y-auto" style={{ maxHeight: '100vh' }}>
           {/* Desktop Topbar (inside Outlet area) */}
           {!isMobile && (
             <div className="flex items-center justify-between px-8 py-4 rounded-lg mb-6">

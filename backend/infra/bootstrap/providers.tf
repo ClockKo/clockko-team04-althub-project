@@ -11,6 +11,7 @@ terraform {
 }
 
 provider "aws" {
-  region  = "eu-west-1"
-  profile = "clockko-cloud-engineer"
+  region  = var.aws_region
+  # Use named profile locally only when provided; otherwise rely on env credentials
+  profile = length(trimspace(var.aws_profile)) > 0 ? var.aws_profile : null
 }

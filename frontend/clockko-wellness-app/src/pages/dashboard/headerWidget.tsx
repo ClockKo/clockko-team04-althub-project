@@ -2,13 +2,13 @@
 // i need to fetch the user's name from the backend and display it here, if not available, display "Guest"
 // also create a logic to know the time of the day and change the greeting message accordingly
 
-import { useOnboarding } from "../../contexts/OnboardingContext";
+// import { useOnboarding } from "../../contexts/OnboardingContext";
 import { useUserData } from "./dashboardHooks";
 import { getGreetingMessage } from "../../utils/greeting";
 import koPose from "../../assets/images/KoPoses.png";
 
 export function DashboardHeader() {
-  const { resetOnboarding } = useOnboarding(); // for testing purposes and rember to remove in production
+  // const { resetOnboarding } = useOnboarding(); // for testing purposes and rember to remove in production
   const { data: user, isLoading } = useUserData();
   
   const userName = user?.username || "Guest";
@@ -26,13 +26,13 @@ export function DashboardHeader() {
         </div>
       </div>
       {/* Reset onboarding button for testing - remove in production */}
-      <button
+      {/* <button
         onClick={resetOnboarding}
         className="px-3 py-1 text-xs bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors"
         title="Reset onboarding (for testing)"
       >
         Reset Onboarding
-      </button>
+      </button> */}
     </div>
   );
 }

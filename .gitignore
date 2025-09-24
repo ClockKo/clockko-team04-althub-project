@@ -236,3 +236,69 @@ override.tf.json
 *_override.tf
 *_override.tf.
 tfplan
+
+# =============================================
+# Frontend (React/Node.js/JavaScript)
+# =============================================
+# Dependencies
+**/node_modules/
+.pnp
+.pnp.js
+
+# Package manager lock files (keep only the one you're using)
+**/package-lock.json  # npm
+**/yarn.lock         # yarn
+# **/pnpm-lock.yaml  # pnpm - uncomment if not using pnpm
+
+# Production builds
+**/dist/
+**/build/
+**/out/
+**/.next/
+**/.nuxt/
+**/dist-ssr/
+
+# Cache directories
+**/.cache/
+**/.parcel-cache/
+**/.eslintcache
+**/.stylelintcache
+**/.turbo/
+
+# Vite specific
+**/vite.config.js.timestamp-*
+**/vite.config.ts.timestamp-*
+
+# Testing
+**/coverage/
+**/.nyc_output/
+**/junit.xml
+**/test-results/
+**/playwright-report/
+**/test-results.xml
+
+# Storybook
+**/storybook-static/
+
+# TypeScript
+**/*.tsbuildinfo
+
+# =============================================
+# Development and debugging files
+# =============================================
+# Debug files
+debug_*.js
+debug_*.ts
+debug_*.py
+temp_*.js
+temp_*.ts
+temp_*.py
+
+# Configuration backups
+*.config.bak
+*.json.bak
+
+# Development servers and scripts
+dev_server.*
+local_server.*
+test_server.*

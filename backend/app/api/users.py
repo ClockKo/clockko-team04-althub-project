@@ -139,7 +139,7 @@ def reset_user_settings(
     db: Session = Depends(get_db)
 ):
     """
-    Reset user settings to default values.
+    Reset user settings.
     This will restore all settings to their default values.
     """
     try:
@@ -221,7 +221,7 @@ def get_user_profile(
                 "id": str(current_user.id),
                 "username": current_user.username,
                 "email": current_user.email,
-                "full_name": current_user.full_name,
+                "name": current_user.full_name,
                 "phone_number": current_user.phone_number,
                 "is_verified": current_user.is_verified,
                 "created_at": current_user.created_at.isoformat() if current_user.created_at is not None else None

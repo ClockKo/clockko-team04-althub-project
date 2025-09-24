@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from app.core.database import get_db
 from app.core.config import settings
+from app.core.security import create_access_token
 from app.models.user import User
 from app.schemas.user import UserResponse
 
@@ -28,8 +29,8 @@ def verify_google_id_token(body: GoogleToken, db: Session = Depends(get_db)):
     """
     Verify a Google ID token (from Google Sign-In on the client). If valid:
     - Find or create a User by email
-    - Return a minimal user payload with 'name' and 'email' (matching FE expectations)
-    Note: This endpoint does NOT create our own JWT yet; we will extend later if needed.
+    - Issue a JWT access token for subsequent API calls
+    - Return user data and token (matching FE expectations)
     """
     if id_token is None or google_requests is None:
         raise HTTPException(
@@ -78,6 +79,13 @@ def verify_google_id_token(body: GoogleToken, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(user)
 
-    # Return normalized response matching FE shape
+    # Create JWT access token for this user
+    access_token = create_access_token(data={"sub": str(user.id)})
+
+    # Return user data with access token
     payload = UserResponse.from_user_model(user).model_dump()
-    return {"user": payload}
+    return {
+        "user": payload,
+        "access_token": access_token,
+        "token_type": "bearer"
+    }

@@ -31,4 +31,4 @@
 
 - Review and implement the above controls.
 - Document test results.
-** Report any gaps or risks to the security team.
+- Report any gaps or risks to the security team.

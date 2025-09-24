@@ -1,5 +1,7 @@
 import axios from 'axios'
 
+// const API_BASE_URL = 'http://localhost:8000';
+
 // Helper to get token
 function getToken() {
   return localStorage.getItem('authToken') || '';
@@ -11,7 +13,7 @@ export async function fetchCurrentSession() {
   if (!token) return null; // Return null if no token
 
   try {
-    const res = await axios.get('/api/dashboard/current-session', {
+    const res = await axios.get(`/api/dashboard/current-session`, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
@@ -29,7 +31,7 @@ export async function clockIn() {
   if (!token) throw new Error('You must be logged in to clock in.');
 
   try {
-    const res = await axios.post('/api/dashboard/clock-in', {}, {
+    const res = await axios.post(`/api/dashboard/clock-in`, {}, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
@@ -47,7 +49,7 @@ export async function clockOut() {
   if (!token) throw new Error('You must be logged in to clock out.');
 
   try {
-    const res = await axios.post('/api/dashboard/clock-out', {}, {
+    const res = await axios.post(`/api/dashboard/clock-out`, {}, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
@@ -65,7 +67,7 @@ export async function fetchUserData() {
   if (!token) return null;
 
   try {
-    const res = await axios.get('/api/user/profile', {
+    const res = await axios.get(`/api/users/profile`, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
@@ -83,7 +85,7 @@ export async function fetchDashboardData() {
   if (!token) return null;
 
   try {
-    const res = await axios.get('/api/dashboard/data', {
+    const res = await axios.get(`/api/dashboard/data`, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })

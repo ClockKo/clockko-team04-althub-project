@@ -3,7 +3,7 @@
 # 1. Validate Reward Redemption Logic
 - Ensure there is accurate and timely progress tracking on every user platform.
 - Ensure there is proper and clear redeemable reward documentation visible to users.
-- Ensure every reward redemption system checks user eligibility (e.g., required points or completed challenges).
+- Ensure every reward redemption system checks user eligibility (in this case completed challenges).
 - Enforce one-time use by tracking redemptions in a dedicated table
 - Reject redemptions if user is not eligible for a reward or has already claimed the same reward.
 

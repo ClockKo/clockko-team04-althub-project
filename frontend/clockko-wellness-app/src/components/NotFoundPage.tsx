@@ -1,7 +1,20 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
 import { Button } from './ui/button'
 import { Home, ArrowLeft } from 'lucide-react'
+
+// Safe Link component that works both inside and outside Router context
+const SafeLink: React.FC<{ to: string; className?: string; children: React.ReactNode }> = ({ to, className, children }) => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    window.location.href = to
+  }
+
+  return (
+    <a href={to} className={className} onClick={handleClick}>
+      {children}
+    </a>
+  )
+}
 
 const NotFoundPage: React.FC = () => {
   return (
@@ -32,22 +45,19 @@ const NotFoundPage: React.FC = () => {
             variant="default"
             className="bg-[#34559E] hover:bg-[#2c4885] px-6 py-3 rounded-[16px]"
           >
-            <Link to="/" className="flex items-center gap-2">
+            <SafeLink to="/" className="flex items-center gap-2">
               <Home size={20} />
               Go to Homepage
-            </Link>
+            </SafeLink>
           </Button>
           
           <Button
-            asChild
             variant="outline"
             className="px-6 py-3 rounded-[16px]"
             onClick={() => window.history.back()}
           >
-            <button className="flex items-center gap-2">
-              <ArrowLeft size={20} />
-              Go Back
-            </button>
+            <ArrowLeft size={20} className="mr-2" />
+            Go Back
           </Button>
         </div>
 
@@ -57,30 +67,30 @@ const NotFoundPage: React.FC = () => {
             Need help? Here are some helpful links:
           </p>
           <div className="flex flex-wrap justify-center gap-4 text-sm">
-            <Link 
+            <SafeLink 
               to="/dashboard" 
               className="text-[#34559E] hover:text-[#2c4885] underline"
             >
               Dashboard
-            </Link>
-            <Link 
+            </SafeLink>
+            <SafeLink 
               to="/tasks" 
               className="text-[#34559E] hover:text-[#2c4885] underline"
             >
               Tasks
-            </Link>
-            <Link 
+            </SafeLink>
+            <SafeLink 
               to="/time-tracker" 
               className="text-[#34559E] hover:text-[#2c4885] underline"
             >
               Time Tracker
-            </Link>
-            <Link 
+            </SafeLink>
+            <SafeLink 
               to="/challenges" 
               className="text-[#34559E] hover:text-[#2c4885] underline"
             >
               Challenges
-            </Link>
+            </SafeLink>
           </div>
         </div>
       </div>

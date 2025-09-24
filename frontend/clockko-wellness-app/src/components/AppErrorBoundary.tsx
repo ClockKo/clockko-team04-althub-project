@@ -2,7 +2,6 @@ import React from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { Button } from './ui/button'
 import { RefreshCw, Home, AlertTriangle } from 'lucide-react'
-import { Link } from 'react-router-dom'
 
 interface ErrorFallbackProps {
   error: Error
@@ -58,14 +57,12 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetErrorBoundary
           </Button>
           
           <Button
-            asChild
             variant="outline"
             className="px-6 py-3 rounded-[16px]"
+            onClick={() => window.location.href = '/'}
           >
-            <Link to="/" className="flex items-center gap-2">
-              <Home size={20} />
-              Go to Homepage
-            </Link>
+            <Home size={20} className="mr-2" />
+            Go to Homepage
           </Button>
         </div>
 

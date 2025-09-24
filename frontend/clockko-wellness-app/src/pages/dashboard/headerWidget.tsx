@@ -11,7 +11,8 @@ export function DashboardHeader() {
   // const { resetOnboarding } = useOnboarding(); // for testing purposes and rember to remove in production
   const { data: user, isLoading } = useUserData();
   
-  const userName = user?.username || "Guest";
+  const userName = user?.name || "Guest";
+  console.log(userName);
   const greeting = getGreetingMessage(userName);
 
   return (

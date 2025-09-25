@@ -6,7 +6,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from './AuthLayout'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
-import { registerUser, googleSignUp } from './api'
+import { registerUser, googleSignUp} from './api' 
 import { useAuth } from './authcontext'
 import { useGoogleLogin } from '@react-oauth/google'
 import googleLogo from '../../assets/images/google.png'
@@ -38,42 +38,30 @@ const CreateAccountPage: React.FC = () => {
     resolver: zodResolver(createAccountSchema),
   })
 
-  // Handle form submission
-  const onSubmit = async (data: CreateAccountFormData) => {
-    const { agree, ...registrationData } = data
-    try {
-      const response = await registerUser(registrationData)
-      console.log('Registration successful:', response)
+ 
+ const onSubmit = async (data: CreateAccountFormData) => {
+  const { agree, ...registrationData } = data;
+  
+  setApiError(null);
 
-      // Store the token from the registration response
-      if (response.access_token) {
-        setAuthToken(response.access_token)
-        // Navigate to the dashboard
-        navigate('/dashboard')
-      } else {
-        // If no token, maybe send to a "please log in" page
-        navigate('/signin')
-      }
-    } catch (error: any) {
-      console.error('Registration failed:', error)
-      // Handle and display error
+  console.log('Data being sent to backend:', registrationData);
+
+  try {
+    const response = await registerUser(registrationData);
+    // console.log('Registration successful:', response);
+
+    if (response.access_token) {
+      setAuthToken(response.access_token);
+      navigate('/dashboard');
+    } else {
+      navigate('/signin');
     }
+  } catch (error: any) {
+    console.error('Registration failed:', error);
+    setApiError(error.response?.data?.detail || 'An unknown registration error occurred.');
   }
+};
 
-  // const handleGoogleSuccess = async (tokenResponse: any) => {
-  //   const accessToken = tokenResponse.access_token
-  //   console.log('Google Access Token:', accessToken)
-
-  //   try {
-  //     // TODO: Send this access token to your backend for verification and user creation
-  //     const response = await googleSignUp(accessToken);
-  //     setAuthToken(response.access_token);
-  //     navigate('/dashboard');
-  //   } catch (error) {
-  //     console.error('Google sign-up failed:', error)
-  //     setApiError('An error occurred during Google sign-up.')
-  //   }
-  // }
 
   const handleGoogleSuccess = async (tokenResponse: any) => {
     const googleAccessToken = tokenResponse.access_token;

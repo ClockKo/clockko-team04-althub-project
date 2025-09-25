@@ -1,10 +1,23 @@
-import axios from 'axios';
-import type { LoginFormData, RegistrationFormData } from './validation';
+import axios from 'axios'
+import { z } from 'zod'
 
-// store this in a .env file for security
-// const API_URL = 'http://localhost:8000/api/auth';
-// const API_URL = 'http://localhost:8000';
-const API_URL = 'http://localhost:8000/api'; 
+// Define the shape of the login data
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+})
+export type LoginFormData = z.infer<typeof loginSchema>
+
+// Define and export the shape of the registration data
+const registrationSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+  first_name: z.string(),
+  last_name: z.string(),
+})
+export type RegistrationFormData = z.infer<typeof registrationSchema>
+
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
 
 /**
  * Sends a login request to the backend.
@@ -30,6 +43,10 @@ export const loginUser = async (data: LoginFormData) => {
 export const registerUser = async (data: RegistrationFormData) => {
   try {
     const response = await axios.post(`${API_URL}/auth/register`, data);
+    // Add this block to store the token on successful registration
+    if (response.data.access_token) {
+      localStorage.setItem('authToken', response.data.access_token);
+    }
     return response.data;
   } catch (error) {
     console.error('Registration API call failed:', error);
@@ -37,29 +54,6 @@ export const registerUser = async (data: RegistrationFormData) => {
   }
 };
 
-/**
- * Fetches the current user's data from the backend.
- */
-// export const fetchUserData = async () => {
-//   try {
-//     const token = localStorage.getItem('authToken');
-//     if (!token) {
-//       throw new Error('No auth token found');
-//     }
-
-//     const response = await axios.get(`${API_URL}/users/profile`, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-//     return response.data;
-//   } catch (error) {
-//     console.error('Fetch user data failed:', error);
-//     // Remove invalid token if the request fails
-//     localStorage.removeItem('authToken');
-//     throw error;
-//   }
-// };
 
 export const fetchUserData = async () => {
   try {

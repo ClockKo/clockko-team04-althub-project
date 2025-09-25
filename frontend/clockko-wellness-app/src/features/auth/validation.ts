@@ -12,7 +12,7 @@ export const loginSchema = z.object({
 
 // Schema for the full registration form
 export const registrationSchema = z.object({
-  name: z.string().min(2, { message: 'Please enter your full name' }), 
+  name: z.string().min(2, { message: 'Please enter your full name' }), // Use a single 'name' field
   email: z.string().email({ message: 'Please enter a valid email' }),
   password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
 });

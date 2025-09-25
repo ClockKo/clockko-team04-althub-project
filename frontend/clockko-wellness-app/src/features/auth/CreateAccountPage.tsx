@@ -48,7 +48,7 @@ const CreateAccountPage: React.FC = () => {
 
   try {
     const response = await registerUser(registrationData);
-    console.log('Registration successful:', response);
+    // console.log('Registration successful:', response);
 
     if (response.access_token) {
       setAuthToken(response.access_token);

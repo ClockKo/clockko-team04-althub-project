@@ -10,10 +10,9 @@ export type LoginFormData = z.infer<typeof loginSchema>
 
 // Define and export the shape of the registration data
 const registrationSchema = z.object({
+  name: z.string(),
   email: z.string().email(),
   password: z.string(),
-  first_name: z.string(),
-  last_name: z.string(),
 })
 export type RegistrationFormData = z.infer<typeof registrationSchema>
 
@@ -86,6 +85,37 @@ export const googleSignUp = async (googleToken: string) => {
     return response.data;
   } catch (error) {
     console.error('Google Sign-Up API call failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Verify email with OTP token
+ */
+export const verifyEmail = async (email: string, otp: string) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/verify-email`, {
+      email,
+      otp,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Email verification failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Resend verification email
+ */
+export const resendVerificationEmail = async (email: string) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/send-verification-email`, {
+      email,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Resend verification email failed:', error);
     throw error;
   }
 };

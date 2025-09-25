@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import AuthLayout from './AuthLayout';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
@@ -10,6 +10,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { loginUser } from './api';
 import { useAuth } from './authcontext';
 import googleLogo from '../../assets/images/google.png';
+import toast from 'react-hot-toast';
 
 // Validation schema for the sign-in form
 const signInSchema = z.object({
@@ -23,6 +24,14 @@ const SignInPage: React.FC = () => {
   const navigate = useNavigate();
   const { setAuthToken } = useAuth(); // Get setAuthToken
   const [apiError, setApiError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+
+  // Check if user came from email verification
+  useEffect(() => {
+    if (searchParams.get('verified') === 'true') {
+      toast.success('Email verified successfully! You can now log in.');
+    }
+  }, [searchParams]);
 
   // React-hook-form
   const {

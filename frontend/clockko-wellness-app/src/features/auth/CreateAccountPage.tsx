@@ -10,6 +10,7 @@ import { registerUser, googleSignUp} from './api'
 import { useAuth } from './authcontext'
 import { useGoogleLogin } from '@react-oauth/google'
 import googleLogo from '../../assets/images/google.png'
+import toast from 'react-hot-toast'
 
 
 // Validation schema
@@ -41,24 +42,24 @@ const CreateAccountPage: React.FC = () => {
  
  const onSubmit = async (data: CreateAccountFormData) => {
   const { agree, ...registrationData } = data;
-  
   setApiError(null);
 
   console.log('Data being sent to backend:', registrationData);
 
   try {
     const response = await registerUser(registrationData);
-    // console.log('Registration successful:', response);
+    console.log('Registration successful:', response);
 
-    if (response.access_token) {
-      setAuthToken(response.access_token);
-      navigate('/dashboard');
-    } else {
-      navigate('/signin');
-    }
+    // Show success toast
+    toast.success('Account created successfully! Please check your email for verification.');
+    
+    // Navigate to email verification page with email as query parameter
+    navigate(`/verify-email?email=${encodeURIComponent(registrationData.email)}`);
   } catch (error: any) {
     console.error('Registration failed:', error);
-    setApiError(error.response?.data?.detail || 'An unknown registration error occurred.');
+    const errorMessage = error.response?.data?.detail || 'Registration failed. Please try again.';
+    toast.error(errorMessage);
+    setApiError(errorMessage);
   }
 };
 

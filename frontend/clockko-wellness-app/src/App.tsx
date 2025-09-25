@@ -11,9 +11,11 @@ import TimeTrackerFeatures from './features/timeTracker/timetrackerfeatures';
 import CreateAccountPage from './features/auth/CreateAccountPage';
 import SignInPage from './features/auth/SignInPage';
 import ResetPasswordPage from './features/auth/ResetPasswordPage';
+import EmailVerificationPage from './features/auth/EmailVerificationPage';
 import ProtectedRoutes from './features/auth/protectedroutes'
 import { OnboardingFlow } from './features/onboarding'
 import NotFoundPage from './components/NotFoundPage'
+import { Toaster } from 'react-hot-toast'
 
 
 
@@ -23,12 +25,34 @@ function App() {
       <AuthProvider>
         <UserProvider>
           <OnboardingProvider>
+            {/* Toast notifications */}
+            <Toaster 
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                },
+                success: {
+                  style: {
+                    background: '#10b981',
+                  },
+                },
+                error: {
+                  style: {
+                    background: '#ef4444',
+                  },
+                },
+              }}
+            />
 
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/create-account" element={<CreateAccountPage />} />
               <Route path="/signin" element={<SignInPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/verify-email" element={<EmailVerificationPage />} />
               <Route path="/onboarding" element={<OnboardingFlow />} />
               <Route element={<ProtectedRoutes />}>
                 <Route element={<MainLayout />}>

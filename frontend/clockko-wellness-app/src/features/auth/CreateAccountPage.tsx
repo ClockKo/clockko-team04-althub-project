@@ -6,7 +6,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from './AuthLayout'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
-import { registerUser, googleSignUp, type RegistrationFormData } from './api' 
+import { registerUser, googleSignUp} from './api' 
 import { useAuth } from './authcontext'
 import { useGoogleLogin } from '@react-oauth/google'
 import googleLogo from '../../assets/images/google.png'
@@ -38,38 +38,29 @@ const CreateAccountPage: React.FC = () => {
     resolver: zodResolver(createAccountSchema),
   })
 
-  // Handle form submission
-  const onSubmit = async (data: CreateAccountFormData) => {
-    const { agree, name, ...restOfData } = data
-    try {
-      // Split the full name into first and last name for the backend
-      const nameParts = name.trim().split(' ')
-      const first_name = nameParts[0]
-      const last_name = nameParts.slice(1).join(' ') || first_name // Handle single names
+ 
+ const onSubmit = async (data: CreateAccountFormData) => {
+  const { agree, ...registrationData } = data;
+  
+  setApiError(null);
 
-      const registrationData: RegistrationFormData = {
-        ...restOfData,
-        first_name,
-        last_name,
-      }
+  console.log('Data being sent to backend:', registrationData);
 
-      const response = await registerUser(registrationData)
-      console.log('Registration successful:', response)
+  try {
+    const response = await registerUser(registrationData);
+    console.log('Registration successful:', response);
 
-      // Store the token from the registration response
-      if (response.access_token) {
-        setAuthToken(response.access_token)
-        // Navigate to the onboarding page after successful registration
-        navigate('/onboarding')
-      } else {
-        // If no token, maybe send to a "please log in" page
-        navigate('/signin')
-      }
-    } catch (error: any) {
-      console.error('Registration failed:', error)
-      setApiError(error.response?.data?.detail || 'An unknown registration error occurred.')
+    if (response.access_token) {
+      setAuthToken(response.access_token);
+      navigate('/dashboard');
+    } else {
+      navigate('/signin');
     }
+  } catch (error: any) {
+    console.error('Registration failed:', error);
+    setApiError(error.response?.data?.detail || 'An unknown registration error occurred.');
   }
+};
 
 
   const handleGoogleSuccess = async (tokenResponse: any) => {

@@ -12,9 +12,9 @@ export const loginSchema = z.object({
 
 // Schema for the full registration form
 export const registrationSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(8),
+  name: z.string().min(2, { message: 'Please enter your full name' }), 
+  email: z.string().email({ message: 'Please enter a valid email' }),
+  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
 });
 
 // Infer TypeScript types from the schemas to use in your components

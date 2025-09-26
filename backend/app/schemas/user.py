@@ -9,7 +9,6 @@ class UserCreate(BaseModel):
     name: str
     email: EmailStr
     password: str
-    
 
 
 class UserResponse(BaseModel):
@@ -23,6 +22,7 @@ class UserResponse(BaseModel):
     is_verified: bool = False
     is_active: bool = True
     otp_verified: bool = False
+    onboarding_completed: bool = False
 
     @field_validator("id", mode="before")
     @classmethod
@@ -44,6 +44,7 @@ class UserResponse(BaseModel):
             is_verified=getattr(user_obj, "is_verified", False),
             is_active=getattr(user_obj, "is_active", True),
             otp_verified=getattr(user_obj, "otp_verified", False),
+            onboarding_completed=getattr(user_obj, "onboarding_completed", False),
         )
 
 

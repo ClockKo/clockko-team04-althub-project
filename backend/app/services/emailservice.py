@@ -6,9 +6,49 @@ from email.utils import formataddr
 from typing import List, Optional
 import logging
 import os
+from contextlib import contextmanager
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+class SMTPConnectionError(Exception):
+    """Custom exception for SMTP connection errors"""
+    pass
+
+
+class SMTPAuthError(Exception):
+    """Custom exception for SMTP authentication errors"""
+    pass
+
+
+class EmailSendError(Exception):
+    """Custom exception for email sending errors"""
+    pass
+
+
+@contextmanager
+def smtp_connection(host: str, port: int, username: str = None, password: str = None, use_tls: bool = True):
+    """Context manager for SMTP connections"""
+    server = None
+    try:
+        server = smtplib.SMTP(host, port)
+        
+        if use_tls and username and password:
+            context = ssl.create_default_context()
+            server.starttls(context=context)
+            server.login(username, password)
+        elif username and password:
+            server.login(username, password)
+            
+        yield server
+    finally:
+        if server:
+            try:
+                server.quit()
+            except Exception:
+                # Ignore errors when closing connection
+                pass
 
 
 class EmailService:
@@ -119,19 +159,19 @@ class EmailService:
         except smtplib.SMTPAuthenticationError as e:
             error_msg = f"SMTP Authentication failed: {e}. Check SMTP_USER and SMTP_PASSWORD (use App Password for Gmail)"
             logger.error(error_msg)
-            raise Exception(error_msg)
+            raise SMTPAuthError(error_msg) from e
         except smtplib.SMTPConnectError as e:
             error_msg = f"Failed to connect to SMTP server {self.smtp_host}:{self.smtp_port}: {e}"
             logger.error(error_msg)
-            raise Exception(error_msg)
+            raise SMTPConnectionError(error_msg) from e
         except smtplib.SMTPException as e:
             error_msg = f"SMTP error: {e}"
             logger.error(error_msg)
-            raise Exception(error_msg)
+            raise EmailSendError(error_msg) from e
         except Exception as e:
             error_msg = f"Failed to create SMTP connection: {e}"
             logger.error(error_msg)
-            raise Exception(error_msg)
+            raise SMTPConnectionError(error_msg) from e
     
     def send_email(
         self,
@@ -163,18 +203,26 @@ class EmailService:
             message.attach(html_part)
             
             # Send email
-            with self._create_connection() as server:
+            server = None
+            try:
+                server = self._create_connection()
                 server.send_message(message)
+                logger.info(f"✅ Email sent successfully to {to_email}")
+                
+                # Log additional info for development
+                if self.is_mailhog:
+                    logger.info("🔍 Check MailHog web interface at http://localhost:8025 to view email")
+                
+                return True
+            finally:
+                if server:
+                    try:
+                        server.quit()
+                    except Exception:
+                        # Ignore errors when closing connection
+                        pass
             
-            logger.info(f"✅ Email sent successfully to {to_email}")
-            
-            # Log additional info for development
-            if self.is_mailhog:
-                logger.info("🔍 Check MailHog web interface at http://localhost:8025 to view email")
-            
-            return True
-            
-        except Exception as e:
+        except (SMTPConnectionError, SMTPAuthError, EmailSendError) as e:
             logger.error(f"❌ Failed to send email to {to_email}: {e}")
             if settings.DEBUG:
                 print(f"Email sending failed: {e}")
@@ -206,13 +254,21 @@ class EmailService:
         
         # Test connection if config is valid
         if result["config_valid"]:
+            server = None
             try:
-                with self._create_connection() as server:
-                    result["connection_successful"] = True
-                    logger.info("✅ Email configuration test successful")
-            except Exception as e:
+                server = self._create_connection()
+                result["connection_successful"] = True
+                logger.info("✅ Email configuration test successful")
+            except (SMTPConnectionError, SMTPAuthError, EmailSendError) as e:
                 result["errors"].append(f"Connection test failed: {str(e)}")
                 logger.error(f"❌ Email configuration test failed: {e}")
+            finally:
+                if server:
+                    try:
+                        server.quit()
+                    except Exception:
+                        # Ignore errors when closing connection
+                        pass
         
         return result
     

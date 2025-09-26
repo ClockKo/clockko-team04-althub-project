@@ -74,7 +74,13 @@ def verify_google_id_token(body: GoogleToken, db: Session = Depends(get_db)):
             suffix += 1
             unique_username = f"{base_username}{suffix}"
 
-        user = User(email=email, username=unique_username, full_name=display_name, is_verified=True)
+        user = User(
+            email=email, 
+            username=unique_username, 
+            full_name=display_name, 
+            is_verified=True,
+            onboarding_completed=False
+        )
         db.add(user)
         db.commit()
         db.refresh(user)

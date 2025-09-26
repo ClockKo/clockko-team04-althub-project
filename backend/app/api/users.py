@@ -224,7 +224,8 @@ def get_user_profile(
                 "name": current_user.full_name,
                 "phone_number": current_user.phone_number,
                 "is_verified": current_user.is_verified,
-                "created_at": current_user.created_at.isoformat() if current_user.created_at is not None else None
+                "created_at": current_user.created_at.isoformat() if current_user.created_at is not None else None,
+                "onboarding_completed": current_user.onboarding_completed
             },
             "settings_summary": {
                 "timezone": settings.timezone,
@@ -242,4 +243,48 @@ def get_user_profile(
         raise HTTPException(
             status_code=500,
             detail="Failed to retrieve user profile"
+        )
+
+
+@router.post("/complete-onboarding", status_code=200)
+def complete_onboarding(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Mark user's onboarding as completed.
+    This endpoint should be called when the user finishes the onboarding flow.
+    """
+    try:
+        current_user.onboarding_completed = True
+        db.commit()
+        db.refresh(current_user)
+        
+        return {
+            "message": "Onboarding completed successfully",
+            "onboarding_completed": True
+        }
+    except Exception as e:
+        logger.error(f"Failed to complete onboarding for user {current_user.id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update onboarding status: {str(e)}"
+        )
+
+
+@router.get("/onboarding-status", status_code=200)  
+def get_onboarding_status(current_user: User = Depends(get_current_user)):
+    """
+    Get user's current onboarding completion status.
+    Returns whether the user has completed the onboarding flow.
+    """
+    try:
+        return {
+            "onboarding_completed": bool(current_user.onboarding_completed)
+        }
+    except Exception as e:
+        logger.error(f"Failed to get onboarding status for user {current_user.id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to retrieve onboarding status"
         )

@@ -1,0 +1,278 @@
+# 📋 Backend API Requirements for Frontend Features
+
+## Overview
+
+The frontend features are fully implemented and working with localStorage/mock data. We need backend APIs to persist the data and enable full functionality. Here are the specific database fields and API endpoints needed for each feature.
+
+---
+
+## 🎯 Tasks Feature Enhancement
+
+### Database Fields Needed
+
+**Task Model** (`app/models/task.py`) - Add these fields:
+- `start_date` (DateTime, nullable) - When user plans to start the task
+- `due_date` (DateTime, nullable) - When the task is due
+- `completed` (Boolean, default=False) - Task completion status
+- `priority` (String, default='medium') - 'low', 'medium', 'high'
+- `tags` (JSON, nullable) - Array of task tags for categorization
+
+### API Endpoints Needed
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `POST` | `/api/tasks/` | Create task with new fields |
+| `PUT` | `/api/tasks/{task_id}` | Update task including completion status |
+| `GET` | `/api/tasks/` | List tasks with filtering: ?completed=false&priority=high |
+
+### Expected Response Format
+
+```json
+{
+  "id": "uuid-here",
+  "title": "Complete project",
+  "description": "Finish the task management feature",
+  "start_date": "2025-09-27T09:00:00Z",
+  "due_date": "2025-09-29T17:00:00Z",
+  "completed": false,
+  "priority": "high",
+  "tags": ["urgent", "development", "feature"],
+  "created_at": "2025-09-26T22:00:00Z",
+  "updated_at": "2025-09-26T22:00:00Z"
+}
+```
+
+---
+
+## 🌙 Shutdown Feature 
+
+### Database Fields Needed
+
+**ShutdownReflection Model** (New table: `shutdown_reflections`):
+- `id` (UUID, primary key)
+- `user_id` (UUID, foreign key to users)
+- `productivity_rating` (String) - 'great', 'good', 'okay', 'tough'
+- `reflection_note` (Text, nullable)
+- `mindful_disconnect_completed` (JSON) - Array of booleans
+- `created_at` (DateTime)
+- `shutdown_date` (DateTime)
+
+### API Endpoints Needed
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/api/dashboard/shutdown-summary` | Get daily shutdown summary data |
+| `POST` | `/api/dashboard/shutdown-reflection` | Submit shutdown reflection |
+| `GET` | `/api/dashboard/shutdown-history` | Get reflection history |
+
+### Expected API Responses
+
+**Shutdown Summary:**
+```json
+{
+  "tasksCompleted": 3,
+  "tasksTotal": 5,
+  "pendingTasks": 2,
+  "todayTasks": [{"name": "Review PR", "completed": true}],
+  "focusTime": 420,
+  "focusGoal": 480,
+  "shutdownStreak": 5,
+  "pointsEarned": 45,
+  "clockedOutTime": "18:30"
+}
+```
+
+---
+
+## 🏆 Challenge & Rewards Feature
+
+### Database Fields Needed
+
+**Challenge Model** (New table: `challenges`):
+- `id` (UUID, primary key)
+- `name` (String) - Challenge name
+- `description` (Text) - Challenge description
+- `points` (Integer) - Points awarded
+- `challenge_type` (String) - 'shutdown', 'focus', 'task', 'break'
+- `target_value` (Integer) - Target to achieve
+- `duration_days` (Integer, default=7)
+- `is_active` (Boolean, default=True)
+
+**ChallengeParticipant Model** (New table: `challenge_participants`):
+- `id` (UUID, primary key)
+- `user_id` (UUID, foreign key)
+- `challenge_id` (UUID, foreign key)
+- `progress` (Integer, default=0)
+- `status` (String) - 'in_progress', 'completed'
+- `points_earned` (Integer, default=0)
+
+**UserChallengeStats Model** (New table: `user_challenge_stats`):
+- `user_id` (UUID, foreign key)
+- `total_points` (Integer, default=0)
+- `challenges_completed` (Integer, default=0)
+- `weekly_points` (Integer, default=0)
+- `current_shutdown_streak` (Integer, default=0)
+
+### API Endpoints Needed
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/api/challenges/stats` | Get user's challenge statistics |
+| `GET` | `/api/challenges/week` | Get weekly challenges with progress |
+| `GET` | `/api/challenges/leaders` | Get weekly leaderboard |
+| `POST` | `/api/challenges/{challenge_id}/join` | Join a challenge |
+| `DELETE` | `/api/challenges/{challenge_id}/leave` | Leave a challenge |
+
+### Expected API Responses
+
+**Weekly Challenges:**
+```json
+[
+  {
+    "id": "uuid-here",
+    "name": "Healthy Boundaries",
+    "description": "Log off before 5pm for 5 days",
+    "points": 75,
+    "challenge_type": "shutdown",
+    "target_value": 5,
+    "joined_count": 145,
+    "progress": 2,
+    "total": 5,
+    "status": "in_progress"
+  }
+]
+```
+
+**Leaderboard:**
+```json
+[
+  {
+    "rank": 1,
+    "name": "Sophie L.",
+    "avatar": "/avatars/sophie.png",
+    "points": 1245,
+    "is_current_user": false
+  }
+]
+```
+
+---
+
+## ⏰ Time Tracker Integration
+
+### Database Fields Needed
+
+**TimeLog Model** (Update existing) - Add these fields:
+- `planned_duration` (Integer, nullable) - Planned duration in minutes
+- `session_type` (String, default="work") - "focus", "break", "work"
+- `status` (String, default="active") - "active", "completed", "stopped"
+
+### API Endpoints Needed
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `POST` | `/api/focus-sessions/start` | Start focus session with duration |
+| `POST` | `/api/focus-sessions/{session_id}/complete` | Complete focus session |
+| `POST` | `/api/focus-sessions/{session_id}/stop` | Stop session early |
+| `GET` | `/api/daily-summary` | Get daily focus session summary |
+| `GET` | `/api/current-session` | Get current active session |
+
+### Expected API Responses
+
+**Start Focus Session:**
+```json
+{
+  "session_id": "uuid-here",
+  "user_id": "user-uuid",
+  "start_time": "2025-09-26T14:30:00Z",
+  "planned_duration": 30,
+  "session_type": "focus",
+  "status": "active"
+}
+```
+
+**Daily Summary:**
+```json
+{
+  "date": "2025-09-26T00:00:00Z",
+  "total_focus_sessions": 3,
+  "total_focus_time": 5400,
+  "total_break_time": 900,
+  "focus_sessions": [
+    {
+      "session_id": "uuid-1",
+      "start_time": "2025-09-26T09:00:00Z",
+      "end_time": "2025-09-26T09:30:00Z",
+      "planned_duration": 30,
+      "actual_duration": 30,
+      "session_type": "focus",
+      "status": "completed"
+    }
+  ]
+}
+```
+
+---
+
+## 👤 User Avatar Management
+
+### Database Fields Needed
+
+**User Model** (Update existing) - Add this field:
+- `avatar_url` (String, nullable) - URL or path to user's avatar image
+
+### API Endpoints Needed
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `PUT` | `/api/users/profile/avatar` | Update user's avatar |
+| `GET` | `/api/users/profile/avatar` | Get user's current avatar |
+| `PUT` | `/api/users/onboarding/complete` | Complete onboarding with avatar |
+
+### Expected API Responses
+
+**Update Avatar:**
+```json
+{
+  "id": "user-uuid",
+  "username": "johndoe",
+  "email": "john@example.com",
+  "full_name": "John Doe",
+  "avatar_url": "/avatars/avatar-1.png",
+  "created_at": "2025-09-26T10:00:00Z"
+}
+```
+
+**Request Format:**
+```json
+{
+  "avatar_url": "/avatars/avatar-1.png"
+}
+```
+
+---
+
+## 🎯 Priority Levels
+
+### High Priority (Needed ASAP)
+1. **Tasks Enhancement** - Task completion tracking and categorization
+2. **Avatar Management** - User profile avatar persistence
+3. **Time Tracker Integration** - Focus session persistence and summaries
+
+### Medium Priority
+1. **Shutdown Feature** - Reflection storage and streak tracking
+2. **Challenge System** - Points and leaderboard functionality
+
+---
+
+## 📝 Notes for Backend Team
+
+- All frontend components are already implemented and working with localStorage
+- Frontend is ready to consume these APIs immediately once available
+- No complex business logic needed - mostly CRUD operations with some aggregations
+- All request/response formats match what frontend expects
+- Database migrations will be needed for new fields and tables
+
+---
+
+**Frontend Team** 💙

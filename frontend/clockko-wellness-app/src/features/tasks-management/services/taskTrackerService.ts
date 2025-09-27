@@ -1,91 +1,109 @@
 // taskService.ts
 import api from './api'
-import type { Task, Tag, TagCreate } from '../../../types'
+import type { Task } from '../../../types'
+// import type { Tag, TagCreate } from '../../../types'
 
 interface TaskCreateRequest {
   title: string
   description?: string | null
-  start_date?: string | null
-  due_at?: string | null
-  tag_ids: string[]
-  new_tags?: TagCreate[]
+  // TODO: Uncomment when backend implements these fields
+  // start_date?: string | null
+  // due_date?: string | null
+  // priority?: string
+  // tags?: string[]
+  reminder_enabled?: boolean
+  reminder_time?: string | null
 }
 
 interface TaskUpdateRequest {
   title?: string
   description?: string | null
-  start_date?: string | null
-  due_at?: string | null
-  completed?: boolean
-  tag_ids?: string[]
-  new_tags?: TagCreate[]
+  // TODO: Uncomment when backend implements these fields
+  // start_date?: string | null
+  // due_date?: string | null
+  // completed?: boolean
+  // priority?: string
+  // tags?: string[]
+  reminder_enabled?: boolean
+  reminder_time?: string | null
 }
 
 interface TaskResponse {
   id: string
   title: string
-  description?: string
-  completed: boolean
-  start_date?: string
-  due_at?: string
-  tags: Tag[]
+  description?: string | null
   created_at: string
   updated_at: string
+  // TODO: Uncomment when backend implements these fields
+  // start_date?: string | null
+  // due_date?: string | null
+  // completed?: boolean
+  // priority?: string
+  // tags?: string[]
+  reminder_enabled?: boolean
+  reminder_time?: string | null
 }
 
 // Transform server response to frontend format
-const transformTaskResponse = (task: TaskResponse): Task => ({
-  id: task.id,
-  title: task.title,
-  description: task.description,
-  completed: task.completed,
-  startDate: task.start_date ? new Date(task.start_date) : undefined,
-  dueAt: task.due_at ? new Date(task.due_at) : undefined,
-  tags: task.tags,
-  createdAt: new Date(task.created_at),
-  updatedAt: new Date(task.updated_at),
-})
+const transformTaskResponse = (task: TaskResponse): Task => {
+  console.log('🔄 Transforming task response:', task)
+
+  const transformed: Task = {
+    id: task.id,
+    title: task.title,
+    description: task.description || undefined,
+    // TODO: Uncomment when backend implements these fields
+    completed: false, // TODO: task.completed ?? false,
+    createdAt: new Date(task.created_at),
+    updatedAt: new Date(task.updated_at),
+    // TODO: Uncomment when backend implements these fields
+    startDate: undefined, // TODO: task.start_date ? new Date(task.start_date) : undefined,
+    dueAt: undefined, // TODO: task.due_date ? new Date(task.due_date) : undefined,
+    tags: [], // TODO: task.tags ?? [],
+    // TODO: Uncomment when backend implements priority field
+    // priority: task.priority ?? 'medium',
+  }
+
+  console.log('✅ Transformed task:', transformed)
+  return transformed
+}
 
 // Transform frontend task to server format
 const transformTaskRequest = (task: Task): TaskCreateRequest => {
-  const existingTagIds: string[] = []
-  const newTags: TagCreate[] = []
-  
-  if (task.tags) {
-    task.tags.forEach((tag: Tag) => {
-      if (tag.id.startsWith('temp-') || tag.id.startsWith('tag-')) {
-        newTags.push({
-          name: tag.name,
-          color: tag.color
-        })
-      } else {
-        existingTagIds.push(tag.id)
-      }
-    })
-  }
-  
+  console.log('🔄 Transforming task request:', task)
+
   const requestData: TaskCreateRequest = {
     title: task.title,
     description: task.description || null,
-    start_date: task.startDate ? (task.startDate instanceof Date ? task.startDate.toISOString() : task.startDate) : null,
-    due_at: task.dueAt ? (task.dueAt instanceof Date ? task.dueAt.toISOString() : task.dueAt) : null,
-    tag_ids: existingTagIds,
+    // TODO: Uncomment when backend implements these fields
+    // start_date: task.startDate?.toISOString() || null,
+    // due_date: task.dueAt?.toISOString() || null,
+    // priority: task.priority || 'medium',
+    // tags: task.tags || [],
+    reminder_enabled: false, // Default for now
+    reminder_time: null, // Default for now
   }
-  
-  if (newTags.length > 0) {
-    requestData.new_tags = newTags
-  }
-  
+
+  console.log('✅ Transformed request:', requestData)
   return requestData
 }
 
-
 const fetchTasks = async (): Promise<Task[]> => {
   try {
+    console.log('🚀 Fetching tasks...')
+    const token = localStorage.getItem('authToken')
+    console.log('🔑 Token exists:', !!token)
+    console.log('🔑 Token preview:', token ? `${token.substring(0, 20)}...` : 'null')
+
     const response = await api.get<TaskResponse[]>('/tasks/')
+    console.log('✅ Tasks fetched successfully:', response.data)
     return response.data.map(transformTaskResponse)
-  } catch (error) {
-    console.error('Error fetching tasks:', error)
+  } catch (error: any) {
+    console.error('❌ Error fetching tasks:', error)
+    if (error.response?.status === 401) {
+      console.error('🚫 401 Unauthorized - Token might be expired or invalid')
+      console.error('🚫 Response data:', error.response?.data)
+    }
     throw new Error('Failed to fetch tasks')
   }
 }
@@ -104,43 +122,18 @@ const createTask = async (taskData: Task): Promise<Task> => {
 const updateTask = async (id: string, updates: Partial<Task>): Promise<Task> => {
   try {
     const requestData: TaskUpdateRequest = {}
-    
+
     if (updates.title !== undefined) requestData.title = updates.title
     if (updates.description !== undefined) requestData.description = updates.description || null
-    if (updates.startDate !== undefined) {
-      requestData.start_date = updates.startDate 
-        ? (updates.startDate instanceof Date ? updates.startDate.toISOString() : updates.startDate)
-        : null
-    }
-    if (updates.dueAt !== undefined) {
-      requestData.due_at = updates.dueAt 
-        ? (updates.dueAt instanceof Date ? updates.dueAt.toISOString() : updates.dueAt)
-        : null
-    }
-    if (updates.completed !== undefined) requestData.completed = updates.completed
-    
-    if (updates.tags !== undefined) {
-      const existingTagIds: string[] = []
-      const newTags: TagCreate[] = []
-      
-      if (updates.tags) {
-        updates.tags.forEach((tag: Tag) => {
-          if (tag.id.startsWith('temp-') || tag.id.startsWith('tag-')) {
-            newTags.push({
-              name: tag.name,
-              color: tag.color
-            })
-          } else {
-            existingTagIds.push(tag.id)
-          }
-        })
-      }
-      
-      requestData.tag_ids = existingTagIds
-      if (newTags.length > 0) {
-        requestData.new_tags = newTags
-      }
-    }
+
+    // TODO: Uncomment when backend implements these fields
+    // if (updates.startDate !== undefined) requestData.start_date = updates.startDate?.toISOString() || null
+    // if (updates.dueAt !== undefined) requestData.due_date = updates.dueAt?.toISOString() || null
+    // if (updates.completed !== undefined) requestData.completed = updates.completed
+    // if (updates.priority !== undefined) requestData.priority = updates.priority
+    // if (updates.tags !== undefined) requestData.tags = updates.tags
+
+    console.log('🔄 Updating task with:', requestData)
 
     const response = await api.put<TaskResponse>(`/tasks/${id}`, requestData)
     return transformTaskResponse(response.data)

@@ -8,7 +8,8 @@ from app.core.auth import get_current_user
 from app.core.database import get_db
 # from app.api import task as crud_task
 from app.models.user import User
-from app.services.taskservice import start_timer, stop_timer, get_time_logs, Task as crud_task
+from app.services.taskservice import start_timer, stop_timer, get_time_logs
+from app.services import taskservice
 
 
 router = APIRouter(tags=["Tasks"])
@@ -27,7 +28,7 @@ def create(
             user_id = UUID(str(user_id))
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid user ID")
-    return crud_task.create_task(db, user_id, task_in)
+    return taskservice.create_task(db, task_in, user_id)
 
 
 @router.get("/", response_model=list[TaskResponse])
@@ -41,7 +42,7 @@ def read_all(
             user_id = UUID(str(user_id))
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid user ID")
-    return crud_task.get_tasks(db, user_id)
+    return taskservice.get_tasks(db, user_id)
 
 
 @router.get("/{task_id}", response_model=TaskResponse)
@@ -56,7 +57,7 @@ def read(
             user_id = UUID(str(user_id))
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid user ID")
-    task = crud_task.get_task(db, task_id, user_id)
+    task = taskservice.get_task(db, task_id, user_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     return task
@@ -75,10 +76,7 @@ def update(
             user_id = UUID(str(user_id))
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid user ID")
-    task = crud_task.get_task(db, task_id, user_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return crud_task.update_task(db, task, task_in)
+    return taskservice.update_task(db, task_id, task_in, user_id)
 
 
 @router.delete("/{task_id}", status_code=204)
@@ -93,10 +91,7 @@ def delete(
             user_id = UUID(str(user_id))
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid user ID")
-    task = crud_task.get_task(db, task_id, user_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    crud_task.delete_task(db, task)
+    taskservice.delete_task(db, task_id, user_id)
     return None
 
 

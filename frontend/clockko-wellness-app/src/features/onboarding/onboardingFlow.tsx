@@ -32,6 +32,12 @@ export function OnboardingFlow() {
       // Show loading toast
       const loadingToast = toast.loading('Saving your preferences...');
       
+      // Save avatar to localStorage (until backend API is ready)
+      if (avatar) {
+        localStorage.setItem('userAvatar', avatar);
+        console.log('💾 Avatar saved to localStorage:', avatar);
+      }
+      
       // Save onboarding data to backend
       await saveOnboardingToBackend({
         selectedDays,

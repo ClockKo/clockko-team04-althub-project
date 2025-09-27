@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   SidebarContent,
   SidebarHeader,
@@ -8,6 +8,7 @@ import {
   SidebarFooter,
 } from '../../components/ui/sidebar'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useUserData } from '../../pages/dashboard/dashboardHooks'
 import {
   LayoutDashboard,
   ClipboardCheck,
@@ -26,15 +27,7 @@ import { useIsMobile } from '../../hooks/use-mobile'
 import { SidebarProvider } from '../../components/ui/sidebar'
 import ellipse6 from '../../assets/images/Ellipse6.png'
 
-// Extend Window interface for clockkoUser
-declare global {
-  interface Window {
-    clockkoUser?: {
-      name?: string
-      // add other properties if needed
-    }
-  }
-}
+
 
 // Demo avatar
 const defaultAvatar = ellipse6
@@ -47,6 +40,22 @@ export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string>(defaultAvatar)
   const [searchTerm, setSearchTerm] = useState<string>('')
+  
+  // Use the same user data hook as headerWidget
+  const { data: user, isLoading: userLoading, error: userError } = useUserData()
+  
+  // Load saved avatar from localStorage on component mount
+  useEffect(() => {
+    const savedAvatar = localStorage.getItem('userAvatar');
+    if (savedAvatar) {
+      setAvatarUrl(savedAvatar);
+      console.log('🖼️ Loaded avatar from localStorage:', savedAvatar.substring(0, 50) + '...');
+    }
+  }, []);
+  
+  // Debug logging for mainLayout
+  console.log("🔍 MainLayout - User data:", { user, userLoading, userError, userName: user?.name });
+  console.log("🔍 MainLayout - Auth token exists:", !!localStorage.getItem('authToken'));
 
   const navigationItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -67,7 +76,7 @@ export default function MainLayout() {
   ]
 
   const handleLogout = () => {
-    navigate('/login')
+    navigate('/')
   }
 
   // Utility
@@ -234,7 +243,11 @@ export default function MainLayout() {
                       const reader = new FileReader()
                       reader.onload = (ev) => {
                         if (ev.target?.result) {
-                          setAvatarUrl(ev.target.result as string)
+                          const newAvatarUrl = ev.target.result as string;
+                          setAvatarUrl(newAvatarUrl);
+                          // Save to localStorage
+                          localStorage.setItem('userAvatar', newAvatarUrl);
+                          console.log('💾 New avatar saved to localStorage');
                         }
                       }
                       reader.readAsDataURL(file)
@@ -286,6 +299,7 @@ export default function MainLayout() {
                   className="w-[60%] border-2 border-white bg-whitey shadow-md rounded-4xl px-4 py-2 focus:outline-none focus:border-blue-400"
                 />
               </div>
+              {/* avatar and user name section */}
               <div className="flex items-center gap-4">
                 <label className="cursor-pointer">
                   <img
@@ -303,7 +317,11 @@ export default function MainLayout() {
                         const reader = new FileReader()
                         reader.onload = (ev) => {
                           if (ev.target?.result) {
-                            setAvatarUrl(ev.target.result as string)
+                            const newAvatarUrl = ev.target.result as string;
+                            setAvatarUrl(newAvatarUrl);
+                            // Save to localStorage
+                            localStorage.setItem('userAvatar', newAvatarUrl);
+                            console.log('💾 New avatar saved to localStorage (desktop)');
                           }
                         }
                         reader.readAsDataURL(file)
@@ -312,7 +330,7 @@ export default function MainLayout() {
                   />
                 </label>
                 <span className="font-medium text-gray-700">
-                  {window.clockkoUser?.name || 'Guest'}
+                  {userLoading ? 'Loading...' : user?.name || 'Guest'}
                 </span>
               </div>
             </div>

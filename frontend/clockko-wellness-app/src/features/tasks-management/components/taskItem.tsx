@@ -18,7 +18,8 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
   const [isEditOpen, setIsEditOpen] = React.useState(false)
   const [showOptions, setShowOptions] = React.useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
-  const { mutate: updateTask, isPending: isUpdating } = useUpdateTask()
+  const { mutate: updateTask } = useUpdateTask() // TODO: Re-enable isUpdating when backend supports completion
+  // const { mutate: updateTask, isPending: isUpdating } = useUpdateTask() // IGNORE --- use when backend supports 'completed' field
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask()
 
   useClickOutside(menuRef, () => setShowOptions(false))
@@ -37,19 +38,26 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
         <div className="flex items-start gap-3 flex-1">
           <Checkbox
             checked={task.completed}
-            disabled={isUpdating}
-            onCheckedChange={(checked) =>
-              updateTask({
-                id: task.id,
-                updates: { completed: Boolean(checked) },
-              })
-            }
-            className="mt-0.5 h-6 w-6 rounded-md border-2 border-blue-800 data-[state=checked]:bg-blue-800 data-[state=checked]:border-blue-800 hover:border-blue-900 focus-visible:border-blue-900 focus-visible:ring-blue-800/50 transition-all"
+            disabled={true} // TODO: Enable when backend implements 'completed' field
+            onCheckedChange={(checked) => {
+              // TODO: Uncomment when backend implements 'completed' field
+              // updateTask({
+              //   id: task.id,
+              //   updates: { completed: Boolean(checked) },
+              // })
+              console.log(
+                '⚠️ Task completion feature coming soon! Backend needs to implement "completed" field.'
+              )
+            }}
+            className="mt-0.5 h-6 w-6 rounded-md border-2 border-gray-400 data-[state=checked]:bg-gray-400 data-[state=checked]:border-gray-400 opacity-50 cursor-not-allowed"
+            title="Task completion feature coming soon - pending backend implementation"
           />
           <div className="flex-1">
             {listType === 'list' ? (
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className={`font-medium text-gray-900 ${task.completed ? 'line-through text-gray-500' : ''}`}>
+                <h3
+                  className={`font-medium text-gray-900 ${task.completed ? 'line-through text-gray-500' : ''}`}
+                >
                   {task.title}
                 </h3>
                 {Array.isArray(task.tags) && task.tags.length > 0 && (
@@ -59,10 +67,10 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
                         key={tag.id}
                         variant="secondary"
                         className="px-2 py-1 text-xs rounded-full border"
-                        style={{ 
-                          backgroundColor: `${tag.color}15`, 
+                        style={{
+                          backgroundColor: `${tag.color}15`,
                           borderColor: `${tag.color}40`,
-                          color: tag.color
+                          color: tag.color,
                         }}
                       >
                         {tag.name}
@@ -73,7 +81,9 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
               </div>
             ) : (
               <>
-                <h3 className={`font-medium text-gray-900 ${task.completed ? 'line-through text-gray-500' : ''}`}>
+                <h3
+                  className={`font-medium text-gray-900 ${task.completed ? 'line-through text-gray-500' : ''}`}
+                >
                   {task.title}
                 </h3>
                 {Array.isArray(task.tags) && task.tags.length > 0 && (
@@ -83,10 +93,10 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
                         key={tag.id}
                         variant="secondary"
                         className="px-2 py-1 text-xs rounded-full border"
-                        style={{ 
-                          backgroundColor: `${tag.color}15`, 
+                        style={{
+                          backgroundColor: `${tag.color}15`,
                           borderColor: `${tag.color}40`,
-                          color: tag.color
+                          color: tag.color,
                         }}
                       >
                         {tag.name}
@@ -102,18 +112,18 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
         <div className="flex items-start">
           {listType === 'list' ? (
             <div className="flex items-center gap-1">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={() => setIsEditOpen(true)}
                 className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
               >
                 <MdEdit className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
-                onClick={() => handleDelete(task.id)} 
+                onClick={() => handleDelete(task.id)}
                 disabled={isDeleting}
                 className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
               >
@@ -121,10 +131,10 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
               </Button>
             </div>
           ) : (
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
-              onClick={handleShowMenu} 
+              onClick={handleShowMenu}
               className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
             >
               <MdMoreVert className="h-4 w-4" />
@@ -139,14 +149,18 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
           >
             <ul className="py-1">
               <li className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                <Button variant="ghost" onClick={() => setIsEditOpen(true)} className="w-full justify-start p-0">
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsEditOpen(true)}
+                  className="w-full justify-start p-0"
+                >
                   Edit
                 </Button>
               </li>
               <li className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                <Button 
-                  variant="ghost" 
-                  onClick={() => handleDelete(task.id)} 
+                <Button
+                  variant="ghost"
+                  onClick={() => handleDelete(task.id)}
                   disabled={isDeleting}
                   className="w-full justify-start p-0 text-red-600 hover:text-red-700"
                 >

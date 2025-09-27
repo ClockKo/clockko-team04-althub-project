@@ -6,6 +6,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import AppErrorBoundary from './components/AppErrorBoundary'
 
+// Enable global debug functions in development
+import './utils/globalDebug'
+
 const queryClient = new QueryClient()
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 

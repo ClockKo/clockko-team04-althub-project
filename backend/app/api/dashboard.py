@@ -52,4 +52,11 @@ def get_current_session(db: Session = Depends(get_db), user = Depends(get_curren
         raise HTTPException(status_code=404, detail="No ongoing session")
     return result
 
+@router.get("/last-session", response_model=TimeLogResponse)
+def get_last_session(db: Session = Depends(get_db), user = Depends(get_current_user)):
+    result = timetrackerservice.get_last_session(db, user.id)
+    if not result:
+        raise HTTPException(status_code=404, detail="No previous session found")
+    return result
+
 

@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { Button } from '../../components/ui/button'
 import { BriefcaseBusiness } from 'lucide-react'
+import { debugAuth } from '../../utils/authDebug'
 type WorkSession = {
   session_id?: string
   start_time?: string
@@ -112,14 +113,24 @@ export function WorkSessionCard({
                 {isClockingOut ? 'Clocking Out...' : 'Clock Out'}
               </Button>
               {onTestShutdown && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onTestShutdown}
-                  title="Test shutdown modal UI"
-                >
-                  Test Shutdown
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onTestShutdown}
+                    title="Test shutdown modal UI"
+                  >
+                    Test Shutdown
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => debugAuth()}
+                    title="Debug authentication status"
+                  >
+                    Debug Auth
+                  </Button>
+                </>
               )}
             </div>
           </>

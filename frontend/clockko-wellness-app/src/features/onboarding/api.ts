@@ -5,7 +5,7 @@ const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
 
 // Create axios instance with auth token
 const createApiInstance = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('authToken');  // Fixed: Use 'authToken' instead of 'token'
   return axios.create({
     baseURL: API_URL,
     headers: {

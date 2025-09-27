@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
+import { useQueryClient } from '@tanstack/react-query'
 import { DashboardHeader } from './headerWidget'
 import { WorkSessionCard } from './workWidget'
 import { ProgressCard } from './productivityWidget'
@@ -7,6 +8,7 @@ import { TaskBacklogCard } from './taskWidget'
 import { ShutdownStreakCard } from './shutdownWidget'
 import { useCurrentSession, useClockIn, useClockOut, useDashboardData } from './dashboardHooks'
 import { ShutdownModal } from './shutdownModals/modal'
+import { AuthDebugPanel } from '../../components/AuthDebugPanel'
 import type { Task } from '../../types/typesGlobal'
 import { Skeleton } from '../../components/ui/skeleton'
 
@@ -17,6 +19,7 @@ export default function DashboardPage() {
   const { data: dashboardData } = useDashboardData()
   const clockInMutation = useClockIn()
   const clockOutMutation = useClockOut()
+  const queryClient = useQueryClient()
   const [showShutdown, setShowShutdown] = useState<boolean>(false)
 
   // Handlers for clock in 
@@ -36,6 +39,11 @@ export default function DashboardPage() {
   // handler to close shutdown modal
   function handleCloseShutdown() {
     setShowShutdown(false)
+    // Force refresh of session data to update UI state
+    queryClient.invalidateQueries({ queryKey: ["currentSession"] })
+    queryClient.invalidateQueries({ queryKey: ["dashboardData"] })
+    clockInMutation.reset() // Clear any pending states
+    clockOutMutation.reset() // Clear any pending states
   }
 
   // Handler to open shutdown modal for testing
@@ -87,11 +95,18 @@ export default function DashboardPage() {
               focusTime={progressData.focusTime}
               focusGoal={progressData.focusGoal}
             />
-            <TaskBacklogCard pendingTasks={progressData.pendingTasks} />
+            <TaskBacklogCard />
             <ShutdownStreakCard shutdownStreak={progressData.shutdownStreak} />
           </>
         )}
       </div>
+      
+      {/* Debug Panel - Development Only */}
+      {import.meta.env.DEV && (
+        <div className="mt-6">
+          <AuthDebugPanel />
+        </div>
+      )}
       <AnimatePresence>
         {showShutdown && <ShutdownModal open={showShutdown} onClose={handleCloseShutdown} />}
       </AnimatePresence>

@@ -121,24 +121,42 @@ export interface ShutdownReflection {
 /*************************************************************/
 
 // Virtual Co-working Rooms
-export interface Room {
+export type RoomSummary = {
+  id: string;
+  name: string;
+  description: string;
+  status: string;  // "rooms" | "active"
+  count: number;
+  color?: string;
+};
+
+export type Participant = {
+  id: string;
+  name: string;
+  avatar: string;
+  isSpeaking: boolean;
+  muted: boolean;
+};
+
+export type Message = {
+  id: string;
+  user: string;
+  avatar: string;
+  text: string;
+  time: string;
+};
+
+export type Room = {
   id: string
   name: string
-  participants: RoomMember[]
-  sessionStart: Date | null
-  sessionEnd: Date | null
-  silent: boolean
-}
-export interface RoomMember {
-  userId: string
-  username: string
-  avatarUrl?: string
-  joinedAt: Date
-}
-
-export interface PresenceState {
-  members: RoomMember[]
-  roomId: string
+  participants: Participant[]
+  messages?: Message[]
+  tasksCompleted?: number
+  tasksTotal?: number
+  focusTime?: number
+  focusGoal?: number
+  description?: string
+  color?: string
 }
 /*************************************************************/
 

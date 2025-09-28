@@ -24,6 +24,8 @@
   --color-lightGreen: hsla(130, 92%, 95%, 1);
   --color-warningYellow: hsla(52, 88%, 84%, 1);
   --color-errorRed: hsla(354, 73%, 88%, 1);
+  --color-grayBlue: hsla(221, 37%, 88%, 1);
+  --color-snow: hsla(225, 100%, 99%, 1);
 
   --font-sans: 'Manrope', sans-serif;
   --font-serif: 'Merriweather', serif;

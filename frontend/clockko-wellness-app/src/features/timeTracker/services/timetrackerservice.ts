@@ -12,7 +12,7 @@ interface FocusSession {
   plannedDuration: number // in minutes
   actualDuration?: number // in minutes
   sessionType: 'focus' | 'break'
-  status: 'active' | 'completed' | 'stopped'
+  status: 'active' | 'completed' | 'stopped' | 'paused'
 }
 
 interface DailySummary {
@@ -27,6 +27,7 @@ class TimeTrackerService {
   private readonly STORAGE_KEYS = {
     DAILY_SUMMARY: 'timetracker_daily_summary',
     CURRENT_SESSION: 'timetracker_current_session',
+    PAUSED_SESSION: 'timetracker_paused_session',
     USER_SESSIONS: 'timetracker_user_sessions'
   }
 
@@ -81,6 +82,48 @@ class TimeTrackerService {
     return completedSession
   }
 
+  async pauseFocusSession(sessionId: string): Promise<FocusSession> {
+    console.log('⏸️ Pausing focus session:', sessionId)
+    
+    const currentSession = this.getCurrentSession()
+    if (!currentSession || currentSession.id !== sessionId) {
+      throw new Error('Active session not found')
+    }
+
+    const pausedSession: FocusSession = {
+      ...currentSession,
+      status: 'paused'
+    }
+
+    // Store paused session separately and clear current session
+    localStorage.setItem(this.STORAGE_KEYS.PAUSED_SESSION, JSON.stringify(pausedSession))
+    localStorage.removeItem(this.STORAGE_KEYS.CURRENT_SESSION)
+    
+    console.log('⏸️ Focus session paused and moved to paused storage:', pausedSession)
+    return pausedSession
+  }
+
+  async resumeFocusSession(sessionId: string): Promise<FocusSession> {
+    console.log('▶️ Resuming focus session:', sessionId)
+    
+    const pausedSession = this.getPausedSession()
+    if (!pausedSession || pausedSession.id !== sessionId) {
+      throw new Error('Paused session not found')
+    }
+
+    const resumedSession: FocusSession = {
+      ...pausedSession,
+      status: 'active'
+    }
+
+    // Move session back to current session storage and clear paused storage
+    localStorage.setItem(this.STORAGE_KEYS.CURRENT_SESSION, JSON.stringify(resumedSession))
+    localStorage.removeItem(this.STORAGE_KEYS.PAUSED_SESSION)
+    
+    console.log('▶️ Focus session resumed:', resumedSession)
+    return resumedSession
+  }
+
   async stopFocusSession(sessionId: string): Promise<FocusSession> {
     console.log('⏹️ Stopping focus session:', sessionId)
     
@@ -107,6 +150,25 @@ class TimeTrackerService {
     return stoppedSession
   }
 
+  // Method to manually stop a session that's not in current storage (for paused sessions)
+  async stopSessionManually(session: FocusSession): Promise<FocusSession> {
+    console.log('⏹️ Manually stopping session:', session.id)
+    
+    const now = new Date()
+    const stoppedSession: FocusSession = {
+      ...session,
+      endTime: now,
+      actualDuration: Math.round((now.getTime() - session.startTime.getTime()) / 60000),
+      status: 'stopped'
+    }
+    
+    // Add to daily summary
+    this.addSessionToDailySummary(stoppedSession)
+    
+    console.log('⏹️ Session manually stopped:', stoppedSession)
+    return stoppedSession
+  }
+
   getCurrentSession(): FocusSession | null {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEYS.CURRENT_SESSION)
@@ -120,6 +182,23 @@ class TimeTrackerService {
       return session
     } catch (error) {
       console.error('Error getting current session:', error)
+      return null
+    }
+  }
+
+  getPausedSession(): FocusSession | null {
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEYS.PAUSED_SESSION)
+      if (!stored) return null
+      
+      const session = JSON.parse(stored)
+      // Convert date strings back to Date objects
+      session.startTime = new Date(session.startTime)
+      if (session.endTime) session.endTime = new Date(session.endTime)
+      
+      return session
+    } catch (error) {
+      console.error('Error getting paused session:', error)
       return null
     }
   }
@@ -228,6 +307,11 @@ class TimeTrackerService {
       localStorage.removeItem(key)
     })
     console.log('🗑️ All time tracker data cleared')
+  }
+
+  // Helper method to check if there's a paused session
+  hasPausedSession(): boolean {
+    return this.getPausedSession() !== null
   }
 }
 

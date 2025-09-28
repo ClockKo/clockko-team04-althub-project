@@ -11,6 +11,7 @@ The frontend features are fully implemented and working with localStorage/mock d
 ### Database Fields Needed
 
 **Task Model** (`app/models/task.py`) - Add these fields:
+
 - `start_date` (DateTime, nullable) - When user plans to start the task
 - `due_date` (DateTime, nullable) - When the task is due
 - `completed` (Boolean, default=False) - Task completion status
@@ -44,11 +45,12 @@ The frontend features are fully implemented and working with localStorage/mock d
 
 ---
 
-## 🌙 Shutdown Feature 
+## 🌙 Shutdown Feature
 
 ### Database Fields Needed
 
 **ShutdownReflection Model** (New table: `shutdown_reflections`):
+
 - `id` (UUID, primary key)
 - `user_id` (UUID, foreign key to users)
 - `productivity_rating` (String) - 'great', 'good', 'okay', 'tough'
@@ -68,6 +70,7 @@ The frontend features are fully implemented and working with localStorage/mock d
 ### Expected API Responses
 
 **Shutdown Summary:**
+
 ```json
 {
   "tasksCompleted": 3,
@@ -89,6 +92,7 @@ The frontend features are fully implemented and working with localStorage/mock d
 ### Database Fields Needed
 
 **Challenge Model** (New table: `challenges`):
+
 - `id` (UUID, primary key)
 - `name` (String) - Challenge name
 - `description` (Text) - Challenge description
@@ -99,6 +103,7 @@ The frontend features are fully implemented and working with localStorage/mock d
 - `is_active` (Boolean, default=True)
 
 **ChallengeParticipant Model** (New table: `challenge_participants`):
+
 - `id` (UUID, primary key)
 - `user_id` (UUID, foreign key)
 - `challenge_id` (UUID, foreign key)
@@ -107,6 +112,7 @@ The frontend features are fully implemented and working with localStorage/mock d
 - `points_earned` (Integer, default=0)
 
 **UserChallengeStats Model** (New table: `user_challenge_stats`):
+
 - `user_id` (UUID, foreign key)
 - `total_points` (Integer, default=0)
 - `challenges_completed` (Integer, default=0)
@@ -126,6 +132,7 @@ The frontend features are fully implemented and working with localStorage/mock d
 ### Expected API Responses
 
 **Weekly Challenges:**
+
 ```json
 [
   {
@@ -144,6 +151,7 @@ The frontend features are fully implemented and working with localStorage/mock d
 ```
 
 **Leaderboard:**
+
 ```json
 [
   {
@@ -163,9 +171,12 @@ The frontend features are fully implemented and working with localStorage/mock d
 ### Database Fields Needed
 
 **TimeLog Model** (Update existing) - Add these fields:
+
 - `planned_duration` (Integer, nullable) - Planned duration in minutes
 - `session_type` (String, default="work") - "focus", "break", "work"
-- `status` (String, default="active") - "active", "completed", "stopped"
+- `status` (String, default="active") - "active", "completed", "stopped", "paused"
+- `paused_at` (DateTime, nullable) - When session was paused
+- `remaining_time` (Integer, nullable) - Remaining time in seconds when paused
 
 ### API Endpoints Needed
 
@@ -174,12 +185,16 @@ The frontend features are fully implemented and working with localStorage/mock d
 | `POST` | `/api/focus-sessions/start` | Start focus session with duration |
 | `POST` | `/api/focus-sessions/{session_id}/complete` | Complete focus session |
 | `POST` | `/api/focus-sessions/{session_id}/stop` | Stop session early |
+| `POST` | `/api/focus-sessions/{session_id}/pause` | Pause active session for break |
+| `POST` | `/api/focus-sessions/{session_id}/resume` | Resume paused session after break |
 | `GET` | `/api/daily-summary` | Get daily focus session summary |
 | `GET` | `/api/current-session` | Get current active session |
+| `GET` | `/api/paused-session` | Get current paused session |
 
 ### Expected API Responses
 
 **Start Focus Session:**
+
 ```json
 {
   "session_id": "uuid-here",
@@ -191,7 +206,53 @@ The frontend features are fully implemented and working with localStorage/mock d
 }
 ```
 
+**Pause Focus Session:**
+
+```json
+{
+  "session_id": "uuid-here",
+  "user_id": "user-uuid",
+  "start_time": "2025-09-26T14:30:00Z",
+  "paused_at": "2025-09-26T14:45:00Z",
+  "planned_duration": 30,
+  "remaining_time": 900,
+  "session_type": "focus",
+  "status": "paused"
+}
+```
+
+**Resume Focus Session:**
+
+```json
+{
+  "session_id": "uuid-here",
+  "user_id": "user-uuid",
+  "start_time": "2025-09-26T14:30:00Z",
+  "paused_at": "2025-09-26T14:45:00Z",
+  "planned_duration": 30,
+  "remaining_time": 900,
+  "session_type": "focus",
+  "status": "active"
+}
+```
+
+**Get Paused Session:**
+
+```json
+{
+  "session_id": "uuid-here",
+  "user_id": "user-uuid",
+  "start_time": "2025-09-26T14:30:00Z",
+  "paused_at": "2025-09-26T14:45:00Z",
+  "planned_duration": 30,
+  "remaining_time": 900,
+  "session_type": "focus",
+  "status": "paused"
+}
+```
+
 **Daily Summary:**
+
 ```json
 {
   "date": "2025-09-26T00:00:00Z",
@@ -212,6 +273,27 @@ The frontend features are fully implemented and working with localStorage/mock d
 }
 ```
 
+### Paused Session Workflow
+
+The time tracker supports pausing focus sessions to take breaks while preserving the original session state:
+
+1. **User starts focus session (60 min)** → `POST /api/focus-sessions/start`
+2. **User pauses after 30 min to take break** → `POST /api/focus-sessions/{id}/pause`
+   - Session status changes to "paused"
+   - Remaining time (30 min) is stored
+   - Break session can start separately
+3. **Break ends, user resumes focus** → `POST /api/focus-sessions/{id}/resume`
+   - Session status changes back to "active"
+   - User continues with remaining 30 minutes
+4. **User completes or stops session** → `POST /api/focus-sessions/{id}/complete` or `/stop`
+
+**Key Requirements:**
+
+- Only one active session per user at a time
+- Multiple paused sessions allowed (user can pause focus, take break, pause break, etc.)
+- Paused sessions persist across browser sessions/device changes
+- When resuming, session continues with exact remaining time
+
 ---
 
 ## 👤 User Avatar Management
@@ -219,6 +301,7 @@ The frontend features are fully implemented and working with localStorage/mock d
 ### Database Fields Needed
 
 **User Model** (Update existing) - Add this field:
+
 - `avatar_url` (String, nullable) - URL or path to user's avatar image
 
 ### API Endpoints Needed
@@ -232,6 +315,7 @@ The frontend features are fully implemented and working with localStorage/mock d
 ### Expected API Responses
 
 **Update Avatar:**
+
 ```json
 {
   "id": "user-uuid",
@@ -244,6 +328,7 @@ The frontend features are fully implemented and working with localStorage/mock d
 ```
 
 **Request Format:**
+
 ```json
 {
   "avatar_url": "/avatars/avatar-1.png"
@@ -255,11 +340,13 @@ The frontend features are fully implemented and working with localStorage/mock d
 ## 🎯 Priority Levels
 
 ### High Priority (Needed ASAP)
+
 1. **Tasks Enhancement** - Task completion tracking and categorization
 2. **Avatar Management** - User profile avatar persistence
 3. **Time Tracker Integration** - Focus session persistence and summaries
 
 ### Medium Priority
+
 1. **Shutdown Feature** - Reflection storage and streak tracking
 2. **Challenge System** - Points and leaderboard functionality
 

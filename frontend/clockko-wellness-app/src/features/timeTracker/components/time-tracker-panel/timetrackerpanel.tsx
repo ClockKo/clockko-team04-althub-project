@@ -2,7 +2,35 @@
 TimeTrackerPanel.tsx
   # Main panel integratin    // --- Koala State ---
     const [currentKoalaImage, setCurrentKoalaImage] = useState(koalaInitial);
-    const [currentSpeechBubbleText, setCurrentSpeechBubbleText] = useState("Wake me up when it's time to get serious");
+    const [currentSpeechBubbleText, setCurrentS    // Effect for updating Koala Image and Speech Bubble text based on mode and running status
+    useEffect(() => {
+        if (mode === 'initial') {
+            setCurrentKoalaImage(koalaInitial);
+            setCurrentSpeechBubbleText("Wake me up when it's time to get serious");
+        } else if (isRunning && mode === 'focus') {
+            // Timer is running and it's a FOCUS session
+            setCurrentKoalaImage(koalaFocus);
+            setCurrentSpeechBubbleText(`You're locked in, ${name}. Let's do this!`);
+        } else if (isRunning && mode === 'break') {
+            // Timer is running and it's a BREAK session
+            setCurrentKoalaImage(koalaHappy);
+            if (pausedFocusSession) {
+                setCurrentSpeechBubbleText(`Enjoy your break, ${name}! Your focus session will resume after.`);
+            } else {
+                setCurrentSpeechBubbleText(`Take a breather, ${name}! You've earned it.`);
+            }
+        } else {
+            // All other states:
+            // - Paused (focus or break)
+            // - Completed Focus (transitioning to break)
+            setCurrentKoalaImage(koalaHappy);
+            if (pausedFocusSession && mode === 'break') {
+                setCurrentSpeechBubbleText(`Focus session paused. Enjoying your break, ${name}?`);
+            } else {
+                setCurrentSpeechBubbleText(`Hey ${name}. Great Job! Need a break?`);
+            }
+        }
+    }, [mode, isRunning, name, pausedFocusSession]); // Rerun when mode, isRunning, name, or pausedFocusSession changes useState("Wake me up when it's time to get serious");
 
     // Load daily summary and handle session recovery on component mount
     useEffect(() => {
@@ -126,15 +154,20 @@ function TimeTrackerPanel() {
     // Debug function to manually clear stuck sessions and refresh data
     const clearStuckSession = () => {
         const currentSession = timeTrackerService.getCurrentSession();
-        if (currentSession) {
-            console.log("🧹 Manually clearing session:", currentSession);
+        const pausedSession = timeTrackerService.getPausedSession();
+        
+        if (currentSession || pausedSession || pausedFocusSession) {
+            console.log("🧹 Manually clearing sessions:", { currentSession, pausedSession, pausedFocusSession });
             localStorage.removeItem('timetracker_current_session');
+            localStorage.removeItem('timetracker_paused_session');
             setCurrentSession(null);
+            setPausedFocusSession(null);
+            setPausedFocusTimeLeft(null);
             
             // Force reload daily summary with recalculation
             refreshDailySummary();
         } else {
-            console.log("ℹ️ No session to clear");
+            console.log("ℹ️ No sessions to clear");
         }
     };
 
@@ -167,6 +200,8 @@ function TimeTrackerPanel() {
     const [totalFocusTime, setTotalFocusTime] = useState(0); // in seconds
     const [totalBreakTime, setTotalBreakTime] = useState(0); // in seconds
     const [currentSession, setCurrentSession] = useState<FocusSession | null>(null); // Current active session
+    const [pausedFocusSession, setPausedFocusSession] = useState<FocusSession | null>(null); // Paused focus session during break
+    const [pausedFocusTimeLeft, setPausedFocusTimeLeft] = useState<number | null>(null); // Time left on paused focus session
     const [isDataLoaded, setIsDataLoaded] = useState(false); // Track if data has been loaded
 
 
@@ -250,10 +285,30 @@ function TimeTrackerPanel() {
             });
         }
         
+        // If there's a paused focus session, stop it using the service
+        const servicePausedSession = timeTrackerService.getPausedSession();
+        if (servicePausedSession || pausedFocusSession) {
+            const sessionToStop = servicePausedSession || pausedFocusSession;
+            timeTrackerService.stopSessionManually(sessionToStop!).then(stoppedSession => {
+                console.log("🛑 Paused focus session stopped:", stoppedSession);
+                
+                // Clear paused session storage
+                localStorage.removeItem('timetracker_paused_session');
+                
+                // Refresh daily summary to show updated stats
+                return refreshDailySummary();
+            }).catch(error => {
+                console.error("Failed to stop paused session:", error);
+            });
+        }
+        
+        // Clear all session state
         setIsRunning(false);
         setMode('initial');
         setTimeLeft(FOCUS_DEFAULT_DURATION); // Always reset to default focus duration
         setFocusDuration(FOCUS_DEFAULT_DURATION); // Also reset focus duration state
+        setPausedFocusSession(null); // Clear paused session
+        setPausedFocusTimeLeft(null); // Clear paused time
         setIsDropdownOpen(false); // Close start dropdown
         setIsBreakDropdownOpen(false); // Close break dropdown
     };
@@ -281,8 +336,6 @@ function TimeTrackerPanel() {
             setTotalFocusSessions(prev => prev + 1); // Increment session count
             setTotalFocusTime(prev => prev + focusDuration); // Add completed focus duration
         } else if (mode === 'break') {
-            setMode('initial'); // After break, go back to initial state, ready for next focus
-            setTimeLeft(focusDuration); // Set time back to the last selected focus duration
             console.log("Break session completed!");
             
             // Complete the break session in localStorage service
@@ -299,6 +352,38 @@ function TimeTrackerPanel() {
             }
             
             setTotalBreakTime(prev => prev + breakDuration); // Add completed break duration (legacy)
+            
+            // Check if there's a paused focus session to resume
+            if (pausedFocusSession && pausedFocusTimeLeft !== null) {
+                console.log("🔄 Resuming paused focus session after break:", pausedFocusSession);
+                
+                // Resume the focus session using the service
+                timeTrackerService.resumeFocusSession(pausedFocusSession.id).then(resumedSession => {
+                    setCurrentSession(resumedSession);
+                    
+                    // Restore focus mode and remaining time
+                    setMode('focus');
+                    setTimeLeft(pausedFocusTimeLeft);
+                    setFocusDuration(pausedFocusSession.plannedDuration * 60); // Convert back to seconds
+                    
+                    // Clear the paused session state
+                    setPausedFocusSession(null);
+                    setPausedFocusTimeLeft(null);
+                    
+                    console.log("✅ Focus session resumed with", pausedFocusTimeLeft, "seconds remaining");
+                }).catch(error => {
+                    console.error("Failed to resume focus session:", error);
+                    // Fallback: go to initial state
+                    setMode('initial');
+                    setTimeLeft(focusDuration);
+                    setPausedFocusSession(null);
+                    setPausedFocusTimeLeft(null);
+                });
+            } else {
+                // No paused focus session, go back to initial state
+                setMode('initial');
+                setTimeLeft(focusDuration); // Set time back to the last selected focus duration
+            }
         }
         setIsRunning(false); // Ensure timer is not running
         setIsBreakDropdownOpen(false); // Close break dropdown if open
@@ -310,10 +395,23 @@ function TimeTrackerPanel() {
             window.clearInterval(timerRef.current); // Using window.clearInterval
         }
         
-        // Clear any existing session first (focus session should be completed before break)
-        if (currentSession) {
-            console.log("🔄 Clearing previous session before starting break");
-            setCurrentSession(null);
+        // Preserve the paused focus session if it exists and is a focus session
+        if (currentSession && currentSession.sessionType === 'focus' && mode === 'focus') {
+            console.log("💾 Pausing focus session for break:", currentSession);
+            
+            // Pause the focus session using the service (it will handle storage)
+            timeTrackerService.pauseFocusSession(currentSession.id).then(pausedSession => {
+                setPausedFocusSession(pausedSession);
+                setPausedFocusTimeLeft(timeLeft); // Save the remaining time for UI
+                setCurrentSession(null); // Clear from UI state
+                console.log("⏸️ Focus session paused in service:", pausedSession);
+            }).catch(error => {
+                console.error("Failed to pause focus session:", error);
+                // Fallback to old method if service fails
+                setPausedFocusSession(currentSession);
+                setPausedFocusTimeLeft(timeLeft);
+                setCurrentSession(null);
+            });
         }
         
         const duration = minutes * 60; // Convert minutes to seconds
@@ -438,6 +536,18 @@ function TimeTrackerPanel() {
                                 }}>
                                     {isDataLoaded ? '✅ Data Loaded' : '⏳ Loading...'}
                                 </span>
+                                {(pausedFocusSession || timeTrackerService.hasPausedSession()) && (
+                                    <span style={{ 
+                                        fontSize: '12px', 
+                                        color: '#ff9800',
+                                        alignSelf: 'center',
+                                        padding: '2px 8px',
+                                        borderRadius: '4px',
+                                        background: '#fff3e0'
+                                    }}>
+                                        ⏸️ Focus Paused ({Math.floor((pausedFocusTimeLeft || 0) / 60)}:{String((pausedFocusTimeLeft || 0) % 60).padStart(2, '0')})
+                                    </span>
+                                )}
                             </div>
                         </div>
                         <div className="panel-main">

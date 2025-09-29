@@ -1,112 +1,4 @@
 /*
-TimeTrackerPanel.tsx
-  # Main panel integratin    // --- Koala State ---
-    const [currentKoalaImage, setCurrentKoalaImage] = useState(koalaInitial);
-    const [currentSpeechBubbleText, setCurrentS    // Effect for updating Koala Image and Speech Bubble text based on mode and running status
-    useEffect(() => {
-        if (mode === 'initial') {
-            setCurrentKoalaImage(koalaInitial);
-            setCurrentSpeechBubbleText("Wake me up when it's time to get serious");
-        } else if (isRunning && mode === 'focus') {
-            // Timer is running and it's a FOCUS session
-            setCurrentKoalaImage(koalaFocus);
-            setCurrentSpeechBubbleText(`You're locked in, ${name}. Let's do this!`);
-        } else if (isRunning && mode === 'break') {
-            // Timer is running and it's a BREAK session
-            setCurrentKoalaImage(koalaHappy);
-            if (pausedFocusSession) {
-                setCurrentSpeechBubbleText(`Enjoy your break, ${name}! Your focus session will resume after.`);
-            } else {
-                setCurrentSpeechBubbleText(`Take a breather, ${name}! You've earned it.`);
-            }
-        } else {
-            // All other states:
-            // - Paused (focus or break)
-            // - Completed Focus (transitioning to break)
-            setCurrentKoalaImage(koalaHappy);
-            if (pausedFocusSession && mode === 'break') {
-                setCurrentSpeechBubbleText(`Focus session paused. Enjoying your break, ${name}?`);
-            } else {
-                setCurrentSpeechBubbleText(`Hey ${name}. Great Job! Need a break?`);
-            }
-        }
-    }, [mode, isRunning, name, pausedFocusSession]); // Rerun when mode, isRunning, name, or pausedFocusSession changes useState("Wake me up when it's time to get serious");
-
-    // Load daily summary and handle session recovery on component mount
-    useEffect(() => {
-        console.log("🔄 TimeTrackerPanel mounting, checking for sessions...");
-        
-        // Check for stuck active sessions (only if they're actually problematic)
-        const currentSession = timeTrackerService.getCurrentSession();
-        if (currentSession) {
-            console.log("🔄 Found existing session on mount:", currentSession);
-            
-            // Only clean up if it's truly stuck (running for more than reasonable time)
-            const startTime = new Date(currentSession.startTime);
-            const now = new Date();
-            const runningTime = (now.getTime() - startTime.getTime()) / 1000 / 60; // minutes
-            
-            // Only clean up sessions that have been running for more than 3 hours (clearly stuck)
-            if (runningTime > 180) { 
-                console.log(`🧹 Session running for ${runningTime.toFixed(1)} minutes (>3hrs), clearing stuck session`);
-                localStorage.removeItem('timetracker_current_session');
-            } else if (currentSession.status === 'active') {
-                // If session is marked as active but timer isn't running in UI, user might have navigated away
-                console.log("ℹ️ Active session found, but timer is not running in UI. User may have navigated away.");
-                // Don't auto-clear, let user decide what to do
-                setCurrentSession(currentSession); // Restore session state
-            } else {
-                console.log("ℹ️ Session exists but not problematic, leaving it alone");
-            }
-        }
-        
-        // Load daily summary immediately (no delay needed)
-        console.log("🔄 About to load daily summary on mount...");
-        timeTrackerService.getDailySummary().then(summary => {
-            console.log("📊 Got daily summary on mount:", summary);
-            console.log("🔄 Setting state - Focus Sessions:", summary.totalFocusSessions, "Focus Time:", summary.totalFocusTime, "Break Time:", summary.totalBreakTime);
-            
-            setTotalFocusSessions(summary.totalFocusSessions);
-            setTotalFocusTime(summary.totalFocusTime);
-            setTotalBreakTime(summary.totalBreakTime);
-            setIsDataLoaded(true);
-            
-            console.log("✅ State updated on mount - Data loaded flag set to true");
-        }).catch(error => {
-            console.error("❌ Failed to load daily summary on mount:", error);
-        });
-    }, []);
-
-    // Secondary effect to ensure data is loaded after a brief delay (fallback mechanism)
-    useEffect(() => {
-        if (!isDataLoaded) {
-            const fallbackTimer = setTimeout(() => {
-                console.log("🔄 Fallback: Data not loaded yet, trying again...");
-                timeTrackerService.getDailySummary().then(summary => {
-                    if (!isDataLoaded) {
-                        console.log("🔄 Fallback: Loading data that wasn't loaded in primary effect");
-                        setTotalFocusSessions(summary.totalFocusSessions);
-                        setTotalFocusTime(summary.totalFocusTime);
-                        setTotalBreakTime(summary.totalBreakTime);
-                        setIsDataLoaded(true);
-                    }
-                });
-            }, 500); // Try again after 500ms if data wasn't loaded
-
-            return () => clearTimeout(fallbackTimer);
-        }
-    }, [isDataLoaded]);
-
-    // Add cleanup effect to log what happens when component unmounts
-    useEffect(() => {
-        return () => {
-            console.log("⚠️ TimeTrackerPanel unmounting...");
-            const currentSession = localStorage.getItem('timetracker_current_session');
-            const dailySummary = localStorage.getItem('timetracker_daily_summary');
-            console.log("📱 Session on unmount:", currentSession ? JSON.parse(currentSession) : null);
-            console.log("📊 Summary on unmount:", dailySummary ? JSON.parse(dailySummary) : null);
-        };
-    }, []);ll time tracker components
   # Includes localStorage service integration for immediate functionality
   # Ready for backend API integration when available
 */
@@ -131,6 +23,9 @@ import { FOCUS_DEFAULT_DURATION, BREAK_DEFAULT_DURATION, formatTime} from "../..
 // --- Time Tracker Service ---
 import { timeTrackerService, type FocusSession } from "../../services/timetrackerservice";
 
+// --- Sound Service ---
+import { soundService, type SoundTheme } from "../../services/soundService";
+
 function TimeTrackerPanel() {
     // TODO: Add user context integration when backend APIs are ready
     // const { user } = useAuth(); // Get user info for personalized messages
@@ -151,6 +46,7 @@ function TimeTrackerPanel() {
         }
     };
 
+    // Remember, this is a debug function only - remove or disable in production
     // Debug function to manually clear stuck sessions and refresh data
     const clearStuckSession = () => {
         const currentSession = timeTrackerService.getCurrentSession();
@@ -171,6 +67,7 @@ function TimeTrackerPanel() {
         }
     };
 
+    // Remember, this is a debug function only - remove or disable in production
     // Debug function to manually refresh daily summary 
     const forceRefreshSummary = () => {
         console.log("🔄 Force refreshing daily summary...");
@@ -183,6 +80,27 @@ function TimeTrackerPanel() {
         console.log("📊 Daily summary in localStorage:", dailySummary ? JSON.parse(dailySummary) : null);
         
         refreshDailySummary();
+    };
+
+    // Sound settings toggle
+    const toggleSound = () => {
+        const newEnabled = !soundEnabled;
+        setSoundEnabled(newEnabled);
+        soundService.setEnabled(newEnabled);
+        
+        // Initialize audio context on user action if enabling
+        if (newEnabled) {
+            soundService.initializeOnUserAction();
+            soundService.playTestSound(); // Play test sound when enabling
+        }
+    };
+
+    // Change sound theme
+    const handleThemeChange = (theme: SoundTheme) => {
+        setCurrentSoundTheme(theme);
+        soundService.setTheme(theme);
+        // Play preview of the new theme
+        soundService.playThemePreview(theme);
     };
     
     // --- Timer State ---
@@ -203,6 +121,10 @@ function TimeTrackerPanel() {
     const [pausedFocusSession, setPausedFocusSession] = useState<FocusSession | null>(null); // Paused focus session during break
     const [pausedFocusTimeLeft, setPausedFocusTimeLeft] = useState<number | null>(null); // Time left on paused focus session
     const [isDataLoaded, setIsDataLoaded] = useState(false); // Track if data has been loaded
+
+    // --- Sound Settings State ---
+    const [soundEnabled, setSoundEnabled] = useState(true);
+    const [currentSoundTheme, setCurrentSoundTheme] = useState<SoundTheme>('upbeat');
 
 
     // --- Koala State ---
@@ -249,6 +171,13 @@ function TimeTrackerPanel() {
         }
     }, [mode, isRunning, name]); // Rerun when mode, isRunning, or name changes
 
+    // Effect for initializing sound settings on mount
+    useEffect(() => {
+        // Initialize sound service with saved preferences
+        setSoundEnabled(soundService.getEnabled());
+        setCurrentSoundTheme(soundService.getTheme());
+    }, []); // Run once on mount
+
     // --- Timer Control Functions ---
 
     // Resumes a paused timer
@@ -256,6 +185,9 @@ function TimeTrackerPanel() {
         setIsRunning(true);
         setIsDropdownOpen(false); // Ensure start dropdown is closed
         setIsBreakDropdownOpen(false); // Ensure break dropdown is closed
+        
+        // Play resume sound
+        soundService.playSessionResumed();
     };
 
     // Pauses the current timer
@@ -264,6 +196,9 @@ function TimeTrackerPanel() {
         if (timerRef.current) {
             window.clearInterval(timerRef.current); // Using window.clearInterval
         }
+        
+        // Play pause sound
+        soundService.playSessionPaused();
     };
 
     // Stops the timer and resets it to the initial state with default focus duration
@@ -319,6 +254,9 @@ function TimeTrackerPanel() {
             setMode('completed'); // Set to completed after focus, to prompt for break
             console.log("Focus session completed!");
             
+            // Play focus completion sound
+            soundService.playFocusComplete();
+            
             // Complete the session in localStorage service
             if (currentSession) {
                 timeTrackerService.completeFocusSession(currentSession.id).then(completedSession => {
@@ -337,6 +275,9 @@ function TimeTrackerPanel() {
             setTotalFocusTime(prev => prev + focusDuration); // Add completed focus duration
         } else if (mode === 'break') {
             console.log("Break session completed!");
+            
+            // Play break completion sound
+            soundService.playBreakComplete();
             
             // Complete the break session in localStorage service
             if (currentSession) {
@@ -526,6 +467,39 @@ function TimeTrackerPanel() {
                                 >
                                     🔄 Refresh Summary
                                 </button>
+                                <button 
+                                    onClick={toggleSound} 
+                                    style={{
+                                        background: soundEnabled ? '#4caf50' : '#ff9800', 
+                                        color: 'white', 
+                                        border: 'none', 
+                                        padding: '5px 10px', 
+                                        borderRadius: '4px',
+                                        fontSize: '12px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    {soundEnabled ? '🔊 Sound On' : '🔇 Sound Off'}
+                                </button>
+                                <select 
+                                    value={currentSoundTheme}
+                                    onChange={(e) => handleThemeChange(e.target.value as SoundTheme)}
+                                    style={{
+                                        background: '#6d84d6ff',
+                                        border: '1px solid #ddd',
+                                        padding: '8px 10px',
+                                        borderRadius: '10px',
+                                        fontSize: '12px',
+                                        cursor: 'pointer',
+                                        color: 'white'    
+                                    }}
+                                >
+                                    {Object.entries(soundService.getThemes()).map(([key, config]) => (
+                                        <option key={key} value={key}>
+                                            {config.name} - {config.description}
+                                        </option>
+                                    ))}
+                                </select>
                                 <span style={{ 
                                     fontSize: '12px', 
                                     color: isDataLoaded ? '#4caf50' : '#ff9800',

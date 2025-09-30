@@ -375,4 +375,136 @@ The backend receives processed base64 data URLs ready for storage or conversion.
 
 ---
 
+## 💼 Co-working Rooms Feature
+
+### Database Fields Needed
+
+**CoworkingRoom Model** (New table: `coworking_rooms`):
+
+- `id` (UUID, primary key)
+- `name` (String) - Room name
+- `description` (String) - Room description
+- `status` (String) - 'active', 'inactive'
+- `max_participants` (Integer, default=10)
+- `created_at` (DateTime)
+- `updated_at` (DateTime)
+
+**RoomParticipant Model** (New table: `room_participants`):
+
+- `id` (UUID, primary key)
+- `room_id` (UUID, foreign key to coworking_rooms)
+- `user_id` (UUID, foreign key to users)
+- `joined_at` (DateTime)
+- `is_muted` (Boolean, default=true)
+- `is_speaking` (Boolean, default=false)
+- `left_at` (DateTime, nullable)
+
+**RoomMessage Model** (New table: `room_messages`):
+
+- `id` (UUID, primary key)
+- `room_id` (UUID, foreign key to coworking_rooms)
+- `user_id` (UUID, foreign key to users)
+- `message_text` (Text)
+- `message_type` (String) - 'text', 'system', 'emoji'
+- `created_at` (DateTime)
+
+### API Endpoints Needed
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/api/coworking/rooms` | Get all available rooms |
+| `GET` | `/api/coworking/rooms/{room_id}` | Get specific room details |
+| `POST` | `/api/coworking/rooms/{room_id}/join` | Join a room |
+| `POST` | `/api/coworking/rooms/{room_id}/leave` | Leave a room |
+| `POST` | `/api/coworking/rooms/{room_id}/messages` | Send message to room |
+| `PUT` | `/api/coworking/rooms/{room_id}/mic-toggle` | Toggle microphone status |
+| `PUT` | `/api/coworking/rooms/{room_id}/speaking` | Update speaking status |
+| `POST` | `/api/coworking/rooms/{room_id}/emoji` | Send emoji reaction |
+
+### Expected API Responses
+
+**Get Rooms:**
+
+```json
+[
+  {
+    "id": "room-uuid",
+    "name": "Focus Zone",
+    "description": "Deep work sessions",
+    "status": "active",
+    "participant_count": 5,
+    "max_participants": 10,
+    "color": "bg-grayBlue"
+  }
+]
+```
+
+**Get Room Details:**
+
+```json
+{
+  "id": "room-uuid",
+  "name": "Focus Zone",
+  "description": "Deep work sessions",
+  "participants": [
+    {
+      "id": "user-uuid",
+      "name": "John Doe",
+      "avatar": "/avatars/john.png",
+      "is_speaking": false,
+      "is_muted": true,
+      "joined_at": "2025-09-30T10:00:00Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-uuid",
+      "user": "John Doe",
+      "avatar": "/avatars/john.png",
+      "text": "Hello everyone!",
+      "time": "10:30",
+      "created_at": "2025-09-30T10:30:00Z"
+    }
+  ],
+  "tasks_completed": 0,
+  "tasks_total": 0,
+  "focus_time": 0,
+  "focus_goal": 480
+}
+```
+
+**Join Room:**
+
+```json
+{
+  "success": true,
+  "message": "Joined room successfully",
+  "room": { /* room details */ }
+}
+```
+
+### WebSocket Events (Optional for Real-time)
+
+For real-time functionality, consider WebSocket events:
+
+- `user_joined` - When someone joins the room
+- `user_left` - When someone leaves the room
+- `message_sent` - New message in room
+- `mic_toggled` - User muted/unmuted
+- `speaking_changed` - User started/stopped speaking
+- `emoji_reaction` - Emoji reaction sent
+
+### Frontend Implementation
+
+The frontend uses a `coworkingService` with localStorage that:
+
+- ✅ Manages room state and participants
+- ✅ Handles real-time message synchronization
+- ✅ Manages microphone permissions and audio streams
+- ✅ Provides emoji reactions and chat functionality
+- ✅ Persists user session across page refreshes
+- ✅ Ready for WebSocket integration when backend is available
+
+---
+
 **Frontend Team** 💙

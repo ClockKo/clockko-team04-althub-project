@@ -126,3 +126,31 @@ export const resendVerificationEmail = async (email: string) => {
 export const logoutUser = () => {
   localStorage.removeItem('authToken');
 };
+
+
+// forget password api endpoint
+export const sendPasswordResetEmail = async (email: string) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
+    return response.data;
+  }
+  catch (error) {
+    console.error('Send password reset email failed:', error);
+    throw error;
+  }
+};
+
+export const resetPassword = async (email: string, otp: string, newPassword: string) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/reset-password`, { 
+      email, 
+      otp, 
+      new_password: newPassword 
+    });
+    return response.data;
+  }
+  catch (error) {
+    console.error('Reset password failed:', error);
+    throw error;
+  }
+}

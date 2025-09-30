@@ -1,49 +1,77 @@
 import { useEffect, useState, useRef } from 'react'
 import { fetchRoom } from './api'
+import { coworkingService } from './coworkingService'
 import type { Room, Message } from '../../types/typesGlobal'
 import { Skeleton } from '@/components/ui/skeleton'
 import { motion } from 'framer-motion'
-import { Mic, MicOff, Smile, MessageSquare, Phone } from 'lucide-react'
+import { Mic, MicOff, Smile, MessageSquare, Phone, Building2 } from 'lucide-react'
 import { ChevronDown } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ProgressCard } from '@/pages/dashboard'
+import toast from 'react-hot-toast'
 
-
-// Avatar Images
-import Ellipse6 from '../../assets/images/Ellipse6.png'
-import Ellipse7 from '../../assets/images/Ellipse7.png'
-import Ellipse8 from '../../assets/images/Ellipse8.png'
-import Ellipse9 from '../../assets/images/Ellipse9.png'
-import Ellipse10 from '../../assets/images/Ellipse10.png'
-
-const avatars = [
-  { src: Ellipse6, alt: 'Avatar 1' },
-  { src: Ellipse7, alt: 'Avatar 2' },
-  { src: Ellipse8, alt: 'Avatar 3' },
-  { src: Ellipse9, alt: 'Avatar 4' },
-  { src: Ellipse10, alt: 'Avatar 5' },
-]
 
 const EMOJIS = ['💜', '😂', '🙂', '👏', '👍', '🎉','🤣','😊']
 
 export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: string, roomName?: string, onLeaveRoom?: () => void }) {
   const [isMuted, setIsMuted] = useState(true);
+  const [showChat, setShowChat] = useState(false)
+  const [showProgressDropdown, setShowProgressDropdown] = useState(false)
+  const [room, setRoom] = useState<Room | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [showSkeleton, setShowSkeleton] = useState(true)
+  const [showEmojis, setShowEmojis] = useState(false)
+  const [floatingEmojis, setFloatingEmojis] = useState<Array<{ id: string; emoji: string; x: number }>>([])
+  const [message, setMessage] = useState('')
+  const [messages, setMessages] = useState<Message[]>([])
+  const [displayRoomName, setDisplayRoomName] = useState<string>(roomName || "");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showMicActivity, setShowMicActivity] = useState(false);
+  
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const hasFetched = useRef(false);
 
+  // Handle window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Microphone management - Mobile-friendly approach
   useEffect(() => {
     if (!isMuted) {
-      // Request microphone access and play audio
+      // Request microphone access
       navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
         streamRef.current = stream;
-        if (audioRef.current) {
-          audioRef.current.srcObject = stream;
-          audioRef.current.play();
+        
+        // For mobile devices, don't play back the audio to avoid feedback
+        // Instead, just capture the stream and show visual feedback
+        if (isMobile) {
+          console.log('🎵 Mobile: Microphone stream captured successfully');
+          toast.success('Microphone is active');
+          setShowMicActivity(true);
+        } else {
+          // For desktop, we can play the audio back
+          if (audioRef.current) {
+            audioRef.current.srcObject = stream;
+            audioRef.current.play().catch((err) => {
+              console.log('Desktop audio playback failed:', err);
+            });
+          }
         }
+        
+        // Update speaking status based on audio activity
+        coworkingService.updateSpeakingStatus(roomId, true);
       }).catch((err) => {
-        // Handle error (mic denied)
         console.error('Microphone access denied:', err);
+        toast.error('Microphone access denied');
+        setIsMuted(true);
       });
     } else {
       // Stop audio stream
@@ -53,8 +81,12 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
       }
       if (audioRef.current) {
         audioRef.current.srcObject = null;
+        audioRef.current.pause();
       }
+      setShowMicActivity(false);
+      coworkingService.updateSpeakingStatus(roomId, false);
     }
+    
     // Cleanup on unmount
     return () => {
       if (streamRef.current) {
@@ -63,63 +95,112 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
       }
       if (audioRef.current) {
         audioRef.current.srcObject = null;
+        audioRef.current.pause();
       }
     };
-  }, [isMuted]);
-  // Removed duplicate isMuted declaration
-  const [showChat, setShowChat] = useState(false)
-  const [showProgressDropdown, setShowProgressDropdown] = useState(false)
-  const [room, setRoom] = useState<Room | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [showSkeleton, setShowSkeleton] = useState(true)
-  const [showEmojis, setShowEmojis] = useState(false)
-  const [emojiReactions, setEmojiReactions] = useState<{ [key: string]: string }>({})
-  const [message, setMessage] = useState('')
-  const [messages, setMessages] = useState<Message[]>([])
-  const [displayRoomName, setDisplayRoomName] = useState<string>(roomName || "");
-  const hasFetched = useRef(false);
+  }, [isMuted, roomId, isMobile]);
 
+  // Load room data and set up real-time listeners
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
     setShowSkeleton(true);
     hasFetched.current = false;
-    // Set initial room name from props or demo data
-    if (roomName) {
-      setDisplayRoomName(roomName);
-    } else {
-      import('./api').then(mod => {
-        const demoRoom = mod.DEMO_ROOMS?.find(r => r.id === roomId);
-        if (demoRoom) setDisplayRoomName(demoRoom.name);
-      });
-    }
-    // Always show skeleton while fetching
-    fetchRoom(roomId).then((data) => {
-      if (isMounted) {
-        hasFetched.current = true;
-        if (data && Array.isArray(data.participants) && data.participants.length > 0) {
-          setRoom(data);
-          setDisplayRoomName(d => data.name || d);
-          setMessages(Array.isArray(data.messages) ? data.messages : []);
-        } else {
-          import('./api').then(mod => {
-            // Use selected room name for fallback
-            const fallbackRoom = mod.DEMO_ROOMS?.find(r => r.id === roomId);
-            setRoom({ ...mod.DEMO_ROOM, name: fallbackRoom?.name || mod.DEMO_ROOM.name });
-            setDisplayRoomName(fallbackRoom?.name || mod.DEMO_ROOM.name);
-            setMessages(Array.isArray(mod.DEMO_ROOM.messages) ? mod.DEMO_ROOM.messages : []);
-          });
+    
+   
+
+    // Load room data
+    const loadRoom = async () => {
+      try {
+        const roomData = await fetchRoom(roomId);
+        if (isMounted && roomData) {
+          hasFetched.current = true;
+          setRoom(roomData);
+          setDisplayRoomName(roomData.name);
+          setMessages(Array.isArray(roomData.messages) ? roomData.messages : []);
+          setLoading(false);
         }
-        setLoading(false);
+      } catch (error) {
+        console.error('Failed to load room:', error);
+        if (isMounted) {
+          toast.error('Failed to load room');
+          setLoading(false);
+        }
       }
-    });
+    };
+
+    loadRoom();
+
+    // Set up real-time event listeners
+    const handleMessageAdded = ({ roomId: eventRoomId, message }: { roomId: string, message: Message }) => {
+      if (eventRoomId === roomId) {
+        setMessages(prev => [...prev, message]);
+      }
+    };
+
+    const handleMicToggled = ({ roomId: eventRoomId, muted }: { roomId: string, muted: boolean }) => {
+      if (eventRoomId === roomId) {
+        setIsMuted(muted);
+        setRoom(prev => prev ? { ...prev } : null); // Trigger re-render
+      }
+    };
+
+    const handleSpeakingChanged = ({ roomId: eventRoomId }: { roomId: string }) => {
+      if (eventRoomId === roomId) {
+        setRoom(prev => prev ? { ...prev } : null); // Trigger re-render
+      }
+    };
+
+    const handleEmojiReaction = ({ roomId: eventRoomId, emoji, user }: { roomId: string, emoji: string, user: string }) => {
+      if (eventRoomId === roomId) {
+        // Create floating emoji for reactions from other users
+        const floatingId = `floating_${Date.now()}_${Math.random()}`;
+        const randomX = Math.random() * (isMobile ? 300 : 600);
+        
+        setFloatingEmojis(prev => [
+          ...prev,
+          {
+            id: floatingId,
+            emoji,
+            x: randomX
+          }
+        ]);
+        
+        // Remove the floating emoji after animation completes
+        setTimeout(() => {
+          setFloatingEmojis(prev => prev.filter(item => item.id !== floatingId));
+        }, 4000);
+        
+        toast.success(`${user} reacted with ${emoji}`, { duration: 2000 });
+      }
+    };
+
+    const handleRoomUpdated = ({ roomId: eventRoomId, room: updatedRoom }: { roomId: string, room: Room }) => {
+      if (eventRoomId === roomId) {
+        setRoom(updatedRoom);
+        setMessages(Array.isArray(updatedRoom.messages) ? updatedRoom.messages : []);
+      }
+    };
+
+    coworkingService.on('messageAdded', handleMessageAdded);
+    coworkingService.on('micToggled', handleMicToggled);
+    coworkingService.on('speakingStatusChanged', handleSpeakingChanged);
+    coworkingService.on('emojiReaction', handleEmojiReaction);
+    coworkingService.on('roomUpdated', handleRoomUpdated);
+
     // Timer for skeleton loading (3 seconds)
     const timer = setTimeout(() => {
       if (isMounted) setShowSkeleton(false);
     }, 3000);
+
     return () => {
       isMounted = false;
       clearTimeout(timer);
+      coworkingService.off('messageAdded', handleMessageAdded);
+      coworkingService.off('micToggled', handleMicToggled);
+      coworkingService.off('speakingStatusChanged', handleSpeakingChanged);
+      coworkingService.off('emojiReaction', handleEmojiReaction);
+      coworkingService.off('roomUpdated', handleRoomUpdated);
     };
   }, [roomId, roomName]);
 
@@ -150,10 +231,15 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
         </div>
         <div className="flex flex-col gap-2 mb-2 max-h-40 overflow-y-auto">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex items-center gap-2">
+            <div key={i} className="flex items-start gap-2 p-2 rounded-lg">
               <Skeleton className="w-6 h-6 rounded-full" />
-              <Skeleton className="w-32 h-4 rounded bg-gray-200" />
-              <Skeleton className="w-10 h-4 rounded bg-gray-200" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2 mb-1">
+                  <Skeleton className="w-16 h-3 rounded bg-gray-200" />
+                  <Skeleton className="w-8 h-3 rounded bg-gray-200" />
+                </div>
+                <Skeleton className="w-32 h-4 rounded bg-gray-200" />
+              </div>
             </div>
           ))}
         </div>
@@ -166,11 +252,136 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
   }
 
   function leaveRoom() {
-  // when user clicks leave room button it should take them back to the rooms list page
-  if (onLeaveRoom) {
-    onLeaveRoom();
+    // Leave room through service and navigate back
+    coworkingService.leaveRoom(roomId).then(() => {
+      toast.success('Left the room');
+      if (onLeaveRoom) {
+        onLeaveRoom();
+      }
+    }).catch((error) => {
+      console.error('Error leaving room:', error);
+      toast.error('Failed to leave room');
+    });
   }
-  }
+
+  // Toggle microphone mute
+  const handleMicToggle = async () => {
+    try {
+      const newMutedState = await coworkingService.toggleMute(roomId);
+      setIsMuted(newMutedState);
+      
+      // Update speaking status when unmuting
+      if (!newMutedState) {
+        await coworkingService.updateSpeakingStatus(roomId, true);
+      } else {
+        await coworkingService.updateSpeakingStatus(roomId, false);
+      }
+      
+      // Force re-render of room data to update UI
+      const updatedRoom = await coworkingService.getRoom(roomId);
+      if (updatedRoom) {
+        setRoom(updatedRoom);
+      }
+      
+    } catch (error) {
+      console.error('Error toggling mic:', error);
+      toast.error('Failed to toggle microphone');
+    }
+  };
+
+  // Send message
+  const handleSendMessage = async (messageText: string) => {
+    if (!messageText.trim() || !room) return;
+
+    // Get user info the same way as the coworking service
+    let userData: any = null;
+    try {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        const response = await fetch('http://localhost:8000/api/users/profile', {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          userData = data.user || data;
+        }
+      }
+    } catch (error) {
+      console.log('Could not fetch user data from API for message:', error);
+    }
+    
+    // Fallback to localStorage if API fails
+    if (!userData) {
+      try {
+        const storedUser = localStorage.getItem('user') || localStorage.getItem('userData');
+        if (storedUser) {
+          userData = JSON.parse(storedUser);
+        }
+      } catch {
+        // Fallback to empty object
+      }
+    }
+    
+    const savedAvatar = localStorage.getItem('userAvatar');
+    const port = window.location.port;
+    
+    // Use the same name resolution logic as the dashboard and coworking service
+    const userName = userData?.name || userData?.username || userData?.full_name || 'User_' + port;
+    
+    console.log('🎯 RoomView: Using username for message:', userName);
+    
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      user: userName,
+      avatar: savedAvatar || `https://avatar.iran.liara.run/public?username=${userName}`,
+      text: messageText,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    try {
+      await coworkingService.addMessage(roomId, newMessage);
+      setMessage('');
+      toast.success('Message sent!');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message');
+    }
+  };
+
+  // Send emoji reaction with beautiful floating animation
+  const handleEmojiClick = async (emoji: string) => {
+    try {
+      await coworkingService.addEmojiReaction(roomId, emoji);
+      
+      // Create floating emoji animation
+      const floatingId = `floating_${Date.now()}_${Math.random()}`;
+      const randomX = Math.random() * (isMobile ? 300 : 600); // Random horizontal position
+      
+      setFloatingEmojis(prev => [
+        ...prev,
+        {
+          id: floatingId,
+          emoji,
+          x: randomX
+        }
+      ]);
+      
+      // Remove the floating emoji after animation completes (4 seconds)
+      setTimeout(() => {
+        setFloatingEmojis(prev => prev.filter(item => item.id !== floatingId));
+      }, 4000);
+      
+      console.log(`Emoji ${emoji} sent successfully with floating animation`);
+      toast.success(`${emoji} reaction sent!`);
+    } catch (error) {
+      console.error('Error sending emoji:', error);
+      toast.error('Failed to send reaction');
+    }
+  };
 
 
   if (loading || showSkeleton) {
@@ -196,14 +407,22 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
     </div>
   );
 
-  // Responsive grid logic
-  const isMobile = window.innerWidth < 768
   // Main speaker is first participant
-  const mainSpeaker = room.participants[0]
-  const otherParticipants = room.participants.slice(1)
+  const getCurrentUser = () => {
+    const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+    const port = window.location.port;
+    const sessionId = localStorage.getItem('coworking_session_id');
+    return sessionId || `${userProfile.name?.toLowerCase().replace(/\s+/g, '_') || 'anonymous'}_${port}_${Date.now().toString().slice(-6)}`;
+  };
+  
+  const currentUserId = getCurrentUser();
+  
+  // Handle empty rooms gracefully
+  const mainSpeaker = room.participants.length > 0 ? room.participants[0] : null;
+  const otherParticipants = room.participants.length > 1 ? room.participants.slice(1) : [];
 
   return (
-  <div className="min-h-screen bg-powderBlue py-4 px-2 xs:px-4 flex flex-col md:flex-row gap-6">
+  <div className={`min-h-screen bg-powderBlue py-4 px-2 xs:px-4 flex flex-col md:flex-row gap-6 ${isMobile ? 'pb-20' : ''}`}>
       {/* Main content area */}
       <div className="flex-1 flex flex-col">
         {/* Room name for mobile */}
@@ -237,35 +456,57 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
         )}
   {/* Focus Zone grid */}
   <div className={isMobile ? "grid grid-cols-1 gap-4 mb-6" : "grid grid-cols-3 grid-rows-2 gap-4 mb-6"}>
-          {/* Main speaker large box */}
-          <motion.div
-            key={mainSpeaker.id}
-            className={`rounded-2xl bg-gray-100 flex flex-col items-center justify-center p-4 relative border-2 col-span-1 ${!isMobile ? 'row-span-2 col-span-2 h-full' : 'h-48'} ${mainSpeaker.isSpeaking ? 'border-green-400' : 'border-gray-300'}`}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Avatar>
-              <AvatarImage
-                src={mainSpeaker.avatar || 'https://avatar.iran.liara.run/public'}
-                alt={mainSpeaker.name}
-                className="w-8 h-8 rounded-full mb-1"
-              />
-              <AvatarFallback>{mainSpeaker.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div className="font-semibold text-base mt-2">{mainSpeaker.name}</div>
-            <div className="absolute bottom-2 right-2">
-              {mainSpeaker.muted ? (
-                <MicOff className="h-5 w-5 text-gray-400" />
-              ) : (
-                <Mic className="h-5 w-5 text-blue-600" />
-              )}
-            </div>
-          </motion.div>
+          {/* Main speaker large box or empty state */}
+          {mainSpeaker ? (
+            <motion.div
+              key={mainSpeaker.id}
+              className={`rounded-2xl bg-gray-100 flex flex-col items-center justify-center p-4 relative border-2 col-span-1 ${!isMobile ? 'row-span-2 col-span-2 h-full' : 'h-48'} ${
+                (mainSpeaker.isSpeaking && !mainSpeaker.muted) || (mainSpeaker.id === currentUserId && !isMuted && !mainSpeaker.muted) 
+                  ? 'border-green-400' 
+                  : 'border-gray-300'
+              }`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Avatar>
+                <AvatarImage
+                  src={mainSpeaker.avatar || 'https://avatar.iran.liara.run/public'}
+                  alt={mainSpeaker.name}
+                  className="w-8 h-8 rounded-full mb-1"
+                />
+                <AvatarFallback>{mainSpeaker.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div className="font-semibold text-base mt-2">{mainSpeaker.name}</div>
+              <div className="absolute bottom-2 right-2">
+                {mainSpeaker.muted ? (
+                  <MicOff className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <Mic className="h-5 w-5 text-blue-600" />
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              className={`rounded-2xl bg-gray-50 flex flex-col items-center justify-center p-4 relative border-2 border-dashed border-gray-300 col-span-1 ${!isMobile ? 'row-span-2 col-span-2 h-full' : 'h-48'}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="text-gray-400 text-center">
+                <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <div className="font-medium">Room is empty</div>
+                <div className="text-sm">Be the first to join!</div>
+              </div>
+            </motion.div>
+          )}
           {/* Other participants smaller boxes */}
           {otherParticipants.map((p) => (
             <motion.div
               key={p.id}
-              className={`rounded-2xl bg-gray-100 flex flex-col items-center justify-center p-4 relative border-2 ${p.isSpeaking ? 'border-green-400' : 'border-gray-300'} h-32`}
+              className={`rounded-2xl bg-gray-100 flex flex-col items-center justify-center p-4 relative border-2 ${
+                (p.isSpeaking && !p.muted) || (p.id === currentUserId && !isMuted && !p.muted) 
+                  ? 'border-green-400' 
+                  : 'border-gray-300'
+              } h-32`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
             >
@@ -298,31 +539,20 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
                   <button
                     key={emoji}
                     className="text-2xl p-2 rounded-full hover:bg-gray-200 transition"
-                    onClick={() => setEmojiReactions((prev) => ({ ...prev, [Date.now().toString()]: emoji }))}
+                    onClick={() => handleEmojiClick(emoji)}
                   >
                     {emoji}
                   </button>
                 ))}
-                <div className="flex gap-1 ml-4">
-                  {Object.values(emojiReactions)
-                    .slice(-4)
-                    .map((emoji, i) => (
-                      <motion.span
-                        key={i}
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.2 }}
-                        className="text-2xl"
-                      >
-                        {emoji}
-                      </motion.span>
-                    ))}
-                </div>
               </div>
             )}
             <div className="flex gap-25 mb-6 bg-snow p-4 rounded-2xl shadow-md  w-full max-w-xl items-center justify-center">
-              <Button variant="destructive" className="flex gap-2 rounded-2xl px-6 bg-errorRed" onClick={() => setIsMuted((prev) => !prev)}>
+              <Button variant="destructive" className={`flex gap-2 rounded-2xl px-6 bg-errorRed relative ${showMicActivity && !isMuted ? 'animate-pulse' : ''}`} onClick={handleMicToggle}>
                 {isMuted ? <MicOff className="h-5 w-5 text-red-500" /> : <Mic className="h-5 w-5 text-blue-600" />}
+                {/* Mobile activity indicator */}
+                {isMobile && showMicActivity && !isMuted && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
+                )}
               </Button>
               {/* Hidden audio element for local playback */}
               <audio ref={audioRef} style={{ display: 'none' }} autoPlay />
@@ -381,7 +611,7 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
               {messages.length === 0
                 ? <div className="flex flex-col items-center justify-center h-24 text-gray-400 text-sm italic">start a conversation</div>
                 : messages.map((msg) => (
-                  <div key={msg.id} className="flex items-center gap-2">
+                  <div key={msg.id} className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50">
                     <Avatar>
                       <AvatarImage
                         src={msg.avatar || 'https://avatar.iran.liara.run/public'}
@@ -390,8 +620,13 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
                       />
                       <AvatarFallback>{msg.user.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <span className="text-gray-800 text-sm">{msg.text}</span>
-                    <span className="text-gray-400 text-xs">{msg.time}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-medium text-sm text-gray-900">{msg.user}</span>
+                        <span className="text-gray-400 text-xs">{msg.time}</span>
+                      </div>
+                      <div className="text-gray-700 text-sm mt-1 break-words">{msg.text}</div>
+                    </div>
                   </div>
                 ))}
             </div>
@@ -399,16 +634,7 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
               className="flex gap-2 mt-2"
               onSubmit={(e) => {
                 e.preventDefault()
-                if (!message.trim()) return
-                const newMsg: Message = {
-                  id: Date.now().toString(),
-                  user: 'Jess',
-                  avatar: avatars[0].src,
-                  text: message,
-                  time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                }
-                setMessages((msgs) => [...msgs, newMsg])
-                setMessage('')
+                handleSendMessage(message)
               }}
             >
               <input
@@ -418,7 +644,7 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
               />
-              <Button type="submit" variant="default">
+              <Button type="submit" variant="default" className="px-4 bg-blue1 hover:bg-blue-800/50">
                 Send
               </Button>
             </form>
@@ -428,21 +654,92 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
 
       {/* Mobile bottom bar for controls */}
       {isMobile && (
-        <div className="fixed bottom-0 left-0 w-full bg-white rounded-t-2xl shadow flex justify-between items-center px-6 py-3 z-50">
-          <Button variant="destructive" className="flex gap-2">
-            <MicOff className="h-5 w-5" />
-          </Button>
-          <Button variant="outline" className="flex gap-2" onClick={() => setShowChat((prev) => !prev)}>
-            <MessageSquare className="h-5 w-5" />
-          </Button>
-          <Button variant="outline" className="flex gap-2">
-            <Smile className="h-5 w-5" />
-          </Button>
-          <Button variant="destructive" className="flex gap-2">
-            <Phone className="h-5 w-5" />
-          </Button>
+        <div className="fixed bottom-0 left-0 w-full bg-white rounded-t-2xl shadow-lg border-t flex flex-col px-6 py-4 z-50">
+          {/* Emoji reactions row */}
+          {showEmojis && (
+            <div className="flex gap-3 mb-4 justify-center flex-wrap bg-gray-50 rounded-xl p-3">
+              {EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  className="text-3xl p-3 rounded-full bg-white shadow-sm hover:bg-gray-100 active:scale-95 transition-all duration-150 border"
+                  onClick={() => handleEmojiClick(emoji)}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
+          
+          {/* Control buttons row */}
+          <div className="flex justify-between items-center">
+            <Button 
+              variant={isMuted ? "destructive" : "default"} 
+              className={`flex gap-2 min-w-[60px] h-12 relative ${showMicActivity && !isMuted ? 'animate-pulse' : ''}`}
+              onClick={handleMicToggle}
+            >
+              {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              {/* Activity indicator for mobile */}
+              {showMicActivity && !isMuted && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
+              )}
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex gap-2 min-w-[60px] h-12" 
+              onClick={() => setShowChat((prev) => !prev)}
+            >
+              <MessageSquare className="h-5 w-5" />
+            </Button>
+            <Button 
+              variant={showEmojis ? "default" : "outline"} 
+              className="flex gap-2 min-w-[60px] h-12" 
+              onClick={() => setShowEmojis((prev) => !prev)}
+            >
+              <Smile className="h-5 w-5" />
+            </Button>
+            <Button 
+              variant="destructive" 
+              className="flex gap-2 min-w-[60px] h-12" 
+              onClick={leaveRoom}
+            >
+              <Phone className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       )}
+
+      {/* Floating Emoji Animations Overlay */}
+      <div className="fixed inset-0 pointer-events-none z-40 overflow-hidden">
+        {floatingEmojis.map((item) => (
+          <motion.div
+            key={item.id}
+            initial={{ 
+              y: isMobile ? window.innerHeight - 120 : window.innerHeight - 50,
+              x: item.x,
+              scale: 0.5,
+              opacity: 0
+            }}
+            animate={{ 
+              y: isMobile ? window.innerHeight - 500 : window.innerHeight - 400,
+              scale: [0.5, 1.8, 1.5, 1.2],
+              opacity: [0, 1, 1, 0],
+              rotate: [0, 15, -10, 5, 0]
+            }}
+            transition={{ 
+              duration: 4,
+              ease: "easeOut",
+              times: [0, 0.2, 0.7, 1]
+            }}
+            className="absolute text-4xl md:text-5xl select-none"
+            style={{
+              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))',
+              textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+            }}
+          >
+            {item.emoji}
+          </motion.div>
+        ))}
+      </div>
     </div>
   )
 }

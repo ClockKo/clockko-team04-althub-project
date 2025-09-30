@@ -157,6 +157,7 @@ export type Room = {
   focusGoal?: number
   description?: string
   color?: string
+  lastUpdated?: number
 }
 /*************************************************************/
 

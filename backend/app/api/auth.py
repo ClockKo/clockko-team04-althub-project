@@ -144,13 +144,16 @@ def forgot_password(payload: schema.SendOTPRequest, db: Session = Depends(get_db
     try:
         success = userservice.send_password_reset_otp(db, payload.email)
         if not success:
-            raise HTTPException(404, detail="User not found")
-        return {
-            "detail": "Password reset code sent successfully",
-            "message": f"A 6-digit password reset code has been sent to {payload.email}. Use it to reset your password."
-        }
+            raise HTTPException(400, detail="User not found")
+        return {"detail": "If the email is registered, a reset code has been sent"}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to send password reset code: {str(e)}")
+        logger.error(f"Forgot password error: {str(e)}")
+        logger.error(f"Error type: {type(e).__name__}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Failed to send reset email: {str(e)}")
 
 @router.post("/reset-password")
 def reset_password(payload: schema.ResetPasswordRequest, db: Session = Depends(get_db)):

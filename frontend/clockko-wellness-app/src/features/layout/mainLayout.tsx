@@ -26,6 +26,8 @@ import clockkoLogo from '../../assets/images/frame1.png'
 import { useIsMobile } from '../../hooks/use-mobile'
 import { SidebarProvider } from '../../components/ui/sidebar'
 import ellipse6 from '../../assets/images/Ellipse6.png'
+import { processAvatarImage, validateImageFile } from '../../utils/imageProcessing'
+import toast from 'react-hot-toast'
 
 
 
@@ -40,6 +42,7 @@ export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string>(defaultAvatar)
   const [searchTerm, setSearchTerm] = useState<string>('')
+  const [isProcessingAvatar, setIsProcessingAvatar] = useState(false)
   
   // Use the same user data hook as headerWidget
   const { data: user, isLoading: userLoading, error: userError } = useUserData()
@@ -56,6 +59,44 @@ export default function MainLayout() {
   // Debug logging for mainLayout
   console.log("🔍 MainLayout - User data:", { user, userLoading, userError, userName: user?.name });
   console.log("🔍 MainLayout - Auth token exists:", !!localStorage.getItem('authToken'));
+
+  // Avatar upload handler with image processing
+  const handleAvatarUpload = async (file: File) => {
+    if (isProcessingAvatar) return;
+
+    setIsProcessingAvatar(true);
+
+    try {
+      // Validate the file
+      const validation = validateImageFile(file);
+      if (!validation.isValid) {
+        toast.error(validation.error || 'Invalid file');
+        return;
+      }
+
+      // Process the image (resize, crop, optimize)
+      const processedDataURL = await processAvatarImage(file, {
+        maxWidth: 256,
+        maxHeight: 256,
+        quality: 0.9,
+        format: 'image/jpeg',
+        cropToSquare: true
+      });
+
+      // Update avatar URL and save to localStorage
+      setAvatarUrl(processedDataURL);
+      localStorage.setItem('userAvatar', processedDataURL);
+      
+      toast.success('Avatar updated successfully!');
+      console.log('💾 Processed avatar saved to localStorage');
+
+    } catch (error) {
+      console.error('❌ Avatar processing failed:', error);
+      toast.error('Failed to process image. Please try a different file.');
+    } finally {
+      setIsProcessingAvatar(false);
+    }
+  };
 
   const navigationItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -227,30 +268,28 @@ export default function MainLayout() {
                 <Search className="h-5 w-5" />
               </button>
               {/* User can change avatar */}
-              <label className="cursor-pointer">
-                <img
-                  src={avatarUrl}
-                  alt="User Avatar"
-                  className="w-8 h-8 rounded-full border-2 border-gray-300 hover:border-blue-400 transition duration-200"
-                />
+              <label className={`cursor-pointer ${isProcessingAvatar ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className="relative">
+                  <img
+                    src={avatarUrl}
+                    alt="User Avatar"
+                    className="w-8 h-8 rounded-full border-2 border-gray-300 hover:border-blue-400 transition duration-200"
+                  />
+                  {isProcessingAvatar && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    </div>
+                  )}
+                </div>
                 <input
                   type="file"
                   accept="image/*"
                   className="hidden"
+                  disabled={isProcessingAvatar}
                   onChange={(e) => {
-                    const file = e.target.files?.[0]
+                    const file = e.target.files?.[0];
                     if (file) {
-                      const reader = new FileReader()
-                      reader.onload = (ev) => {
-                        if (ev.target?.result) {
-                          const newAvatarUrl = ev.target.result as string;
-                          setAvatarUrl(newAvatarUrl);
-                          // Save to localStorage
-                          localStorage.setItem('userAvatar', newAvatarUrl);
-                          console.log('💾 New avatar saved to localStorage');
-                        }
-                      }
-                      reader.readAsDataURL(file)
+                      handleAvatarUpload(file);
                     }
                   }}
                 />
@@ -301,30 +340,28 @@ export default function MainLayout() {
               </div>
               {/* avatar and user name section */}
               <div className="flex items-center gap-4">
-                <label className="cursor-pointer">
-                  <img
-                    src={avatarUrl}
-                    alt="User Avatar"
-                    className="w-10 h-10 rounded-full border-2 border-gray-300 hover:border-blue-400 transition duration-200"
-                  />
+                <label className={`cursor-pointer ${isProcessingAvatar ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <div className="relative">
+                    <img
+                      src={avatarUrl}
+                      alt="User Avatar"
+                      className="w-10 h-10 rounded-full border-2 border-gray-300 hover:border-blue-400 transition duration-200"
+                    />
+                    {isProcessingAvatar && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      </div>
+                    )}
+                  </div>
                   <input
                     type="file"
                     accept="image/*"
                     className="hidden"
+                    disabled={isProcessingAvatar}
                     onChange={(e) => {
-                      const file = e.target.files?.[0]
+                      const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader()
-                        reader.onload = (ev) => {
-                          if (ev.target?.result) {
-                            const newAvatarUrl = ev.target.result as string;
-                            setAvatarUrl(newAvatarUrl);
-                            // Save to localStorage
-                            localStorage.setItem('userAvatar', newAvatarUrl);
-                            console.log('💾 New avatar saved to localStorage (desktop)');
-                          }
-                        }
-                        reader.readAsDataURL(file)
+                        handleAvatarUpload(file);
                       }
                     }}
                   />

@@ -41,7 +41,7 @@ const CreateAccountPage: React.FC = () => {
 
  
  const onSubmit = async (data: CreateAccountFormData) => {
-  const { agree, ...registrationData } = data;
+  const { agree: _agree, ...registrationData } = data;
   setApiError(null);
 
   console.log('Data being sent to backend:', registrationData);

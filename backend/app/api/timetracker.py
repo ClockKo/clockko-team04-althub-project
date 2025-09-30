@@ -7,7 +7,7 @@ from app.services import timetrackerservice
 
 router = APIRouter(tags=["time-log"])
 
-@router.post("/time-logs/start-work", response_model=TimeLogResponse)
+@router.post("/time-logs/start", response_model=TimeLogResponse)
 def start_work(request: StartSessionRequest, db: Session = Depends(get_db)):
     return timetrackerservice.start_session(db, request, session_type="work")
 
@@ -38,13 +38,13 @@ def get_logs(user_id: str, db: Session = Depends(get_db)):
     return timetrackerservice.list_time_logs(db, user_id)
 
 
-@router.get("/time-logs/summary")
+@router.get("/time-logs/daily-summary")
 def get_summary(session_id: str, db: Session = Depends(get_db)):
     return timetrackerservice.get_summary(db, session_id)
 
 
 
-@router.get("/time-logs/current", response_model=TimeLogResponse)
+@router.get("/time-logs/current-session", response_model=TimeLogResponse)
 def current_session(user_id: str, db: Session = Depends(get_db)):
     result = timetrackerservice.get_current_session(db, user_id)
     if not result:

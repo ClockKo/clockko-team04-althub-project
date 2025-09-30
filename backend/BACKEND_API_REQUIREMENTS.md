@@ -182,14 +182,15 @@ The frontend features are fully implemented and working with localStorage/mock d
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| `POST` | `/api/focus-sessions/start` | Start focus session with duration |
-| `POST` | `/api/focus-sessions/{session_id}/complete` | Complete focus session |
-| `POST` | `/api/focus-sessions/{session_id}/stop` | Stop session early |
-| `POST` | `/api/focus-sessions/{session_id}/pause` | Pause active session for break |
+| `POST` | `/api/time-log/start` | Start focus session with duration |
+| `POST` | `/api/time-log/{session_id}/complete` | Complete focus session |
+| `POST` | `/api/time-log/{session_id}/stop` | Stop session early |
+| `POST` | `/api/time-log/{session_id}/pause` | Pause  active session for break |
 | `POST` | `/api/focus-sessions/{session_id}/resume` | Resume paused session after break |
-| `GET` | `/api/daily-summary` | Get daily focus session summary |
-| `GET` | `/api/current-session` | Get current active session |
+| `GET` | `/api/time-log/daily-summary` | Get daily focus session summary |
+| `GET` | `/api/current-session` | Get current active session | either break or focus
 | `GET` | `/api/paused-session` | Get current paused session |
+
 
 ### Expected API Responses
 
@@ -334,6 +335,18 @@ The time tracker supports pausing focus sessions to take breaks while preserving
   "avatar_url": "/avatars/avatar-1.png"
 }
 ```
+
+### Frontend Image Processing
+
+The frontend automatically processes uploaded avatar images:
+
+- **Validates**: File type (JPEG/PNG/WebP) and size (max 5MB)
+- **Crops**: To perfect square (center crop)
+- **Resizes**: To 256x256px for optimal display
+- **Optimizes**: 90% quality JPEG format
+- **Result**: Consistent, high-quality avatars under 50KB
+
+The backend receives processed base64 data URLs ready for storage or conversion.
 
 ---
 

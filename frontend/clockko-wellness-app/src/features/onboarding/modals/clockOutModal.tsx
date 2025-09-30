@@ -99,7 +99,7 @@ export function ClockOutModal({
             <Button
               variant={ampm === 'AM' ? 'default' : 'outline'}
               onClick={() => setAmpm('AM')}
-              className={`relative right-8 z-10 rounded-full px-8 py-1 md:px-10 transition-colors duration-200 ease-in-out font-thin cursor-pointer hover:bg-blue1 ${ampm === 'AM' ? 'bg-lightBlue text-dark font-bold shadow font-thin' : ''}`}
+              className={`relative right-8 z-10 rounded-full px-8 py-1 md:px-10 transition-colors duration-200 ease-in-out font-thin cursor-pointer hover:bg-blue1 ${ampm === 'AM' ? 'bg-lilac text-dark font-bold shadow font-thin' : ''}`}
               type="button"
             >
               AM
@@ -107,7 +107,7 @@ export function ClockOutModal({
             <Button
               variant={ampm === 'PM' ? 'default' : 'outline'}
               onClick={() => setAmpm('PM')}
-              className={`absolute right-[5.5rem] md:right-[19.5rem] rounded-full px-8 py-1 md:px-10 transition-colors duration-200 ease-in-out font-thin cursor-pointer hover:bg-blue1 ${ampm === 'PM' ? 'bg-lightBlue text-dark font-bold shadow font-thin' : ''}`}
+              className={`absolute right-[5.5rem] md:right-[19.5rem] rounded-full px-8 py-1 md:px-10 transition-colors duration-200 ease-in-out font-thin cursor-pointer hover:bg-blue1 ${ampm === 'PM' ? 'bg-lilac text-dark font-bold shadow font-thin' : ''}`}
               type="button"
             >
               PM

@@ -34,6 +34,7 @@ import toast from 'react-hot-toast'
 // Demo avatar
 const defaultAvatar = ellipse6
 
+
 export default function MainLayout() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -43,10 +44,12 @@ export default function MainLayout() {
   const [avatarUrl, setAvatarUrl] = useState<string>(defaultAvatar)
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [isProcessingAvatar, setIsProcessingAvatar] = useState(false)
-  
+  // Sidebar mode: 'main' or 'settings'
+  const [sidebarMode, setSidebarMode] = useState<'main' | 'settings'>('main')
+
   // Use the same user data hook as headerWidget
   const { data: user, isLoading: userLoading, error: userError } = useUserData()
-  
+
   // Load saved avatar from localStorage on component mount
   useEffect(() => {
     const savedAvatar = localStorage.getItem('userAvatar');
@@ -55,7 +58,16 @@ export default function MainLayout() {
       console.log('🖼️ Loaded avatar from localStorage:', savedAvatar.substring(0, 50) + '...');
     }
   }, []);
-  
+
+  // Switch to settings mode if on /settings route
+  useEffect(() => {
+    if (location.pathname.startsWith('/settings')) {
+      setSidebarMode('settings');
+    } else {
+      setSidebarMode('main');
+    }
+  }, [location.pathname]);
+
   // Debug logging for mainLayout
   console.log("🔍 MainLayout - User data:", { user, userLoading, userError, userName: user?.name });
   console.log("🔍 MainLayout - Auth token exists:", !!localStorage.getItem('authToken'));
@@ -98,6 +110,7 @@ export default function MainLayout() {
     }
   };
 
+
   const navigationItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/tasks', label: 'Tasks', icon: ClipboardCheck },
@@ -105,30 +118,35 @@ export default function MainLayout() {
     { path: '/co-working', label: 'Co-working Rooms', icon: Building2 },
     { path: '/reports', label: 'Reports', icon: BarChart3 },
     { path: '/challenges', label: 'Challenges', icon: Gamepad2 },
-  ]
+  ];
+
+  const settingsItems = [
+    { path: '/settings/profile', label: 'Profile' },
+    { path: '/settings/integrations', label: 'Integrations' },
+    { path: '/settings/general', label: 'General' },
+    { path: '/settings/email', label: 'Email and Calendars' },
+    { path: '/settings/security', label: 'Security' },
+    { path: '/settings/whats-new', label: "+ What's new" },
+    { path: '/settings/invite', label: 'Invite friends' },
+    { path: '/settings/help', label: 'Help & feedback' },
+  ];
 
   // Filter navigation items by search term (case-insensitive)
   const filteredNavigationItems = searchTerm.trim()
     ? navigationItems.filter((item) => item.label.toLowerCase().includes(searchTerm.toLowerCase()))
-    : navigationItems
+    : navigationItems;
   const bottomItems = [
     { path: '/settings', label: 'Settings', icon: Settings },
     { path: '/logout', label: 'Logout', icon: LogOut },
-  ]
+  ];
 
   const handleLogout = () => {
-    navigate('/')
-  }
+    // Add your logout logic here (e.g., clear tokens, redirect)
+    localStorage.removeItem('authToken');
+    navigate('/signin');
+  };
 
-  // Utility
-  const getCurrentNav = () => {
-    const current = navigationItems.find((item) => location.pathname.startsWith(item.path))
-    return current || navigationItems[0]
-  }
-
-  const Icon = getCurrentNav().icon
-
-  // Sidebar for mobile & desktop
+  // Sidebar navigation definition (moved outside handleLogout)
   const sidebarNav = (
     <SidebarProvider>
       <div
@@ -160,42 +178,80 @@ export default function MainLayout() {
               <X className="h-5 w-5 text-gray-700" />
             </button>
           </div>
+          {/* Settings header with back button */}
+          {sidebarMode === 'settings' && (
+            <div className="flex items-center mt-4 mb-2">
+              <button
+                className="mr-2 h-7 w-7 flex items-center justify-center rounded hover:bg-gray-100"
+                onClick={() => {
+                  setSidebarMode('main');
+                  navigate('/dashboard');
+                }}
+                aria-label="Back to main menu"
+              >
+                <X className="h-5 w-5 text-gray-700" />
+              </button>
+              <span className="font-semibold text-lg">Settings</span>
+            </div>
+          )}
         </SidebarHeader>
         <SidebarContent className="px-3 flex-1">
           <SidebarMenu>
-            {filteredNavigationItems.map((item) => {
-              const Icon = item.icon
-              const isActive = location.pathname.startsWith(item.path)
-              return (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive}
-                    className={
-                      isActive
-                        ? '!bg-lightBlue !text-blue1 border-r-2 border-blue-700'
-                        : 'hover:bg-gray-50'
-                    }
-                    onClick={() => {
-                      setMobileSidebarOpen(false)
-                    }}
-                  >
-                    <Link to={item.path}>
-                      <Icon className="h-5 w-5" />
-                      {isMobile && !collapsed && <span className="ml-2">{item.label}</span>}
-                      <span className="hidden md:block">{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )
-            })}
+            {sidebarMode === 'main'
+              ? filteredNavigationItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname.startsWith(item.path);
+                  return (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        className={
+                          isActive
+                            ? '!bg-lightBlue !text-blue1 border-r-2 border-blue-700'
+                            : 'hover:bg-gray-50'
+                        }
+                        onClick={() => {
+                          setMobileSidebarOpen(false);
+                        }}
+                      >
+                        <Link to={item.path}>
+                          <Icon className="h-5 w-5" />
+                          {isMobile && !collapsed && <span className="ml-2">{item.label}</span>}
+                          <span className="hidden md:block">{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })
+              : settingsItems.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        className={
+                          isActive
+                            ? '!bg-lightBlue !text-blue1 border-r-2 border-blue-700'
+                            : 'hover:bg-gray-50'
+                        }
+                        onClick={() => {
+                          setMobileSidebarOpen(false);
+                        }}
+                      >
+                        <Link to={item.path}>{item.label}</Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className="p-3">
           <SidebarMenu>
             {bottomItems.map((item) => {
-              const Icon = item.icon
-              const isActive = location.pathname.startsWith(item.path)
+              const Icon = item.icon;
+              const isActive = location.pathname.startsWith(item.path);
               if (item.path === '/logout') {
                 return (
                   <SidebarMenuItem key={item.path}>
@@ -208,7 +264,7 @@ export default function MainLayout() {
                       <span className="hidden md:block">{item.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                )
+                );
               }
               return (
                 <SidebarMenuItem key={item.path}>
@@ -222,20 +278,39 @@ export default function MainLayout() {
                     }
                     onClick={() => setMobileSidebarOpen(false)}
                   >
-                    <Link to={item.path}>
+                    <Link
+                      to={item.path}
+                      onClick={item.path === '/settings' ? (e) => {
+                        e.preventDefault();
+                        setSidebarMode('settings');
+                        navigate('/settings/profile');
+                        setMobileSidebarOpen(false);
+                      } : undefined}
+                    >
                       <Icon className="h-5 w-5" />
                       {isMobile && !collapsed && <span className="ml-2">{item.label}</span>}
                       <span className="hidden md:block">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              )
+              );
             })}
           </SidebarMenu>
         </SidebarFooter>
       </div>
     </SidebarProvider>
-  )
+  );
+
+
+  // Helper for current nav (for mobile topbar)
+  const getCurrentNav = () => {
+    if (sidebarMode === 'settings') {
+      return { label: 'Settings', icon: Settings };
+    }
+    const current = navigationItems.find((item) => location.pathname.startsWith(item.path));
+    return current || navigationItems[0];
+  };
+  const Icon = getCurrentNav().icon;
 
   return (
     <div className="relative min-h-screen bg-gray-50 flex flex-col w-full">

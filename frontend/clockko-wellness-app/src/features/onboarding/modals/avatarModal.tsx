@@ -7,11 +7,11 @@ import Ellipse11 from '../../../assets/images/Ellipse11.png'
 import { processAvatarImage, validateImageFile } from '../../../utils/imageProcessing'
 
 // Avatar Images
-import Ellipse6 from '../../../../public/Ellipse6.png'
-import Ellipse7 from '../../../../public/Ellipse7.png'
-import Ellipse8 from '../../../../public/Ellipse8.png'
-import Ellipse9 from '../../../../public/Ellipse9.png'
-import Ellipse10 from '../../../../public/Ellipse10.png'
+import Ellipse6 from '../../../assets/images/Ellipse6.png'
+import Ellipse7 from '../../../assets/images/Ellipse7.png'
+import Ellipse8 from '../../../assets/images/Ellipse8.png'
+import Ellipse9 from '../../../assets/images/Ellipse9.png'
+import Ellipse10 from '../../../assets/images/Ellipse10.png'
 
 const avatars = [
   { src: Ellipse6, alt: 'Avatar 1' },

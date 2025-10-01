@@ -11,6 +11,7 @@ import TimeTrackerFeatures from './features/timeTracker/timetrackerfeatures';
 import CreateAccountPage from './features/auth/CreateAccountPage';
 import SignInPage from './features/auth/SignInPage';
 import ResetPasswordPage from './features/auth/ResetPasswordPage';
+import PasswordResetConfirmPage from './features/auth/PasswordResetConfirmPage';
 import EmailVerificationPage from './features/auth/EmailVerificationPage';
 import ProtectedRoutes from './features/auth/protectedroutes'
 import { OnboardingFlow } from './features/onboarding'
@@ -54,6 +55,7 @@ function App() {
               <Route path="/create-account" element={<CreateAccountPage />} />
               <Route path="/signin" element={<SignInPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/reset-password-confirm" element={<PasswordResetConfirmPage />} />
               <Route path="/verify-email" element={<EmailVerificationPage />} />
               <Route path="/onboarding" element={<OnboardingFlow />} />
               <Route element={<ProtectedRoutes />}>

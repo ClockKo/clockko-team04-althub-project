@@ -375,4 +375,289 @@ The backend receives processed base64 data URLs ready for storage or conversion.
 
 ---
 
+## 💼 Co-working Rooms Feature
+
+### Database Fields Needed
+
+**CoworkingRoom Model** (New table: `coworking_rooms`):
+
+- `id` (UUID, primary key)
+- `name` (String) - Room name
+- `description` (String) - Room description
+- `status` (String) - 'active', 'inactive'
+- `max_participants` (Integer, default=10)
+- `created_at` (DateTime)
+- `updated_at` (DateTime)
+
+**RoomParticipant Model** (New table: `room_participants`):
+
+- `id` (UUID, primary key)
+- `room_id` (UUID, foreign key to coworking_rooms)
+- `user_id` (UUID, foreign key to users)
+- `joined_at` (DateTime)
+- `is_muted` (Boolean, default=true)
+- `is_speaking` (Boolean, default=false)
+- `left_at` (DateTime, nullable)
+
+**RoomMessage Model** (New table: `room_messages`):
+
+- `id` (UUID, primary key)
+- `room_id` (UUID, foreign key to coworking_rooms)
+- `user_id` (UUID, foreign key to users)
+- `message_text` (Text)
+- `message_type` (String) - 'text', 'system', 'emoji'
+- `created_at` (DateTime)
+
+### API Endpoints Needed
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/api/coworking/rooms` | Get all available rooms |
+| `GET` | `/api/coworking/rooms/{room_id}` | Get specific room details |
+| `POST` | `/api/coworking/rooms/{room_id}/join` | Join a room |
+| `POST` | `/api/coworking/rooms/{room_id}/leave` | Leave a room |
+| `POST` | `/api/coworking/rooms/{room_id}/messages` | Send message to room |
+| `PUT` | `/api/coworking/rooms/{room_id}/mic-toggle` | Toggle microphone status |
+| `PUT` | `/api/coworking/rooms/{room_id}/speaking` | Update speaking status |
+| `POST` | `/api/coworking/rooms/{room_id}/emoji` | Send emoji reaction |
+
+### Expected API Responses
+
+**Get Rooms:**
+
+```json
+[
+  {
+    "id": "room-uuid",
+    "name": "Focus Zone",
+    "description": "Deep work sessions",
+    "status": "active",
+    "participant_count": 5,
+    "max_participants": 10,
+    "color": "bg-grayBlue"
+  }
+]
+```
+
+**Get Room Details:**
+
+```json
+{
+  "id": "room-uuid",
+  "name": "Focus Zone",
+  "description": "Deep work sessions",
+  "participants": [
+    {
+      "id": "user-uuid",
+      "name": "John Doe",
+      "avatar": "/avatars/john.png",
+      "is_speaking": false,
+      "is_muted": true,
+      "joined_at": "2025-09-30T10:00:00Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-uuid",
+      "user": "John Doe",
+      "avatar": "/avatars/john.png",
+      "text": "Hello everyone!",
+      "time": "10:30",
+      "created_at": "2025-09-30T10:30:00Z"
+    }
+  ],
+  "tasks_completed": 0,
+  "tasks_total": 0,
+  "focus_time": 0,
+  "focus_goal": 480
+}
+```
+
+**Join Room:**
+
+```json
+{
+  "success": true,
+  "message": "Joined room successfully",
+  "room": { /* room details */ }
+}
+```
+
+### WebSocket Events (Optional for Real-time)
+
+For real-time functionality, consider WebSocket events:
+
+- `user_joined` - When someone joins the room
+- `user_left` - When someone leaves the room
+- `message_sent` - New message in room
+- `mic_toggled` - User muted/unmuted
+- `speaking_changed` - User started/stopped speaking
+- `emoji_reaction` - Emoji reaction sent
+
+### 🎤 WebRTC Audio Streaming Integration (CRITICAL FOR AUDIO)
+
+**Current Status:** Audio works locally only. For real peer-to-peer voice chat, implement WebSocket signaling server.
+
+#### Required WebSocket Endpoint
+
+```python
+# main.py
+from fastapi import WebSocket, WebSocketDisconnect
+import json
+
+@app.websocket("/ws/room/{room_id}")
+async def websocket_endpoint(websocket: WebSocket, room_id: str):
+    await websocket.accept()
+    
+    # Add user to room's WebSocket connections
+    room_connections[room_id] = room_connections.get(room_id, set())
+    room_connections[room_id].add(websocket)
+    
+    try:
+        while True:
+            # Receive WebRTC signaling messages
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            # Relay WebRTC signaling to other users in room
+            await broadcast_to_room(room_id, message, exclude=websocket)
+            
+    except WebSocketDisconnect:
+        # Remove user from room connections
+        room_connections[room_id].discard(websocket)
+
+async def broadcast_to_room(room_id: str, message: dict, exclude=None):
+    """Broadcast WebRTC signaling message to all users in room"""
+    for connection in room_connections.get(room_id, set()):
+        if connection != exclude:
+            await connection.send_text(json.dumps(message))
+```
+
+#### WebRTC Signaling Message Types
+
+The frontend sends these WebSocket messages for peer-to-peer audio:
+
+```json
+// User joins room
+{
+  "type": "user-joined",
+  "data": {"userId": "user-123"},
+  "from": "user-123",
+  "roomId": "room-uuid"
+}
+
+// WebRTC Offer (initiating connection)
+{
+  "type": "offer",
+  "data": {
+    "type": "offer",
+    "sdp": "v=0\r\no=- 123..."
+  },
+  "from": "user-123",
+  "to": "user-456",
+  "roomId": "room-uuid"
+}
+
+// WebRTC Answer (responding to offer)
+{
+  "type": "answer", 
+  "data": {
+    "type": "answer",
+    "sdp": "v=0\r\no=- 456..."
+  },
+  "from": "user-456",
+  "to": "user-123", 
+  "roomId": "room-uuid"
+}
+
+// ICE Candidate (network connectivity)
+{
+  "type": "ice-candidate",
+  "data": {
+    "candidate": "candidate:1 1 UDP 2113667326...",
+    "sdpMid": "0",
+    "sdpMLineIndex": 0
+  },
+  "from": "user-123",
+  "to": "user-456",
+  "roomId": "room-uuid"
+}
+
+// User leaves room  
+{
+  "type": "user-left",
+  "data": {"userId": "user-123"},
+  "from": "user-123",
+  "roomId": "room-uuid"
+}
+```
+
+#### Implementation Steps
+
+1. **Add WebSocket dependency:**
+   ```bash
+   pip install websockets
+   ```
+
+2. **Implement room-based WebSocket management:**
+   ```python
+   # Global room connections tracker
+   room_connections = {}  # room_id -> set of WebSocket connections
+   ```
+
+3. **Handle user authentication in WebSocket:**
+   ```python
+   @app.websocket("/ws/room/{room_id}")
+   async def websocket_endpoint(
+       websocket: WebSocket, 
+       room_id: str,
+       token: str = Query(...)  # JWT token for auth
+   ):
+       # Verify JWT token
+       user = verify_jwt_token(token)
+       if not user:
+           await websocket.close(code=1008)
+           return
+       
+       # Continue with WebSocket logic...
+   ```
+
+4. **Frontend automatically connects:**
+   ```typescript
+   // Frontend will automatically connect when you implement this
+   // No frontend changes needed - WebRTC service is ready!
+   const socket = new WebSocket(`ws://localhost:8000/ws/room/${roomId}?token=${authToken}`);
+   ```
+
+#### Benefits After Implementation
+
+- ✅ **Real peer-to-peer voice chat** between users
+- ✅ **High-quality audio** with echo cancellation  
+- ✅ **Low latency** direct connections
+- ✅ **Mobile optimized** (prevents feedback)
+- ✅ **Connection status indicators** (connecting/connected/disconnected)
+- ✅ **Automatic cleanup** when users leave
+
+#### Test Instructions
+
+1. **Deploy WebSocket endpoint**
+2. **Uncomment WebRTC code** in frontend (`coworkingService.ts` line 189)
+3. **Update WebSocket URL** in `webRTCService.ts` (replace localStorage simulation)
+4. **Test with multiple browser tabs** - users should hear each other speak!
+
+**Priority:** HIGH - This enables the core coworking feature (voice chat)
+
+### Frontend Implementation
+
+The frontend uses a `coworkingService` with localStorage that:
+
+- ✅ Manages room state and participants
+- ✅ Handles real-time message synchronization
+- ✅ Manages microphone permissions and audio streams
+- ✅ Provides emoji reactions and chat functionality
+- ✅ Persists user session across page refreshes
+- ✅ Ready for WebSocket integration when backend is available
+
+---
+
 **Frontend Team** 💙

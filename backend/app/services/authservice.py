@@ -145,8 +145,9 @@ def send_password_reset_otp(db: Session, email: str) -> bool:
         try:
             email_service.send_password_reset_otp_email(
                 to_email=str(user.email),  # type: ignore
+                username=str(user.username),  # type: ignore
                 otp=otp,
-                username=str(user.username)  # type: ignore
+                reset_link=""  # Optional reset link, empty for now
             )
             logger.info(f"Password reset OTP sent to {user.email}")
             return True

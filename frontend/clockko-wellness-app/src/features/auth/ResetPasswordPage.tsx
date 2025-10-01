@@ -54,8 +54,8 @@ const ResetPasswordPage: React.FC = () => {
 
   return (
     <AuthLayout hideHeader={true}>
-      <div className="w-full text-left">
-        <h1 className="text-[44px] text-center font-bold mb-2">Reset Password</h1>
+  <div className="w-full text-left px-4 md:px-0">
+        <h1 className="text-[24px] text-center font-bold mb-2">Reset Password</h1>
         <p className="text-gray-500 text[16px] text-center mb-8">Enter your registered email address</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

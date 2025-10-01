@@ -96,8 +96,8 @@ const SignInPage: React.FC = () => {
 
   return (
     <AuthLayout hideHeader={true}>
-      <div className="w-full text-left">
-        <h1 className="text-[44px] text-center font-bold mb-2">Sign in to your account</h1>
+      <div className="w-full text-left px-4 md:px-0">
+        <h1 className="text-[24px] text-center font-bold mb-2">Sign in to your account</h1>
         <p className="text-gray-500 text-center mb-8">Pick up where you left off</p>
 
         {/* The main form */}

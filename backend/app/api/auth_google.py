@@ -79,7 +79,7 @@ def verify_google_id_token(body: GoogleToken, db: Session = Depends(get_db)):
             username=unique_username, 
             full_name=display_name, 
             is_verified=True,
-            onboarding_completed=False
+            # onboarding_completed=False
         )
         db.add(user)
         db.commit()

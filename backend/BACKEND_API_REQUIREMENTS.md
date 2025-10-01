@@ -494,6 +494,159 @@ For real-time functionality, consider WebSocket events:
 - `speaking_changed` - User started/stopped speaking
 - `emoji_reaction` - Emoji reaction sent
 
+### 🎤 WebRTC Audio Streaming Integration (CRITICAL FOR AUDIO)
+
+**Current Status:** Audio works locally only. For real peer-to-peer voice chat, implement WebSocket signaling server.
+
+#### Required WebSocket Endpoint
+
+```python
+# main.py
+from fastapi import WebSocket, WebSocketDisconnect
+import json
+
+@app.websocket("/ws/room/{room_id}")
+async def websocket_endpoint(websocket: WebSocket, room_id: str):
+    await websocket.accept()
+    
+    # Add user to room's WebSocket connections
+    room_connections[room_id] = room_connections.get(room_id, set())
+    room_connections[room_id].add(websocket)
+    
+    try:
+        while True:
+            # Receive WebRTC signaling messages
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            # Relay WebRTC signaling to other users in room
+            await broadcast_to_room(room_id, message, exclude=websocket)
+            
+    except WebSocketDisconnect:
+        # Remove user from room connections
+        room_connections[room_id].discard(websocket)
+
+async def broadcast_to_room(room_id: str, message: dict, exclude=None):
+    """Broadcast WebRTC signaling message to all users in room"""
+    for connection in room_connections.get(room_id, set()):
+        if connection != exclude:
+            await connection.send_text(json.dumps(message))
+```
+
+#### WebRTC Signaling Message Types
+
+The frontend sends these WebSocket messages for peer-to-peer audio:
+
+```json
+// User joins room
+{
+  "type": "user-joined",
+  "data": {"userId": "user-123"},
+  "from": "user-123",
+  "roomId": "room-uuid"
+}
+
+// WebRTC Offer (initiating connection)
+{
+  "type": "offer",
+  "data": {
+    "type": "offer",
+    "sdp": "v=0\r\no=- 123..."
+  },
+  "from": "user-123",
+  "to": "user-456",
+  "roomId": "room-uuid"
+}
+
+// WebRTC Answer (responding to offer)
+{
+  "type": "answer", 
+  "data": {
+    "type": "answer",
+    "sdp": "v=0\r\no=- 456..."
+  },
+  "from": "user-456",
+  "to": "user-123", 
+  "roomId": "room-uuid"
+}
+
+// ICE Candidate (network connectivity)
+{
+  "type": "ice-candidate",
+  "data": {
+    "candidate": "candidate:1 1 UDP 2113667326...",
+    "sdpMid": "0",
+    "sdpMLineIndex": 0
+  },
+  "from": "user-123",
+  "to": "user-456",
+  "roomId": "room-uuid"
+}
+
+// User leaves room  
+{
+  "type": "user-left",
+  "data": {"userId": "user-123"},
+  "from": "user-123",
+  "roomId": "room-uuid"
+}
+```
+
+#### Implementation Steps
+
+1. **Add WebSocket dependency:**
+   ```bash
+   pip install websockets
+   ```
+
+2. **Implement room-based WebSocket management:**
+   ```python
+   # Global room connections tracker
+   room_connections = {}  # room_id -> set of WebSocket connections
+   ```
+
+3. **Handle user authentication in WebSocket:**
+   ```python
+   @app.websocket("/ws/room/{room_id}")
+   async def websocket_endpoint(
+       websocket: WebSocket, 
+       room_id: str,
+       token: str = Query(...)  # JWT token for auth
+   ):
+       # Verify JWT token
+       user = verify_jwt_token(token)
+       if not user:
+           await websocket.close(code=1008)
+           return
+       
+       # Continue with WebSocket logic...
+   ```
+
+4. **Frontend automatically connects:**
+   ```typescript
+   // Frontend will automatically connect when you implement this
+   // No frontend changes needed - WebRTC service is ready!
+   const socket = new WebSocket(`ws://localhost:8000/ws/room/${roomId}?token=${authToken}`);
+   ```
+
+#### Benefits After Implementation
+
+- ✅ **Real peer-to-peer voice chat** between users
+- ✅ **High-quality audio** with echo cancellation  
+- ✅ **Low latency** direct connections
+- ✅ **Mobile optimized** (prevents feedback)
+- ✅ **Connection status indicators** (connecting/connected/disconnected)
+- ✅ **Automatic cleanup** when users leave
+
+#### Test Instructions
+
+1. **Deploy WebSocket endpoint**
+2. **Uncomment WebRTC code** in frontend (`coworkingService.ts` line 189)
+3. **Update WebSocket URL** in `webRTCService.ts` (replace localStorage simulation)
+4. **Test with multiple browser tabs** - users should hear each other speak!
+
+**Priority:** HIGH - This enables the core coworking feature (voice chat)
+
 ### Frontend Implementation
 
 The frontend uses a `coworkingService` with localStorage that:

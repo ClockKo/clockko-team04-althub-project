@@ -28,7 +28,11 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
   const [displayRoomName, setDisplayRoomName] = useState<string>(roomName || "");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showMicActivity, setShowMicActivity] = useState(false);
-  
+  const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(new Map());
+  const [webRTCStatus, setWebRTCStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
+  // const [isAudioTransmitting, setIsAudioTransmitting] = useState(false); // TODO: Set to true when backend ready
+
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const hasFetched = useRef(false);
@@ -43,62 +47,141 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Microphone management - Mobile-friendly approach
-  useEffect(() => {
-    if (!isMuted) {
-      // Request microphone access
-      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-        streamRef.current = stream;
-        
-        // For mobile devices, don't play back the audio to avoid feedback
-        // Instead, just capture the stream and show visual feedback
-        if (isMobile) {
-          console.log('🎵 Mobile: Microphone stream captured successfully');
-          toast.success('Microphone is active');
-          setShowMicActivity(true);
-        } else {
-          // For desktop, we can play the audio back
-          if (audioRef.current) {
-            audioRef.current.srcObject = stream;
-            audioRef.current.play().catch((err) => {
-              console.log('Desktop audio playback failed:', err);
-            });
-          }
-        }
-        
-        // Update speaking status based on audio activity
-        coworkingService.updateSpeakingStatus(roomId, true);
-      }).catch((err) => {
-        console.error('Microphone access denied:', err);
-        toast.error('Microphone access denied');
-        setIsMuted(true);
-      });
-    } else {
-      // Stop audio stream
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
-      }
+// Microphone management - Mobile-friendly approach (restored working version)
+useEffect(() => {
+  if (!isMuted) {
+    // Request microphone access with mobile-optimized settings
+    navigator.mediaDevices.getUserMedia({ 
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        sampleRate: 48000
+      } 
+    }).then((stream) => {
+      streamRef.current = stream;
+      
+      // Set up audio element for both desktop and mobile
       if (audioRef.current) {
-        audioRef.current.srcObject = null;
-        audioRef.current.pause();
+        audioRef.current.srcObject = stream;
+        // On mobile: mute local playback to prevent feedback
+        // On desktop: allow playback for monitoring
+        audioRef.current.muted = isMobile;
+        
+        // Explicitly play to activate stream (required for mobile)
+        audioRef.current.play().catch((err) => {
+          console.log('Audio playback activation:', err);
+        });
       }
-      setShowMicActivity(false);
-      coworkingService.updateSpeakingStatus(roomId, false);
+      
+      console.log(`🎵 ${isMobile ? 'Mobile' : 'Desktop'}: Microphone active (local feedback)`);
+      toast.success('Microphone is active');
+      setShowMicActivity(true);
+      setWebRTCStatus('disconnected'); // No real WebRTC connection yet
+      
+      // Update speaking status
+      coworkingService.updateSpeakingStatus(roomId, true);
+    }).catch((err) => {
+      console.error('Microphone access denied:', err);
+      toast.error('Microphone access denied');
+      setIsMuted(true);
+    });
+  } else {
+    // Stop audio stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
+    if (audioRef.current) {
+      audioRef.current.srcObject = null;
+      audioRef.current.pause();
+    }
+    setShowMicActivity(false);
+    setWebRTCStatus('disconnected');
+    coworkingService.updateSpeakingStatus(roomId, false);
+  }
+  
+  // Cleanup on unmount
+  return () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (audioRef.current) {
+      audioRef.current.srcObject = null;
+      audioRef.current.pause();
+    }
+  };
+}, [isMuted, roomId, isMobile]);
+
+// WebRTC event listeners setup (disabled until backend WebSocket is ready)
+useEffect(() => {
+  // TODO: Enable when backend WebSocket signaling is implemented
+  /*
+  const webRTCService = coworkingService.getWebRTCService();
+  
+  // Handle remote streams from other users
+  const handleRemoteStream = ({ peerId, stream }: { peerId: string, stream: MediaStream }) => {
+    console.log(`🔊 Received audio from ${peerId}`);
+    setRemoteStreams(prev => new Map(prev.set(peerId, stream)));
     
-    // Cleanup on unmount
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
-      }
-      if (audioRef.current) {
-        audioRef.current.srcObject = null;
-        audioRef.current.pause();
-      }
-    };
-  }, [isMuted, roomId, isMobile]);
+    // Create audio element to play remote stream
+    const audioElement = new Audio();
+    audioElement.srcObject = stream;
+    audioElement.autoplay = true;
+    audioElement.volume = 0.8;
+    
+    // Play remote audio (not muted unlike local audio)
+    audioElement.play().catch(err => {
+      console.log('Remote audio playback:', err);
+    });
+    
+    toast.success(`Connected to ${peerId}'s audio`);
+  };
+  
+  // Handle peer disconnection
+  const handlePeerDisconnected = (peerId: string) => {
+    console.log(`🔇 ${peerId} disconnected`);
+    setRemoteStreams(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(peerId);
+      return newMap;
+    });
+  };
+  
+  // Handle connection status changes
+  const handleLocalStreamReady = (stream: MediaStream) => {
+    streamRef.current = stream;
+    setWebRTCStatus('connected');
+    
+    // Set up local audio element for monitoring (muted on mobile)
+    if (audioRef.current) {
+      audioRef.current.srcObject = stream;
+      audioRef.current.muted = isMobile; // Prevent feedback on mobile
+      audioRef.current.play().catch(err => {
+        console.log('Local audio monitoring:', err);
+      });
+    }
+  };
+  
+  // Set up event listeners
+  webRTCService.on('remoteStreamReceived', handleRemoteStream);
+  webRTCService.on('peerDisconnected', handlePeerDisconnected);
+  webRTCService.on('localStreamReady', handleLocalStreamReady);
+  
+  // Cleanup on unmount
+  return () => {
+    webRTCService.off('remoteStreamReceived', handleRemoteStream);
+    webRTCService.off('peerDisconnected', handlePeerDisconnected);
+    webRTCService.off('localStreamReady', handleLocalStreamReady);
+  };
+  */
+  
+  console.log('⚠️ WebRTC disabled - Backend WebSocket signaling required');
+  return () => {
+    // Cleanup placeholder
+  };
+}, [roomId, isMobile]);
 
   // Load room data and set up real-time listeners
   useEffect(() => {
@@ -549,13 +632,17 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
             <div className="flex gap-25 mb-6 bg-snow p-4 rounded-2xl shadow-md  w-full max-w-xl items-center justify-center">
               <Button variant="destructive" className={`flex gap-2 rounded-2xl px-6 bg-errorRed relative ${showMicActivity && !isMuted ? 'animate-pulse' : ''}`} onClick={handleMicToggle}>
                 {isMuted ? <MicOff className="h-5 w-5 text-red-500" /> : <Mic className="h-5 w-5 text-blue-600" />}
-                {/* Mobile activity indicator */}
-                {isMobile && showMicActivity && !isMuted && (
+                {/* Activity indicator for desktop */}
+                {!isMobile && showMicActivity && !isMuted && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
                 )}
+                {/* WebRTC connection status indicator (currently local-only) */}
+                {webRTCStatus === 'disconnected' && !isMuted && (
+                  <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-orange-500 rounded-full" title="Local audio only - WebRTC requires backend"></div>
+                )}
               </Button>
-              {/* Hidden audio element for local playback */}
-              <audio ref={audioRef} style={{ display: 'none' }} autoPlay />
+              {/* Audio element for microphone stream */}
+              <audio ref={audioRef} style={{ display: 'none' }} autoPlay playsInline />
               <Button variant="outline" className={`flex gap-2 bg-powderBlue cursor-pointer ${showChat ? 'bg-blue1 hover:bg-blue-800/50' : 'bg-powderBlue'}`} onClick={() => setShowChat((prev) => !prev)}>
              <MessageSquare className={`h-5 w-5 ${showChat ? 'text-white hover:text-black' : ''}`} /> 
               </Button>
@@ -674,7 +761,7 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
           <div className="flex justify-between items-center">
             <Button 
               variant={isMuted ? "destructive" : "default"} 
-              className={`flex gap-2 min-w-[60px] h-12 relative ${showMicActivity && !isMuted ? 'animate-pulse' : ''}`}
+              className={`flex gap-2 min-w-[60px] h-12 relative ${showMicActivity && !isMuted ? 'animate-pulse bg-blue1' : ''}`}
               onClick={handleMicToggle}
             >
               {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
@@ -682,17 +769,21 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
               {showMicActivity && !isMuted && (
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
               )}
+              {/* WebRTC connection status indicator (currently local-only) */}
+              {webRTCStatus === 'disconnected' && !isMuted && (
+                <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-orange-500 rounded-full" title="Local audio only - WebRTC requires backend"></div>
+              )}
             </Button>
             <Button 
               variant="outline" 
-              className="flex gap-2 min-w-[60px] h-12" 
+              className={`flex gap-2 min-w-[60px] ${showChat ? 'bg-blue1 text-white' : ''} h-12 hover:bg-blue-800/50`}
               onClick={() => setShowChat((prev) => !prev)}
             >
               <MessageSquare className="h-5 w-5" />
             </Button>
             <Button 
               variant={showEmojis ? "default" : "outline"} 
-              className="flex gap-2 min-w-[60px] h-12" 
+              className={`flex gap-2 min-w-[60px] ${showEmojis ? 'bg-blue1' : ''}  h-12 hover:bg-blue-800/50`} 
               onClick={() => setShowEmojis((prev) => !prev)}
             >
               <Smile className="h-5 w-5" />

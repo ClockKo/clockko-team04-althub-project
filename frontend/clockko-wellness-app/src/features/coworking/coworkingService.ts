@@ -1,10 +1,10 @@
 /*
-coworkingService.ts - Simple localStorage-based co-working service
-Handles room functionality with proper user names and real participant counts
-Ready for backend API integration
+coworkingService.ts - Enhanced co-working service with WebRTC audio streaming
+Handles room functionality with real-time audio transmission between users
 */
 
 import type { Room, RoomSummary, Participant, Message } from '../../types/typesGlobal';
+import { webRTCService } from './webRTCService';
 
 // Get current user with proper name resolution (same as dashboard)
 const getCurrentUser = async (): Promise<Participant> => {
@@ -238,6 +238,17 @@ class CoworkingService {
           isSpeaking: false
         }));
 
+        // Initialize WebRTC for audio streaming (disabled until backend WebSocket ready)
+        /*
+        try {
+          await webRTCService.initializeRoom(roomId, currentUser.id);
+          console.log('🔗 WebRTC initialized for room audio streaming');
+        } catch (error) {
+          console.warn('⚠️ WebRTC initialization failed, continuing without audio:', error);
+        }
+        */
+        console.log('⚠️ WebRTC disabled - Backend WebSocket signaling required for real audio streaming');
+
         // Add system message
         await this.addMessage(roomId, {
           id: `system_${Date.now()}`,
@@ -268,6 +279,9 @@ class CoworkingService {
       if (!room) return;
 
       const currentUser = await getCurrentUser();
+      
+      // Leave WebRTC room first (disabled until backend ready)
+      // webRTCService.leaveRoom();
       
       // Remove user from participants
       room.participants = room.participants.filter(p => p.id !== currentUser.id);
@@ -315,6 +329,9 @@ class CoworkingService {
       if (participant) {
         participant.muted = !participant.muted;
         room.lastUpdated = Date.now();
+        
+        // Update WebRTC mute state (disabled until backend ready)
+        // webRTCService.setMuted(participant.muted);
         
         localStorage.setItem(`coworking_room_${roomId}`, JSON.stringify(room));
         
@@ -408,7 +425,16 @@ class CoworkingService {
     if (session) {
       this.leaveRoom(session.roomId);
     }
+    
+    // Cleanup WebRTC (disabled until backend ready)
+    // webRTCService.destroy();
+    
     this.eventListeners.clear();
+  }
+
+  // Get WebRTC service for direct access
+  getWebRTCService() {
+    return webRTCService;
   }
 
   // Development helper: Clear all room data

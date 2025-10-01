@@ -73,7 +73,7 @@ const EmailVerificationPage: React.FC = () => {
 
   return (
     <AuthLayout hideHeader={true}>
-      <div className="w-full text-left">
+      <div className="w-full text-left px-4 md:px-0">
         <h1 className="text-[44px] font-bold mb-2 text-center">Verify Your Email</h1>
         <p className="text-gray-500 mb-8 text-center text-[16px]">
           We've sent a 6-digit verification code to<br />

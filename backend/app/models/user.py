@@ -59,7 +59,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     is_verified = Column(Boolean, default=False)
     verification_token = Column(String, unique=True, nullable=True)
-    onboarding_completed = Column(Boolean, default=False, nullable=False)
+    # onboarding_completed = Column(Boolean, default=False, nullable=False)
 
     # Relationship
     settings = relationship("UserSettings", back_populates="user", uselist=False)

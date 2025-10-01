@@ -6,7 +6,8 @@ from uuid import UUID
 import logging
 from app.core.celery import celery_app
 from app.core.database import SessionLocal, get_db_session
-from app.models.task import Task, TimeLog
+from app.models.task import Task
+from app.models.timelog import Timelog
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TimeLogResponse
 from kombu.exceptions import EncodeError
 
@@ -165,19 +166,18 @@ def delete_task(session: Session, task_id: UUID, user_id: UUID):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
 
-def start_timer(session: Session, task_id: UUID, user_id: UUID) -> TimeLog:
+def start_timer(session: Session, task_id: UUID, user_id: UUID) -> Timelog:
     try:
         get_task(session, task_id, user_id)
         result = session.execute(
-            select(TimeLog).where(TimeLog.user_id ==
-                                  user_id, TimeLog.end_time == None)
+            select(Timelog).where(Timelog.user_id == user_id, Timelog.end_time == None)
         )
         existing = result.scalar_one_or_none()
         if existing:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="Another timer is already running")
 
-        time_log = TimeLog(
+        time_log = Timelog(
             task_id=task_id,
             user_id=user_id,
             start_time=datetime.now(timezone.utc)
@@ -195,12 +195,12 @@ def start_timer(session: Session, task_id: UUID, user_id: UUID) -> TimeLog:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
 
-def stop_timer(session: Session, task_id: UUID, user_id: UUID) -> TimeLog:
+def stop_timer(session: Session, task_id: UUID, user_id: UUID) -> Timelog:
     try:
         get_task(session, task_id, user_id)
         result = session.execute(
-            select(TimeLog).where(TimeLog.task_id ==
-                                  task_id, TimeLog.end_time == None)
+            select(Timelog).where(Timelog.task_id ==
+                                  task_id, Timelog.end_time == None)
         )
         time_log = result.scalar_one_or_none()
         if not time_log:
@@ -220,11 +220,11 @@ def stop_timer(session: Session, task_id: UUID, user_id: UUID) -> TimeLog:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
 
-def get_time_logs(session: Session, task_id: UUID, user_id: UUID) -> list[TimeLog]:
+def get_time_logs(session: Session, task_id: UUID, user_id: UUID) -> list[Timelog]:
     try:
         get_task(session, task_id, user_id)
         result = session.execute(
-            select(TimeLog).where(TimeLog.task_id == task_id))
+            select(Timelog).where(Timelog.task_id == task_id))
         time_logs = result.scalars().all()
         return time_logs
     except HTTPException:

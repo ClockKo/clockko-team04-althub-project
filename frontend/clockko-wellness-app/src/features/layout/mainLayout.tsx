@@ -16,11 +16,20 @@ import {
   Building2,
   BarChart3,
   Gamepad2,
-  Settings,
   LogOut,
   X,
+  ChevronLeft,
   Menu,
   Search,
+  User,
+  Link2,
+  Sliders,
+  Mail,
+  Shield,
+  Gift,
+  HelpCircle,
+  Flame,
+  Settings,
 } from 'lucide-react'
 import clockkoLogo from '../../assets/images/frame1.png'
 import { useIsMobile } from '../../hooks/use-mobile'
@@ -120,23 +129,38 @@ export default function MainLayout() {
     { path: '/challenges', label: 'Challenges', icon: Gamepad2 },
   ];
 
-  const settingsItems = [
-    { path: '/settings/profile', label: 'Profile' },
-    { path: '/settings/integrations', label: 'Integrations' },
-    { path: '/settings/general', label: 'General' },
-    { path: '/settings/email', label: 'Email and Calendars' },
-    { path: '/settings/security', label: 'Security' },
-    { path: '/settings/whats-new', label: "+ What's new" },
-    { path: '/settings/invite', label: 'Invite friends' },
-    { path: '/settings/help', label: 'Help & feedback' },
+
+  // Settings sidebar sections and items with icons
+  const settingsSections = [
+    {
+      header: 'Accounts',
+      items: [
+        { path: '/settings/profile', label: 'Profile', icon: User },
+        { path: '/settings/integrations', label: 'Integrations', icon: Link2 },
+        { path: '/settings/general', label: 'General', icon: Sliders },
+      ],
+    },
+    {
+      header: 'App Settings',
+      items: [
+        { path: '/settings/email', label: 'Email and Calendars', icon: Mail },
+        { path: '/settings/security', label: 'Security', icon: Shield },
+        { path: '/settings/whats-new', label: "What's new", icon: Flame },
+        { path: '/settings/invite', label: 'Invite friends', icon: Gift },
+        { path: '/settings/help', label: 'Help & feedback', icon: HelpCircle },
+      ],
+    },
   ];
 
   // Filter navigation items by search term (case-insensitive)
   const filteredNavigationItems = searchTerm.trim()
     ? navigationItems.filter((item) => item.label.toLowerCase().includes(searchTerm.toLowerCase()))
     : navigationItems;
-  const bottomItems = [
+  const mainBottomItems = [
     { path: '/settings', label: 'Settings', icon: Settings },
+    { path: '/logout', label: 'Logout', icon: LogOut },
+  ];
+  const settingsBottomItems = [
     { path: '/logout', label: 'Logout', icon: LogOut },
   ];
 
@@ -178,20 +202,23 @@ export default function MainLayout() {
               <X className="h-5 w-5 text-gray-700" />
             </button>
           </div>
-          {/* Settings header with back button */}
+          {/* Settings header with back button and icon */}
           {sidebarMode === 'settings' && (
-            <div className="flex items-center mt-4 mb-2">
-              <button
-                className="mr-2 h-7 w-7 flex items-center justify-center rounded hover:bg-gray-100"
-                onClick={() => {
-                  setSidebarMode('main');
-                  navigate('/dashboard');
-                }}
-                aria-label="Back to main menu"
-              >
-                <X className="h-5 w-5 text-gray-700" />
-              </button>
-              <span className="font-semibold text-lg">Settings</span>
+            <div className="flex flex-col mt-4 mb-2">
+              <div className="flex items-center">
+                <button
+                  className="mr-2 h-7 w-7 flex items-center justify-center rounded hover:bg-gray-100"
+                  onClick={() => {
+                    setSidebarMode('main');
+                    navigate('/dashboard');
+                  }}
+                  aria-label="Back to main menu"
+                >
+                  <ChevronLeft className="h-5 w-5 text-gray-700" />
+                </button>
+                <span className="font-semibold text-lg">Settings</span>
+              </div>
+              <div className="border-b border-gray-200 mt-3" />
             </div>
           )}
         </SidebarHeader>
@@ -224,32 +251,40 @@ export default function MainLayout() {
                     </SidebarMenuItem>
                   );
                 })
-              : settingsItems.map((item) => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        className={
-                          isActive
-                            ? '!bg-lightBlue !text-blue1 border-r-2 border-blue-700'
-                            : 'hover:bg-gray-50'
-                        }
-                        onClick={() => {
-                          setMobileSidebarOpen(false);
-                        }}
-                      >
-                        <Link to={item.path}>{item.label}</Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
+              : settingsSections.flatMap((section, idx) => [
+                  // Section header
+                  <div key={section.header} className={`pl-3 pt-4 pb-1 text-xs font-semibold text-gray-500 ${idx !== 0 ? 'mt-2' : ''}`}>{section.header}</div>,
+                  ...section.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <SidebarMenuItem key={item.path}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          className={
+                            isActive
+                              ? '!bg-lightBlue !text-blue1 border-r-2 border-blue-700'
+                              : 'hover:bg-gray-50'
+                          }
+                          onClick={() => {
+                            setMobileSidebarOpen(false);
+                          }}
+                        >
+                          <Link to={item.path}>
+                            <Icon className="h-5 w-5 mr-2" />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })
+                ])}
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className="p-3">
           <SidebarMenu>
-            {bottomItems.map((item) => {
+            {(sidebarMode === 'main' ? mainBottomItems : settingsBottomItems).map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname.startsWith(item.path);
               if (item.path === '/logout') {
@@ -305,7 +340,7 @@ export default function MainLayout() {
   // Helper for current nav (for mobile topbar)
   const getCurrentNav = () => {
     if (sidebarMode === 'settings') {
-      return { label: 'Settings', icon: Settings };
+  return { label: 'Settings', icon: Settings };
     }
     const current = navigationItems.find((item) => location.pathname.startsWith(item.path));
     return current || navigationItems[0];

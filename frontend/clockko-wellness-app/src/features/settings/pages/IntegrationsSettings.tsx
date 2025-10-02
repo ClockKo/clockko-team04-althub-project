@@ -1,5 +1,3 @@
-// src/features/settings/pages/IntegrationsSettings.tsx
-
 import React from 'react';
 import { Button } from '../../../components/ui/button';
 import { Switch } from '../../../components/ui/switch';

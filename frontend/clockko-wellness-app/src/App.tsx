@@ -23,6 +23,7 @@ import IntegrationsSettings from './features/settings/pages/IntegrationsSettings
 import EmailSettings from './features/settings/pages/EmailSettings';
 import WhatsNewPage from './features/settings/pages/WhatsNewPage';
 import InviteFriendsPage from './features/settings/pages/InviteFriendsPage';
+import HelpSettings from './features/settings/pages/HelpSettings';
 
 
 
@@ -79,7 +80,7 @@ function App() {
                   <Route path="/settings/security" element={<SecuritySettings />} />
                   <Route path="/settings/whats-new" element={<WhatsNewPage />} />
                   <Route path="/settings/invite" element={<InviteFriendsPage />} />
-                  {/* Add more settings sections here */}
+                  <Route path="/settings/help" element={<HelpSettings />} />
                   
                   {/* add more protected routes here */}
                 </Route>

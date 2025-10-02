@@ -8,8 +8,8 @@ import ko_faces_4 from '../../../assets/images/ko_faces_4.png';
 
 const InviteFriendsPage: React.FC = () => {
   return (
-    <div className="flex items-center justify-center h-full p-4">
-      <div className="w-full max-w-lg bg-white rounded-lg shadow-sm p-8 text-center">
+    <div className="flex items-center justify-center h-full">
+      <div className="w-full max-w-xl bg-white rounded-lg shadow-sm p-12 text-center">
         {/* Placeholder for the illustration */}
         <div className="flex justify-center items-center mb-6">
           <div className="flex space-x-4">
@@ -29,11 +29,11 @@ const InviteFriendsPage: React.FC = () => {
         </p>
         
         <div className="flex justify-center gap-4">
-          <Button variant="outline">
+          <Button className="bg-[#34559E] hover:bg-[#2c4885]">
             <Link2 className="h-4 w-4 mr-2" />
             Copy link
           </Button>
-          <Button className="bg-[#34559E] hover:bg-[#2c4885]">
+          <Button variant="outline">
             <Send className="h-4 w-4 mr-2" />
             Send invite
           </Button>

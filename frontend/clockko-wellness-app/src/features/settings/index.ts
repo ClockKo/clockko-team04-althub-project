@@ -5,4 +5,4 @@ export { default as IntegrationsSettings } from './pages/IntegrationsSettings';
 export { default as EmailSettings } from './pages/EmailSettings';
 export { default as WhatsNewPage } from './pages/WhatsNewPage';
 export { default as InviteFriendsPage } from './pages/InviteFriendsPage';
-
+export { default as HelpSettings} from './pages/HelpSettings';

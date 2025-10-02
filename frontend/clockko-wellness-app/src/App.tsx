@@ -21,6 +21,7 @@ import CoWorkingRoomsPage from './features/coworking/coworkingRoomPage'
 import {ProfileSettings, GeneralSettings, SecuritySettings } from './features/settings';
 import IntegrationsSettings from './features/settings/pages/IntegrationsSettings';
 import EmailSettings from './features/settings/pages/EmailSettings';
+import WhatsNewPage from './features/settings/pages/WhatsNewPage';
 
 
 
@@ -75,6 +76,7 @@ function App() {
                   <Route path="/settings/integrations" element={<IntegrationsSettings />} />
                   <Route path="/settings/email" element={<EmailSettings />} />
                   <Route path="/settings/security" element={<SecuritySettings />} />
+                  <Route path="/settings/whats-new" element={<WhatsNewPage />} />
                   {/* Add more settings sections here */}
                   
                   {/* add more protected routes here */}

@@ -1,15 +1,17 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import { updateUserProfile } from '../../../pages/dashboard/profileApi';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Switch } from '../../components/ui/switch';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Switch } from '../../../components/ui/switch';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select';
+} from '../../../components/ui/select';
 import {
   Upload,
   Trash2,
@@ -17,24 +19,64 @@ import {
   ChevronRight,
   ChevronDown,
 } from 'lucide-react';
+import { useUserData } from '../../../pages/dashboard/dashboardHooks';
 
 const defaultAvatar =
-  'https://ui-avatars.com/api/?name=Femi+Hemsworth&background=E0E7FF&color=1E40AF&size=128';
+  'https://ui-avatars.com/api/?name=User&background=E0E7FF&color=1E40AF&size=128';
 
 const ProfileSettings: React.FC = () => {
-  const [avatar, setAvatar] = useState<string>(defaultAvatar);
-  const [name, setName] = useState<string>('Femi Hemsworth');
-  const [isEditingName, setIsEditingName] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: user, isLoading } = useUserData();
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Local state only for editing name and uploading avatar
+  const [editName, setEditName] = useState<string>('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+
+  // When entering edit mode, set editName to current user name
+  useEffect(() => {
+    if (isEditingName && user) {
+      setEditName(user.name || '');
+    }
+  }, [isEditingName, user]);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (ev) => {
-        if (ev.target?.result) setAvatar(ev.target.result as string);
+      reader.onload = async (ev) => {
+        if (ev.target?.result) {
+          const newAvatar = ev.target.result as string;
+          setUploadingAvatar(true);
+          try {
+            await updateUserProfile({ avatar: newAvatar });
+            await queryClient.invalidateQueries({ queryKey: ['userData'] });
+          } catch (err) {
+            // Optionally show error toast
+          } finally {
+            setUploadingAvatar(false);
+          }
+        }
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleNameSave = async () => {
+    if (!editName || editName === user?.name) {
+      setIsEditingName(false);
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      await updateUserProfile({ name: editName });
+      await queryClient.invalidateQueries({ queryKey: ['userData'] });
+      setIsEditingName(false);
+    } catch (err) {
+      // Optionally show error toast
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -45,10 +87,9 @@ const ProfileSettings: React.FC = () => {
       {/* Profile Card */}
       <section className="bg-white rounded-lg shadow-sm p-6 mb-8">
         <h2 className="text-lg font-semibold mb-6 text-gray-800">Profile</h2>
-        
         <div className="flex items-center gap-4 mb-6">
           <img
-            src={avatar}
+            src={user?.avatar || defaultAvatar}
             alt="Avatar"
             className="w-16 h-16 rounded-full object-cover"
           />
@@ -57,15 +98,17 @@ const ProfileSettings: React.FC = () => {
               variant="destructive"
               size="icon"
               className="bg-red-50 hover:bg-red-100 text-red-600"
+              disabled
             >
               <Trash2 className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingAvatar}
             >
               <Upload className="h-4 w-4 mr-2" />
-              Upload
+              {uploadingAvatar ? 'Uploading...' : 'Upload'}
             </Button>
             <input
               ref={fileInputRef}
@@ -82,20 +125,34 @@ const ProfileSettings: React.FC = () => {
             <label className="text-xs text-gray-500">Name</label>
             <Input
               type="text"
-              value={name}
+              value={isEditingName ? editName : user?.name || ''}
               readOnly={!isEditingName}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => setEditName(e.target.value)}
               className="w-full bg-gray-50 border-gray-200 rounded-md mt-1"
+              disabled={isLoading}
             />
           </div>
-          <Button
-            variant="outline"
-            onClick={() => setIsEditingName(!isEditingName)}
-            className="whitespace-nowrap"
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            {isEditingName ? 'Save' : 'Edit'}
-          </Button>
+          {isEditingName ? (
+            <Button
+              variant="outline"
+              onClick={handleNameSave}
+              className="whitespace-nowrap"
+              disabled={uploadingAvatar}
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              {uploadingAvatar ? 'Saving...' : 'Save'}
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => setIsEditingName(true)}
+              className="whitespace-nowrap"
+              disabled={isLoading}
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          )}
         </div>
       </section>
 

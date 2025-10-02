@@ -18,7 +18,9 @@ import { OnboardingFlow } from './features/onboarding'
 import NotFoundPage from './components/NotFoundPage'
 import { Toaster } from 'react-hot-toast'
 import CoWorkingRoomsPage from './features/coworking/coworkingRoomPage'
-import { SettingsPage, ProfileSettings, GeneralSettings, SecuritySettings } from './features/settings';
+import {ProfileSettings, GeneralSettings, SecuritySettings } from './features/settings';
+import IntegrationsSettings from './features/settings/pages/IntegrationsSettings';
+import EmailSettings from './features/settings/pages/EmailSettings';
 
 
 
@@ -66,12 +68,15 @@ function App() {
                   <Route path="/co-working" element={<CoWorkingRoomsPage/>} />
                   <Route path="/reports" element={<div className="p-6"><h1 className="text-2xl font-bold">Reports</h1><p>Coming soon...</p></div>} />
                   <Route path="/challenges" element={<ChallengesPage/>} />
-                  <Route path="/settings" element={<SettingsPage />}>
-                    <Route path="profile" element={<ProfileSettings />} />
-                    <Route path="general" element={<GeneralSettings />} />
-                    <Route path="security" element={<SecuritySettings />} />
-                    {/* Add more settings sections here */}
-                  </Route>
+                  
+                  <Route path="/settings/profile" element={<ProfileSettings />} />
+                  <Route path="/settings/general" element={<GeneralSettings />} />
+                  <Route path="/settings/security" element={<SecuritySettings />} />
+                  <Route path="/settings/integrations" element={<IntegrationsSettings />} />
+                  <Route path="/settings/email" element={<EmailSettings />} />
+                  <Route path="/settings/security" element={<SecuritySettings />} />
+                  {/* Add more settings sections here */}
+                  
                   {/* add more protected routes here */}
                 </Route>
               </Route>

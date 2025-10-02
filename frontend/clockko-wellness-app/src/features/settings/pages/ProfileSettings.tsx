@@ -16,16 +16,23 @@ import {
   Upload,
   Trash2,
   Edit,
-  ChevronRight,
-  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { useUserData } from '../../../pages/dashboard/dashboardHooks';
+import { getData } from 'country-list';
+import timezones from 'timezones-list';
 
 const defaultAvatar =
   'https://ui-avatars.com/api/?name=User&background=E0E7FF&color=1E40AF&size=128';
 
 const ProfileSettings: React.FC = () => {
+  const [selectedCountry, setSelectedCountry] = useState<string>('NG');
+  const countries = getData();
   const { data: user, isLoading } = useUserData();
+
+  // Get the browser's timezone identifier
+  const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const [selectedTimezone, setSelectedTimezone] = useState<string>(detectedTimezone);
 
   // Local state only for editing name and uploading avatar
   const [editName, setEditName] = useState<string>('');
@@ -40,6 +47,27 @@ const ProfileSettings: React.FC = () => {
       setEditName(user.name || '');
     }
   }, [isEditingName, user]);
+
+  useEffect(() => {
+    // Check if the browser supports Geolocation
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        try {
+          // Use a free reverse geocoding service to get the country code
+          const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+          const data = await response.json();
+          
+          if (data.countryCode) {
+            setSelectedCountry(data.countryCode);
+          }
+        } catch (error) {
+          console.error("Error fetching user's country:", error);
+        }
+      });
+    }
+  }, []); // This runs once when the component mounts
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -186,14 +214,17 @@ const ProfileSettings: React.FC = () => {
               <h4 className="font-medium text-gray-800">Timezone</h4>
               <p className="text-sm text-gray-500">Current timezone setting.</p>
             </div>
-            <Select defaultValue="lagos">
+            <Select value={selectedTimezone} onValueChange={setSelectedTimezone}>
               <SelectTrigger className="w-[220px]">
                 <SelectValue placeholder="Select timezone" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="lagos">(GMT+1:00) Lagos</SelectItem>
-                <SelectItem value="london">(GMT+0:00) London</SelectItem>
-                <SelectItem value="new-york">(GMT-5:00) New York</SelectItem>
+                {/* 👇 2. Map over the timezones to create the options */}
+                {timezones.map((tz) => (
+                  <SelectItem key={tz.tzCode} value={tz.tzCode}>
+                    {tz.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -204,16 +235,18 @@ const ProfileSettings: React.FC = () => {
                 Change the country for regional settings.
               </p>
             </div>
-            <Select defaultValue="nigeria">
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select region" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="nigeria">Nigeria</SelectItem>
-                <SelectItem value="united-kingdom">United Kingdom</SelectItem>
-                <SelectItem value="united-states">United States</SelectItem>
-              </SelectContent>
-            </Select>
+            <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select region" />
+            </SelectTrigger>
+            <SelectContent>
+              {countries.map((country) => (
+                <SelectItem key={country.code} value={country.code}>
+                  {country.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           </div>
           <div className="flex justify-between items-center">
             <div>

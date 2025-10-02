@@ -8,16 +8,31 @@ importers:
 
   .:
     dependencies:
+      '@types/country-list':
+        specifier: ^2.1.4
+        version: 2.1.4
       '@unhead/react':
         specifier: ^2.0.17
         version: 2.0.17(react@19.1.1)
+      country-list:
+        specifier: ^2.4.1
+        version: 2.4.1
+      timezones-list:
+        specifier: ^3.1.0
+        version: 3.1.0
 
 packages:
+
+  '@types/country-list@2.1.4':
+    resolution: {integrity: sha512-c4orjm0wT+BRt6Ynf2/QRRL+iMX4SdLT11jAjKqkJ7mQr/DLOmdz7qR8i04j9Y7wFSoP70cXJc18FN4YGNgGaA==}
 
   '@unhead/react@2.0.17':
     resolution: {integrity: sha512-Mg8yDWUMf2eH8uZQ7vHvVaeV/HBqEzO/ThYf2VQKvfy1ZuiynFoGp8UNnC1sCA6Efbg4sPPX33BlCqdnr6vJcg==}
     peerDependencies:
       react: '>=18.3.1'
+
+  country-list@2.4.1:
+    resolution: {integrity: sha512-KhVV/UfUV3dSNpsWIqHTQxLpYDKPKz1UwkRjadt+YbX2PRhyCEihEoS5XgB7J7AMXpkicvl+tRHvkNI5wbji/g==}
 
   hookable@5.5.3:
     resolution: {integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ==}
@@ -26,19 +41,28 @@ packages:
     resolution: {integrity: sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ==}
     engines: {node: '>=0.10.0'}
 
+  timezones-list@3.1.0:
+    resolution: {integrity: sha512-PcDBt9tae330KTOIufK/wArTlJp+unuuRcG0EEu+4oLHZACHefKQyP2D51gMZID+urye92mHND60KRVuDDAmbA==}
+
   unhead@2.0.17:
     resolution: {integrity: sha512-xX3PCtxaE80khRZobyWCVxeFF88/Tg9eJDcJWY9us727nsTC7C449B8BUfVBmiF2+3LjPcmqeoB2iuMs0U4oJQ==}
 
 snapshots:
+
+  '@types/country-list@2.1.4': {}
 
   '@unhead/react@2.0.17(react@19.1.1)':
     dependencies:
       react: 19.1.1
       unhead: 2.0.17
 
+  country-list@2.4.1: {}
+
   hookable@5.5.3: {}
 
   react@19.1.1: {}
+
+  timezones-list@3.1.0: {}
 
   unhead@2.0.17:
     dependencies:

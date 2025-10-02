@@ -19,8 +19,8 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-def upgrade():
+def upgrade() -> None:
     op.alter_column('time_logs', 'id', new_column_name='session_id')
 
-def downgrade():
+def downgrade() -> None:
     op.alter_column('time_logs', 'session_id', new_column_name='id')

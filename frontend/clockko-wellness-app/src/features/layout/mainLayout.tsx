@@ -21,6 +21,7 @@ import {
   X,
   Menu,
   Search,
+  Brain,
 } from 'lucide-react'
 import clockkoLogo from '../../assets/images/frame1.png'
 import { useIsMobile } from '../../hooks/use-mobile'
@@ -105,6 +106,7 @@ export default function MainLayout() {
     { path: '/co-working', label: 'Co-working Rooms', icon: Building2 },
     { path: '/reports', label: 'Reports', icon: BarChart3 },
     { path: '/challenges', label: 'Challenges', icon: Gamepad2 },
+    { path: '/smart-features', label: 'Smart Features', icon: Brain },
   ]
 
   // Filter navigation items by search term (case-insensitive)

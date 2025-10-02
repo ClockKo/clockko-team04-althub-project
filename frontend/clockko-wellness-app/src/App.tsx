@@ -8,6 +8,7 @@ import { UserProvider } from './contexts/UserContext';
 import { AuthProvider } from './features/auth';
 import TaskTrackerFeatures from './features/tasks-management/taskTrackerFeatures'
 import TimeTrackerFeatures from './features/timeTracker/timetrackerfeatures';
+import SmartFeaturesPage from './pages/SmartFeaturesPage';
 import CreateAccountPage from './features/auth/CreateAccountPage';
 import SignInPage from './features/auth/SignInPage';
 import ResetPasswordPage from './features/auth/ResetPasswordPage';
@@ -66,6 +67,7 @@ function App() {
                   <Route path="/co-working" element={<CoWorkingRoomsPage/>} />
                   <Route path="/reports" element={<div className="p-6"><h1 className="text-2xl font-bold">Reports</h1><p>Coming soon...</p></div>} />
                   <Route path="/challenges" element={<ChallengesPage/>} />
+                  <Route path="/smart-features" element={<SmartFeaturesPage />} />
                   <Route path="/settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Settings</h1><p>Coming soon...</p></div>} />
                   {/* add more protected routes here */}
                 </Route>

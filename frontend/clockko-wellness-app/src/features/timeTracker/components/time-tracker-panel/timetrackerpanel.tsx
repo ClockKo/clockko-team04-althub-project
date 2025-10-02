@@ -26,10 +26,16 @@ import { timeTrackerService, type FocusSession } from "../../services/timetracke
 // --- Sound Service ---
 import { soundService, type SoundTheme } from "../../services/soundService";
 
+// --- Smart Real-Time Features ---
+import { useRealTimeFeatures } from "../../../../hooks/useRealTimeFeatures";
+
 function TimeTrackerPanel() {
     // TODO: Add user context integration when backend APIs are ready
     // const { user } = useAuth(); // Get user info for personalized messages
     const name = "Focus Champion"; // Placeholder name, replace with user.name when auth is ready
+    
+    // --- Smart Real-Time Features Integration ---
+    const realTimeFeatures = useRealTimeFeatures('user-placeholder'); // Replace with actual user ID when auth is ready
     
     // Utility function to refresh UI with latest data
     const refreshDailySummary = async () => {
@@ -176,6 +182,27 @@ function TimeTrackerPanel() {
         // Initialize sound service with saved preferences
         setSoundEnabled(soundService.getEnabled());
         setCurrentSoundTheme(soundService.getTheme());
+        
+        // --- Smart Features: Check for cross-device sessions ---
+        const activeSession = realTimeFeatures.checkForSessionContinuation();
+        if (activeSession) {
+            // Use confirm dialog for seamless UX
+            const shouldContinue = window.confirm(
+                `📱 Found active session from ${activeSession.deviceName}\nElapsed: ${Math.floor(activeSession.elapsedTime / 60)}:${(activeSession.elapsedTime % 60).toString().padStart(2, '0')}\n\nContinue this session?`
+            );
+            if (shouldContinue) {
+                // Continue the session seamlessly
+                setMode('focus');
+                setTimeLeft(Math.max(0, activeSession.plannedDuration - activeSession.elapsedTime));
+                setFocusDuration(activeSession.plannedDuration);
+                setIsRunning(true);
+                
+                // Use your existing koala speech system for notification
+                setCurrentSpeechBubbleText(`Welcome back, ${name}! Continuing from your other device`);
+                
+                console.log("📱 Continuing cross-device session:", activeSession);
+            }
+        }
     }, []); // Run once on mount
 
     // --- Timer Control Functions ---
@@ -262,6 +289,14 @@ function TimeTrackerPanel() {
                 timeTrackerService.completeFocusSession(currentSession.id).then(completedSession => {
                     console.log("✅ Focus session completed and saved:", completedSession);
                     setCurrentSession(null);
+                    
+                    // --- Smart Features: End enhanced focus session ---
+                    realTimeFeatures.endEnhancedFocusSession({
+                        duration: focusDuration,
+                        endTime: new Date(),
+                        productivity: focusDuration > 1500 ? 'high' : focusDuration > 600 ? 'medium' : 'low',
+                        sessionId: completedSession.id
+                    });
                     
                     // Update UI with fresh data
                     return refreshDailySummary();
@@ -403,6 +438,15 @@ function TimeTrackerPanel() {
         timeTrackerService.startFocusSession(minutes, 'focus').then(session => {
             setCurrentSession(session);
             console.log("🚀 Focus session started:", session);
+            
+            // --- Smart Features: Start enhanced focus session ---
+            realTimeFeatures.startEnhancedFocusSession({
+                taskType: 'focus',
+                plannedDuration: duration,
+                startTime: new Date(),
+                sessionId: session.id
+            });
+            
         }).catch(error => {
             console.error("Failed to start session:", error);
             
@@ -437,6 +481,21 @@ function TimeTrackerPanel() {
                         <div className="panel-header">
                             <h1>Focus Timer</h1>
                             <p>Ready to get into deep work?</p>
+                            
+                            {/* Smart Features Status - subtle indicator */}
+                            {(isRunning && mode === 'focus') && (
+                                <div style={{ 
+                                    fontSize: '12px', 
+                                    color: '#6b7280', 
+                                    marginTop: '2px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                }}>
+                                    <span style={{ color: '#10b981' }}>●</span>
+                                    Smart features active: Focus protection & auto-sync
+                                </div>
+                            )}
                             {/* Temporary debug buttons - remove in production */}
                             <div style={{ marginTop: '5px', display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                                 <button 

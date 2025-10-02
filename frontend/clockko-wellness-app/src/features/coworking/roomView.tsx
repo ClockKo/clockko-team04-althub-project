@@ -28,7 +28,7 @@ export default function RoomView({ roomId, roomName, onLeaveRoom }: { roomId: st
   const [displayRoomName, setDisplayRoomName] = useState<string>(roomName || "");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showMicActivity, setShowMicActivity] = useState(false);
-  const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(new Map());
+  // const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(new Map());
   const [webRTCStatus, setWebRTCStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
   // const [isAudioTransmitting, setIsAudioTransmitting] = useState(false); // TODO: Set to true when backend ready
 

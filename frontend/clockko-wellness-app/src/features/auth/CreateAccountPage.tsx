@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
+import { useHead } from '@unhead/react'
 import AuthLayout from './AuthLayout'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
@@ -26,6 +27,21 @@ const createAccountSchema = z.object({
 type CreateAccountFormData = z.infer<typeof createAccountSchema>
 
 const CreateAccountPage: React.FC = () => {
+  // Set meta tags for create account page
+  useHead({
+    title: 'Create Account - ClockKo | Join the Productivity Revolution',
+    meta: [
+      {
+        name: 'description',
+        content: 'Create your free ClockKo account to start tracking time, managing tasks, and boosting your productivity with wellness features.'
+      },
+      {
+        name: 'robots',
+        content: 'noindex, nofollow' // Auth pages should not be indexed
+      }
+    ]
+  });
+
   const navigate = useNavigate()
   const { setAuthToken } = useAuth() // Get the setAuthToken function
   const [apiError, setApiError] = useState<string | null>(null)

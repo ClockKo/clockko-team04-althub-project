@@ -62,7 +62,7 @@ export const fetchUserData = async () => {
       return null;
     }
 
-    const response = await axios.get(`${API_URL}/users/profile`, {
+    const response = await axios.get(`${API_URL}/auth/user`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

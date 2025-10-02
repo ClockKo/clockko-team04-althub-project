@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useQueryClient } from '@tanstack/react-query'
+import { useHead } from '@unhead/react'
 import { DashboardHeader } from './headerWidget'
 import { WorkSessionCard } from './workWidget'
 import { ProgressCard } from './productivityWidget'
@@ -15,6 +16,21 @@ import { Skeleton } from '../../components/ui/skeleton'
 // ------------------ MAIN DASHBOARD PAGE ------------------
 
 export default function DashboardPage() {
+  // Set meta tags for dashboard
+  useHead({
+    title: 'Dashboard - ClockKo | Your Productivity Hub',
+    meta: [
+      {
+        name: 'description',
+        content: 'Track your work sessions, manage tasks, monitor productivity, and maintain wellness streaks all from your ClockKo dashboard.'
+      },
+      {
+        name: 'robots',
+        content: 'noindex, nofollow' // Dashboard should not be indexed
+      }
+    ]
+  });
+
   const { data: session, isLoading: sessionLoading } = useCurrentSession()
   const { data: dashboardData } = useDashboardData()
   const clockInMutation = useClockIn()

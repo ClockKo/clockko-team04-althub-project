@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import frame1 from "../../assets/images/frame1.png";
 import { Link } from "react-router-dom";
 import { MoveUpRight } from "lucide-react";
+import { useHead } from '@unhead/react';
 import TaskExapanded from "../../assets/design/landing-page design/taskExpanded.png";
 import timer1 from "../../assets/design/landing-page design/timer1.png"
 import framer3 from "../../assets/images/frame3.png"
@@ -54,6 +55,45 @@ const cardData = [
 ];
 
 export const LandingPage: React.FC = () => {
+  // Set meta tags for landing page
+  useHead({
+    title: 'ClockKo - Productivity & Wellness App | Time Tracking Made Simple',
+    meta: [
+      {
+        name: 'description',
+        content: 'ClockKo is a comprehensive productivity and wellness app featuring time tracking, task management, co-working spaces, and wellness challenges. Boost your productivity while maintaining work-life balance.'
+      },
+      {
+        name: 'keywords',
+        content: 'productivity app, time tracking, task management, wellness, co-working, work-life balance, time tracker, productivity tools'
+      },
+      {
+        property: 'og:title',
+        content: 'ClockKo - Productivity & Wellness App'
+      },
+      {
+        property: 'og:description',
+        content: 'Boost your productivity with ClockKo - featuring time tracking, task management, and wellness features all in one app.'
+      },
+      {
+        property: 'og:type',
+        content: 'website'
+      },
+      {
+        name: 'twitter:card',
+        content: 'summary_large_image'
+      },
+      {
+        name: 'twitter:title',
+        content: 'ClockKo - Productivity & Wellness App'
+      },
+      {
+        name: 'twitter:description',
+        content: 'Boost your productivity with ClockKo - featuring time tracking, task management, and wellness features all in one app.'
+      }
+    ]
+  });
+
   return (
     <main className="font-sans bg-white text-gray-900 overflow-hidden">
          {/* Logo */}

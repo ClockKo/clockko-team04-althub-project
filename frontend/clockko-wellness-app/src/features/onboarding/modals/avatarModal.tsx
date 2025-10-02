@@ -179,6 +179,7 @@ export function AvatarModal({
               className="hidden"
               onChange={handleFileChange}
               disabled={isProcessing}
+              aria-hidden={true}
             />
           </button>
         </div>

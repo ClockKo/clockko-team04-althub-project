@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
+import { useHead } from '@unhead/react';
 import AuthLayout from './AuthLayout';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
@@ -17,6 +18,21 @@ const resetPasswordSchema = z.object({
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 const ResetPasswordPage: React.FC = () => {
+  // Set meta tags for password reset page
+  useHead({
+    title: 'Reset Password - ClockKo | Recover Your Account',
+    meta: [
+      {
+        name: 'description',
+        content: 'Reset your ClockKo password. Enter your email to receive password reset instructions and regain access to your productivity dashboard.'
+      },
+      {
+        name: 'robots',
+        content: 'noindex, nofollow' // Auth pages should not be indexed
+      }
+    ]
+  });
+
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 

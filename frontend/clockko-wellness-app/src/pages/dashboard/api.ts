@@ -88,7 +88,7 @@ export async function fetchUserData() {
   if (!token) return null;
 
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/users/profile`, {
+    const res = await axios.get(`${API_BASE_URL}/api/auth/user`, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })

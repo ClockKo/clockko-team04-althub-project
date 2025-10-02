@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useHead } from '@unhead/react';
 import { fetchRooms } from "./api";
 import { coworkingService } from "./coworkingService";
 import type { RoomSummary } from "../../types/typesGlobal";
@@ -9,6 +10,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 import toast from 'react-hot-toast';
 
 export default function CoWorkingRoomsPage() {
+  // Set meta tags for co-working page
+  useHead({
+    title: 'Co-Working Rooms - ClockKo | Virtual Productivity Spaces',
+    meta: [
+      {
+        name: 'description',
+        content: 'Join virtual co-working rooms in ClockKo. Collaborate with others, stay motivated, and boost productivity in shared digital workspaces.'
+      },
+      {
+        name: 'robots',
+        content: 'noindex, nofollow' // Protected pages should not be indexed
+      }
+    ]
+  });
+
   const [rooms, setRooms] = useState<RoomSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState<RoomSummary | null>(null);

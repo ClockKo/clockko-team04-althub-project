@@ -1,6 +1,7 @@
 import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
+import { useHead } from '@unhead/react'
 import { Button } from '../../components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '../../components/ui/avatar'
 import { cn } from '../../lib/utils'
@@ -286,6 +287,21 @@ function Leaderboard({ leaders }: { leaders: Leader[] }) {
 
 // Main Page
 export default function ChallengesPage() {
+  // Set meta tags for challenges page
+  useHead({
+    title: 'Wellness Challenges - ClockKo | Join Fun Productivity Challenges',
+    meta: [
+      {
+        name: 'description',
+        content: 'Take on wellness challenges in ClockKo. Compete with others, build healthy habits, and earn rewards while boosting your productivity.'
+      },
+      {
+        name: 'robots',
+        content: 'noindex, nofollow' // Protected pages should not be indexed
+      }
+    ]
+  });
+
   // Store previous leader data for fallback
   const [prevLeaderData, setPrevLeaderData] = useState<Leader[]>([])
 

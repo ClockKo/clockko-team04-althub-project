@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useHead } from '@unhead/react';
 import AuthLayout from './AuthLayout';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
@@ -21,6 +22,21 @@ const signInSchema = z.object({
 type SignInFormData = z.infer<typeof signInSchema>
 
 const SignInPage: React.FC = () => {
+  // Set meta tags for sign-in page
+  useHead({
+    title: 'Sign In - ClockKo | Access Your Productivity Dashboard',
+    meta: [
+      {
+        name: 'description',
+        content: 'Sign in to your ClockKo account to access your productivity dashboard, track time, manage tasks, and boost your wellness.'
+      },
+      {
+        name: 'robots',
+        content: 'noindex, nofollow' // Auth pages should not be indexed
+      }
+    ]
+  });
+
   const navigate = useNavigate();
   const { setAuthToken } = useAuth(); // Get setAuthToken
   const [apiError, setApiError] = useState<string | null>(null);

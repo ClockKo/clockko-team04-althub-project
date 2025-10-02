@@ -33,6 +33,7 @@ const ProfileSettings: React.FC = () => {
   // Get the browser's timezone identifier
   const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [selectedTimezone, setSelectedTimezone] = useState<string>(detectedTimezone);
+  const [autoTimezone, setAutoTimezone] = useState(true);
 
   // Local state only for editing name and uploading avatar
   const [editName, setEditName] = useState<string>('');
@@ -219,7 +220,7 @@ const ProfileSettings: React.FC = () => {
                 <SelectValue placeholder="Select timezone" />
               </SelectTrigger>
               <SelectContent>
-                {/* 👇 2. Map over the timezones to create the options */}
+                {/* Map over the timezones to create the options */}
                 {timezones.map((tz) => (
                   <SelectItem key={tz.tzCode} value={tz.tzCode}>
                     {tz.label}
@@ -257,7 +258,10 @@ const ProfileSettings: React.FC = () => {
                 Workspace activity is based on your time zone.
               </p>
             </div>
-            <Switch defaultChecked />
+            <Switch 
+              checked={autoTimezone} 
+              onCheckedChange={setAutoTimezone} 
+            />
           </div>
         </div>
       </section>

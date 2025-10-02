@@ -1,0 +1,5 @@
+{
+	"dependencies": {
+		"@unhead/react": "^2.0.17"
+	}
+}

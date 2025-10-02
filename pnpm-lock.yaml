@@ -1,0 +1,45 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@unhead/react':
+        specifier: ^2.0.17
+        version: 2.0.17(react@19.1.1)
+
+packages:
+
+  '@unhead/react@2.0.17':
+    resolution: {integrity: sha512-Mg8yDWUMf2eH8uZQ7vHvVaeV/HBqEzO/ThYf2VQKvfy1ZuiynFoGp8UNnC1sCA6Efbg4sPPX33BlCqdnr6vJcg==}
+    peerDependencies:
+      react: '>=18.3.1'
+
+  hookable@5.5.3:
+    resolution: {integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ==}
+
+  react@19.1.1:
+    resolution: {integrity: sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ==}
+    engines: {node: '>=0.10.0'}
+
+  unhead@2.0.17:
+    resolution: {integrity: sha512-xX3PCtxaE80khRZobyWCVxeFF88/Tg9eJDcJWY9us727nsTC7C449B8BUfVBmiF2+3LjPcmqeoB2iuMs0U4oJQ==}
+
+snapshots:
+
+  '@unhead/react@2.0.17(react@19.1.1)':
+    dependencies:
+      react: 19.1.1
+      unhead: 2.0.17
+
+  hookable@5.5.3: {}
+
+  react@19.1.1: {}
+
+  unhead@2.0.17:
+    dependencies:
+      hookable: 5.5.3

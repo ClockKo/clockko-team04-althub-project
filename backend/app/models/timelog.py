@@ -14,8 +14,12 @@ class Timelog(Base):
     end_time = Column(DateTime, nullable=True)
     type = Column(String)
     date = Column(DateTime)
+    planned_duration = Column(Integer)
+    status = Column(String)
+    paused_at = Column(DateTime, nullable=True)
+    remaining_time = Column(Integer, nullable=True)
     
-
+    
 
 
 

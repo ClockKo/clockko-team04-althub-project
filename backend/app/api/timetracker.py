@@ -33,10 +33,6 @@ def start_break(request: StartSessionRequest, db: Session = Depends(get_db)):
 @router.post("/break-sessions/{session_id}/end", response_model=FocusSessionResponse)
 def end_break(request: EndSessionRequest, db: Session = Depends(get_db)):
     return timetrackerservice.end_session(db, request, type="break")
-#     result = timetrackerservice.end_session(db, request, session_type="break")
-#     if not result:
-#         raise HTTPException(status_code=404, detail="No open break session found")
-#     return result
 
 @router.post("/break-sessions/{session_id}/pause", response_model=FocusSessionResponse)
 def pause_break(request: PauseSessionRequest, db: Session = Depends(get_db)):
@@ -46,20 +42,17 @@ def pause_break(request: PauseSessionRequest, db: Session = Depends(get_db)):
 def resume_break(request: ResumeSessionRequest, db: Session = Depends(get_db)):
     return timetrackerservice.resume_session(db, request)
 
-@router.get("/time-logs/all", response_model=list[FocusSessionResponse])
-def get_logs(user_id: str, db: Session = Depends(get_db)):
-    return timetrackerservice.list_time_logs(db, user_id)
-
-
 @router.get("/time-logs/daily-summary", response_model=DailySummaryResponse)
 def get_daily_summary(user_id: str, db: Session = Depends(get_db)):
     return timetrackerservice.get_daily_summary(db, user_id)
 
-
-
-@router.get("/time-logs/current", response_model=FocusSessionResponse)
+@router.get("/current-session", response_model=FocusSessionResponse)
 def current_session(user_id: str, db: Session = Depends(get_db)):
     result = timetrackerservice.get_current_session(db, user_id)
     if not result:
         raise HTTPException(status_code=404, detail="No ongoing session")
     return result
+
+# @router.get("/paused_session", response_model=FocusSessionResponse)
+# def get_current_paused_session(user_id: str, db: Session = Depends(get_db)):
+#     return

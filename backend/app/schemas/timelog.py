@@ -53,11 +53,7 @@ class TimeLogResponse(BaseModel):
     start_time: datetime
     end_time: Optional [datetime]
     type: str
-    date: datetime
-    planned_duration: Optional[int]
-    status: str # "active", "completed", "paused", "stopped"
-    paused_at: Optional[datetime]
-    remaining_time: Optional[int]
+    date: Optional[datetime]
     class Config:
         orm_mode = True
 

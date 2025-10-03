@@ -3,14 +3,14 @@ from sqlalchemy.orm import Session
 from app.services import timetrackerservice, taskservice
 from app.core.database import get_db
 from app.core.auth import get_current_user
-from app.schemas.timelog import TimeLogResponse, StartSessionRequest, EndSessionRequest, FocusTimeResponse
+from app.schemas.timelog import TimeLogResponse, EndSessionRequest, FocusTimeResponse
 
 router = APIRouter(tags=["Dashboard"])
 
 @router.post("/clock-in", response_model=TimeLogResponse)
 def clock_in(db: Session = Depends(get_db), user=Depends(get_current_user)):
-    request = StartSessionRequest(user_id=user.id)
-    return timetrackerservice.start_session(db, request, session_type="work")
+    # request = StartSessionRequest(user_id=user.id, type="clock-in")
+    return timetrackerservice.clock_in(db, user.id)
 
 @router.post("/clock-out", response_model=TimeLogResponse)
 def clock_out(db: Session = Depends(get_db), user=Depends(get_current_user)):
@@ -18,8 +18,8 @@ def clock_out(db: Session = Depends(get_db), user=Depends(get_current_user)):
     current_session = timetrackerservice.get_current_session(db, user.id)
     if not current_session or current_session.type != "work" or current_session.end_time is not None:
         raise HTTPException(status_code=404, detail="No active work session found to end.")
-    request = EndSessionRequest(session_id=current_session.session_id)
-    return timetrackerservice.end_session(db, request, session_type="work")
+    # request = EndSessionRequest(session_id=current_session.session_id)
+    return timetrackerservice.clock_out(db, user.id)
 
 
 @router.get("/current-session", response_model=TimeLogResponse)

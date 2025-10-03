@@ -168,16 +168,8 @@ def resume_session(db: Session, request: ResumeSessionRequest):
 
 
 def list_time_logs(db: Session, user_id):
-    # return db.query(Timelog).filter(Timelog.id == id).all()
     return db.query(Timelog).filter(Timelog.user_id == user_id).all()
 
-
-
-# def format_duration(minutes: int) -> str:
-#     """Convert minutes into hh:mm format."""
-#     hours = minutes // 60
-#     mins = minutes % 60
-#     return f"{hours:02d}:{mins:02d}"
 
 def get_daily_summary(db: Session, user_id):
     from sqlalchemy import func
@@ -195,16 +187,13 @@ def get_daily_summary(db: Session, user_id):
         # Timelog.start_time < today_end
     ).all()
 
-    # print(f"Found {len(logs)} logs for today.")
-
     total_focus_sessions = 0
     total_focus_time = 0
     total_break_time = 0
     focus_sessions = []
 
     for log in logs:
-        # print(f"Log: {log.id}, type={log.type}, start={log.start_time}, end={log.end_time}")  # Debug
-        
+                
         if log.end_time:
             duration = abs(log.end_time - log.start_time).total_seconds()
 
@@ -229,9 +218,9 @@ def get_daily_summary(db: Session, user_id):
     return {
         "date": today,
         "total_focus_sessions": total_focus_sessions,
-        "total_focus_time": total_focus_time,
-        "total_break_time": total_break_time,
-        "focus_sessions": focus_sessions
+        "total_focus_time": int(total_focus_time),
+        "total_break_time": int(total_break_time),
+        # "focus_sessions": []
     }
 
 
@@ -253,3 +242,31 @@ def get_last_session(db: Session, user_id):
 def get_focus_time(db: Session, user_id):
     summary = get_daily_summary(db, user_id)
     return summary["total_focus_time"] 
+
+
+def clock_in(db: Session, user_id:int):
+    log = Timelog(
+        user_id=user_id,
+        type="work",
+        start_time=datetime.now(timezone.utc)
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(log)
+    return log
+
+def clock_out(db: Session, user_id:int):
+    log = db.query(Timelog).filter(
+        Timelog.user_id == user_id,
+        Timelog.type == "work",
+        Timelog.end_time == None
+    ).first()
+
+    if not log:
+        raise Exception("No active session found.")
+    
+    log.end_time = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(log)
+    return log
+

@@ -18,8 +18,3 @@ class Timelog(Base):
     status = Column(String)
     paused_at = Column(DateTime, nullable=True)
     remaining_time = Column(Integer, nullable=True)
-    
-    
-
-
-

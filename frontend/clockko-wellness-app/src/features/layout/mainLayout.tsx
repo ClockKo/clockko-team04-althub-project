@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   SidebarContent,
   SidebarHeader,
@@ -8,6 +8,7 @@ import {
   SidebarFooter,
 } from '../../components/ui/sidebar'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useUserData } from '../../pages/dashboard/dashboardHooks'
 import {
   LayoutDashboard,
   ClipboardCheck,
@@ -15,29 +16,34 @@ import {
   Building2,
   BarChart3,
   Gamepad2,
-  Settings,
   LogOut,
   X,
+  ChevronLeft,
   Menu,
   Search,
+  User,
+  Link2,
+  Sliders,
+  Mail,
+  Shield,
+  Gift,
+  HelpCircle,
+  Flame,
+  Settings,
+  Brain,
 } from 'lucide-react'
 import clockkoLogo from '../../assets/images/frame1.png'
 import { useIsMobile } from '../../hooks/use-mobile'
 import { SidebarProvider } from '../../components/ui/sidebar'
 import ellipse6 from '../../assets/images/Ellipse6.png'
+import { processAvatarImage, validateImageFile } from '../../utils/imageProcessing'
+import toast from 'react-hot-toast'
 
-// Extend Window interface for clockkoUser
-declare global {
-  interface Window {
-    clockkoUser?: {
-      name?: string
-      // add other properties if needed
-    }
-  }
-}
+
 
 // Demo avatar
 const defaultAvatar = ellipse6
+
 
 export default function MainLayout() {
   const location = useLocation()
@@ -47,6 +53,73 @@ export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string>(defaultAvatar)
   const [searchTerm, setSearchTerm] = useState<string>('')
+  const [isProcessingAvatar, setIsProcessingAvatar] = useState(false)
+  // Sidebar mode: 'main' or 'settings'
+  const [sidebarMode, setSidebarMode] = useState<'main' | 'settings'>('main')
+
+  // Use the same user data hook as headerWidget
+  const { data: user, isLoading: userLoading, error: userError } = useUserData()
+
+  // Load saved avatar from localStorage on component mount
+  useEffect(() => {
+    const savedAvatar = localStorage.getItem('userAvatar');
+    if (savedAvatar) {
+      setAvatarUrl(savedAvatar);
+      console.log('🖼️ Loaded avatar from localStorage:', savedAvatar.substring(0, 50) + '...');
+    }
+  }, []);
+
+  // Switch to settings mode if on /settings route
+  useEffect(() => {
+    if (location.pathname.startsWith('/settings')) {
+      setSidebarMode('settings');
+    } else {
+      setSidebarMode('main');
+    }
+  }, [location.pathname]);
+
+  // Debug logging for mainLayout
+  console.log("🔍 MainLayout - User data:", { user, userLoading, userError, userName: user?.name });
+  console.log("🔍 MainLayout - Auth token exists:", !!localStorage.getItem('authToken'));
+
+  // Avatar upload handler with image processing
+  const handleAvatarUpload = async (file: File) => {
+    if (isProcessingAvatar) return;
+
+    setIsProcessingAvatar(true);
+
+    try {
+      // Validate the file
+      const validation = validateImageFile(file);
+      if (!validation.isValid) {
+        toast.error(validation.error || 'Invalid file');
+        return;
+      }
+
+      // Process the image (resize, crop, optimize)
+      const processedDataURL = await processAvatarImage(file, {
+        maxWidth: 256,
+        maxHeight: 256,
+        quality: 0.9,
+        format: 'image/jpeg',
+        cropToSquare: true
+      });
+
+      // Update avatar URL and save to localStorage
+      setAvatarUrl(processedDataURL);
+      localStorage.setItem('userAvatar', processedDataURL);
+      
+      toast.success('Avatar updated successfully!');
+      console.log('💾 Processed avatar saved to localStorage');
+
+    } catch (error) {
+      console.error('❌ Avatar processing failed:', error);
+      toast.error('Failed to process image. Please try a different file.');
+    } finally {
+      setIsProcessingAvatar(false);
+    }
+  };
+
 
   const navigationItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -55,30 +128,51 @@ export default function MainLayout() {
     { path: '/co-working', label: 'Co-working Rooms', icon: Building2 },
     { path: '/reports', label: 'Reports', icon: BarChart3 },
     { path: '/challenges', label: 'Challenges', icon: Gamepad2 },
-  ]
+    { path: '/smart-features', label: 'Smart Features', icon: Brain },
+  ];
+
+
+  // Settings sidebar sections and items with icons
+  const settingsSections = [
+    {
+      header: 'Accounts',
+      items: [
+        { path: '/settings/profile', label: 'Profile', icon: User },
+        { path: '/settings/integrations', label: 'Integrations', icon: Link2 },
+        { path: '/settings/general', label: 'General', icon: Sliders },
+      ],
+    },
+    {
+      header: 'App Settings',
+      items: [
+        { path: '/settings/email', label: 'Email and Calendars', icon: Mail },
+        { path: '/settings/security', label: 'Security', icon: Shield },
+        { path: '/settings/whats-new', label: "What's new", icon: Flame },
+        { path: '/settings/invite', label: 'Invite friends', icon: Gift },
+        { path: '/settings/help', label: 'Help & feedback', icon: HelpCircle },
+      ],
+    },
+  ];
 
   // Filter navigation items by search term (case-insensitive)
   const filteredNavigationItems = searchTerm.trim()
     ? navigationItems.filter((item) => item.label.toLowerCase().includes(searchTerm.toLowerCase()))
-    : navigationItems
-  const bottomItems = [
+    : navigationItems;
+  const mainBottomItems = [
     { path: '/settings', label: 'Settings', icon: Settings },
     { path: '/logout', label: 'Logout', icon: LogOut },
-  ]
+  ];
+  const settingsBottomItems = [
+    { path: '/logout', label: 'Logout', icon: LogOut },
+  ];
 
   const handleLogout = () => {
-    navigate('/login')
-  }
+    // Add your logout logic here (e.g., clear tokens, redirect)
+    localStorage.removeItem('authToken');
+    navigate('/signin');
+  };
 
-  // Utility
-  const getCurrentNav = () => {
-    const current = navigationItems.find((item) => location.pathname.startsWith(item.path))
-    return current || navigationItems[0]
-  }
-
-  const Icon = getCurrentNav().icon
-
-  // Sidebar for mobile & desktop
+  // Sidebar navigation definition (moved outside handleLogout)
   const sidebarNav = (
     <SidebarProvider>
       <div
@@ -110,42 +204,91 @@ export default function MainLayout() {
               <X className="h-5 w-5 text-gray-700" />
             </button>
           </div>
+          {/* Settings header with back button and icon */}
+          {sidebarMode === 'settings' && (
+            <div className="flex flex-col mt-4 mb-2">
+              <div className="flex items-center">
+                <button
+                  className="mr-2 h-7 w-7 flex items-center justify-center rounded hover:bg-gray-100"
+                  onClick={() => {
+                    setSidebarMode('main');
+                    navigate('/dashboard');
+                  }}
+                  aria-label="Back to main menu"
+                >
+                  <ChevronLeft className="h-5 w-5 text-gray-700" />
+                </button>
+                <span className="font-semibold text-lg">Settings</span>
+              </div>
+              <div className="border-b border-gray-200 mt-3" />
+            </div>
+          )}
         </SidebarHeader>
         <SidebarContent className="px-3 flex-1">
           <SidebarMenu>
-            {filteredNavigationItems.map((item) => {
-              const Icon = item.icon
-              const isActive = location.pathname.startsWith(item.path)
-              return (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive}
-                    className={
-                      isActive
-                        ? '!bg-lightBlue !text-blue1 border-r-2 border-blue-700'
-                        : 'hover:bg-gray-50'
-                    }
-                    onClick={() => {
-                      setMobileSidebarOpen(false)
-                    }}
-                  >
-                    <Link to={item.path}>
-                      <Icon className="h-5 w-5" />
-                      {isMobile && !collapsed && <span className="ml-2">{item.label}</span>}
-                      <span className="hidden md:block">{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )
-            })}
+            {sidebarMode === 'main'
+              ? filteredNavigationItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname.startsWith(item.path);
+                  return (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        className={
+                          isActive
+                            ? '!bg-lightBlue !text-blue1 border-r-2 border-blue-700'
+                            : 'hover:bg-gray-50'
+                        }
+                        onClick={() => {
+                          setMobileSidebarOpen(false);
+                        }}
+                      >
+                        <Link to={item.path}>
+                          <Icon className="h-5 w-5" />
+                          {isMobile && !collapsed && <span className="ml-2">{item.label}</span>}
+                          <span className="hidden md:block">{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })
+              : settingsSections.flatMap((section, idx) => [
+                  // Section header
+                  <div key={section.header} className={`pl-3 pt-4 pb-1 text-xs font-semibold text-gray-500 ${idx !== 0 ? 'mt-2' : ''}`}>{section.header}</div>,
+                  ...section.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <SidebarMenuItem key={item.path}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          className={
+                            isActive
+                              ? '!bg-lightBlue !text-blue1 border-r-2 border-blue-700'
+                              : 'hover:bg-gray-50'
+                          }
+                          onClick={() => {
+                            setMobileSidebarOpen(false);
+                          }}
+                        >
+                          <Link to={item.path}>
+                            <Icon className="h-5 w-5 mr-2" />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })
+                ])}
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className="p-3">
           <SidebarMenu>
-            {bottomItems.map((item) => {
-              const Icon = item.icon
-              const isActive = location.pathname.startsWith(item.path)
+            {(sidebarMode === 'main' ? mainBottomItems : settingsBottomItems).map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname.startsWith(item.path);
               if (item.path === '/logout') {
                 return (
                   <SidebarMenuItem key={item.path}>
@@ -158,7 +301,7 @@ export default function MainLayout() {
                       <span className="hidden md:block">{item.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                )
+                );
               }
               return (
                 <SidebarMenuItem key={item.path}>
@@ -172,20 +315,39 @@ export default function MainLayout() {
                     }
                     onClick={() => setMobileSidebarOpen(false)}
                   >
-                    <Link to={item.path}>
+                    <Link
+                      to={item.path}
+                      onClick={item.path === '/settings' ? (e) => {
+                        e.preventDefault();
+                        setSidebarMode('settings');
+                        navigate('/settings/profile');
+                        setMobileSidebarOpen(false);
+                      } : undefined}
+                    >
                       <Icon className="h-5 w-5" />
                       {isMobile && !collapsed && <span className="ml-2">{item.label}</span>}
                       <span className="hidden md:block">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              )
+              );
             })}
           </SidebarMenu>
         </SidebarFooter>
       </div>
     </SidebarProvider>
-  )
+  );
+
+
+  // Helper for current nav (for mobile topbar)
+  const getCurrentNav = () => {
+    if (sidebarMode === 'settings') {
+  return { label: 'Settings', icon: Settings };
+    }
+    const current = navigationItems.find((item) => location.pathname.startsWith(item.path));
+    return current || navigationItems[0];
+  };
+  const Icon = getCurrentNav().icon;
 
   return (
     <div className="relative min-h-screen bg-gray-50 flex flex-col w-full">
@@ -218,26 +380,28 @@ export default function MainLayout() {
                 <Search className="h-5 w-5" />
               </button>
               {/* User can change avatar */}
-              <label className="cursor-pointer">
-                <img
-                  src={avatarUrl}
-                  alt="User Avatar"
-                  className="w-8 h-8 rounded-full border-2 border-gray-300 hover:border-blue-400 transition duration-200"
-                />
+              <label className={`cursor-pointer ${isProcessingAvatar ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className="relative">
+                  <img
+                    src={avatarUrl}
+                    alt="User Avatar"
+                    className="w-8 h-8 rounded-full border-2 border-gray-300 hover:border-blue-400 transition duration-200"
+                  />
+                  {isProcessingAvatar && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    </div>
+                  )}
+                </div>
                 <input
                   type="file"
                   accept="image/*"
                   className="hidden"
+                  disabled={isProcessingAvatar}
                   onChange={(e) => {
-                    const file = e.target.files?.[0]
+                    const file = e.target.files?.[0];
                     if (file) {
-                      const reader = new FileReader()
-                      reader.onload = (ev) => {
-                        if (ev.target?.result) {
-                          setAvatarUrl(ev.target.result as string)
-                        }
-                      }
-                      reader.readAsDataURL(file)
+                      handleAvatarUpload(file);
                     }
                   }}
                 />
@@ -286,33 +450,36 @@ export default function MainLayout() {
                   className="w-[60%] border-2 border-white bg-whitey shadow-md rounded-4xl px-4 py-2 focus:outline-none focus:border-blue-400"
                 />
               </div>
+              {/* avatar and user name section */}
               <div className="flex items-center gap-4">
-                <label className="cursor-pointer">
-                  <img
-                    src={avatarUrl}
-                    alt="User Avatar"
-                    className="w-10 h-10 rounded-full border-2 border-gray-300 hover:border-blue-400 transition duration-200"
-                  />
+                <label className={`cursor-pointer ${isProcessingAvatar ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <div className="relative">
+                    <img
+                      src={avatarUrl}
+                      alt="User Avatar"
+                      className="w-10 h-10 rounded-full border-2 border-gray-300 hover:border-blue-400 transition duration-200"
+                    />
+                    {isProcessingAvatar && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      </div>
+                    )}
+                  </div>
                   <input
                     type="file"
                     accept="image/*"
                     className="hidden"
+                    disabled={isProcessingAvatar}
                     onChange={(e) => {
-                      const file = e.target.files?.[0]
+                      const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader()
-                        reader.onload = (ev) => {
-                          if (ev.target?.result) {
-                            setAvatarUrl(ev.target.result as string)
-                          }
-                        }
-                        reader.readAsDataURL(file)
+                        handleAvatarUpload(file);
                       }
                     }}
                   />
                 </label>
                 <span className="font-medium text-gray-700">
-                  {window.clockkoUser?.name || 'Guest'}
+                  {userLoading ? 'Loading...' : user?.name || 'Guest'}
                 </span>
               </div>
             </div>

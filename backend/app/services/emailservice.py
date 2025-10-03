@@ -6,9 +6,49 @@ from email.utils import formataddr
 from typing import List, Optional
 import logging
 import os
+from contextlib import contextmanager
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+class SMTPConnectionError(Exception):
+    """Custom exception for SMTP connection errors"""
+    pass
+
+
+class SMTPAuthError(Exception):
+    """Custom exception for SMTP authentication errors"""
+    pass
+
+
+class EmailSendError(Exception):
+    """Custom exception for email sending errors"""
+    pass
+
+
+@contextmanager
+def smtp_connection(host: str, port: int, username: str = None, password: str = None, use_tls: bool = True):
+    """Context manager for SMTP connections"""
+    server = None
+    try:
+        server = smtplib.SMTP(host, port)
+        
+        if use_tls and username and password:
+            context = ssl.create_default_context()
+            server.starttls(context=context)
+            server.login(username, password)
+        elif username and password:
+            server.login(username, password)
+            
+        yield server
+    finally:
+        if server:
+            try:
+                server.quit()
+            except Exception:
+                # Ignore errors when closing connection
+                pass
 
 
 class EmailService:
@@ -24,6 +64,12 @@ class EmailService:
         self.is_mailhog = self._is_mailhog_config()
         self.is_gmail = self._is_gmail_config()
         
+        # Validate configuration
+        config_errors = self._validate_config()
+        if config_errors:
+            for error in config_errors:
+                logger.error(f"📧 Email Configuration Error: {error}")
+        
         # Log which service we're using
         if self.is_mailhog:
             logger.info("📧 Email Service: MailHog (Development Mode)")
@@ -31,6 +77,34 @@ class EmailService:
             logger.info("📧 Email Service: Gmail (Production Mode)")
         else:
             logger.warning("📧 Email Service: Unknown configuration")
+    
+    def _validate_config(self) -> List[str]:
+        """Validate email configuration and return list of errors"""
+        errors = []
+        
+        if not self.smtp_host:
+            errors.append("SMTP_HOST is not set")
+        
+        if not self.smtp_port:
+            errors.append("SMTP_PORT is not set")
+        
+        if not self.smtp_from:
+            errors.append("SMTP_FROM is not set")
+        
+        # Check Gmail-specific requirements
+        if self.smtp_host == "smtp.gmail.com":
+            if not self.smtp_user:
+                errors.append("Gmail requires SMTP_USER to be set")
+            if not self.smtp_password:
+                errors.append("Gmail requires SMTP_PASSWORD to be set (use App Password)")
+            if self.smtp_port != 587:
+                errors.append("Gmail typically uses port 587 for STARTTLS")
+        
+        # Check if from email matches smtp user for Gmail
+        if self.is_gmail and self.smtp_from != self.smtp_user:
+            errors.append("For Gmail, SMTP_FROM should match SMTP_USER")
+        
+        return errors
     
     def _is_mailhog_config(self) -> bool:
         """Check if current config is for MailHog"""
@@ -53,6 +127,7 @@ class EmailService:
     def _create_connection(self):
         """Create SMTP connection based on service type"""
         try:
+            logger.debug(f"🔧 Attempting to connect to {self.smtp_host}:{self.smtp_port}")
             server = smtplib.SMTP(self.smtp_host, self.smtp_port)
             
             if self.is_mailhog:
@@ -62,24 +137,41 @@ class EmailService:
             
             elif self.is_gmail:
                 # Gmail requires TLS and authentication
+                logger.debug("🔧 Starting TLS for Gmail...")
                 context = ssl.create_default_context()
                 server.starttls(context=context)
+                
+                logger.debug(f"🔧 Logging into Gmail with user: {self.smtp_user}")
                 server.login(self.smtp_user, self.smtp_password)
-                logger.debug("🔧 Connected to Gmail")
+                logger.debug("🔧 Connected to Gmail successfully")
                 return server
             
             else:
                 # Generic SMTP (try TLS if user/password provided)
                 if self.smtp_user and self.smtp_password:
+                    logger.debug("🔧 Starting TLS for generic SMTP...")
                     context = ssl.create_default_context()
                     server.starttls(context=context)
                     server.login(self.smtp_user, self.smtp_password)
                 logger.debug("🔧 Connected to generic SMTP")
                 return server
                 
+        except smtplib.SMTPAuthenticationError as e:
+            error_msg = f"SMTP Authentication failed: {e}. Check SMTP_USER and SMTP_PASSWORD (use App Password for Gmail)"
+            logger.error(error_msg)
+            raise SMTPAuthError(error_msg) from e
+        except smtplib.SMTPConnectError as e:
+            error_msg = f"Failed to connect to SMTP server {self.smtp_host}:{self.smtp_port}: {e}"
+            logger.error(error_msg)
+            raise SMTPConnectionError(error_msg) from e
+        except smtplib.SMTPException as e:
+            error_msg = f"SMTP error: {e}"
+            logger.error(error_msg)
+            raise EmailSendError(error_msg) from e
         except Exception as e:
-            logger.error(f"Failed to create SMTP connection: {e}")
-            raise
+            error_msg = f"Failed to create SMTP connection: {e}"
+            logger.error(error_msg)
+            raise SMTPConnectionError(error_msg) from e
     
     def send_email(
         self,
@@ -111,18 +203,26 @@ class EmailService:
             message.attach(html_part)
             
             # Send email
-            with self._create_connection() as server:
+            server = None
+            try:
+                server = self._create_connection()
                 server.send_message(message)
+                logger.info(f"✅ Email sent successfully to {to_email}")
+                
+                # Log additional info for development
+                if self.is_mailhog:
+                    logger.info("🔍 Check MailHog web interface at http://localhost:8025 to view email")
+                
+                return True
+            finally:
+                if server:
+                    try:
+                        server.quit()
+                    except Exception:
+                        # Ignore errors when closing connection
+                        pass
             
-            logger.info(f"✅ Email sent successfully to {to_email}")
-            
-            # Log additional info for development
-            if self.is_mailhog:
-                logger.info("🔍 Check MailHog web interface at http://localhost:8025 to view email")
-            
-            return True
-            
-        except Exception as e:
+        except (SMTPConnectionError, SMTPAuthError, EmailSendError) as e:
             logger.error(f"❌ Failed to send email to {to_email}: {e}")
             if settings.DEBUG:
                 print(f"Email sending failed: {e}")
@@ -130,6 +230,47 @@ class EmailService:
                 print(f"Subject: {subject}")
                 print(f"Content: {html_content}")
             return False
+    
+    def test_connection(self) -> dict:
+        """Test email configuration and SMTP connection"""
+        result = {
+            "config_valid": True,
+            "connection_successful": False,
+            "errors": [],
+            "warnings": [],
+            "config_details": {
+                "smtp_host": self.smtp_host,
+                "smtp_port": self.smtp_port,
+                "smtp_from": self.smtp_from,
+                "service_type": "MailHog" if self.is_mailhog else "Gmail" if self.is_gmail else "Generic SMTP"
+            }
+        }
+        
+        # Validate configuration
+        config_errors = self._validate_config()
+        if config_errors:
+            result["config_valid"] = False
+            result["errors"].extend(config_errors)
+        
+        # Test connection if config is valid
+        if result["config_valid"]:
+            server = None
+            try:
+                server = self._create_connection()
+                result["connection_successful"] = True
+                logger.info("✅ Email configuration test successful")
+            except (SMTPConnectionError, SMTPAuthError, EmailSendError) as e:
+                result["errors"].append(f"Connection test failed: {str(e)}")
+                logger.error(f"❌ Email configuration test failed: {e}")
+            finally:
+                if server:
+                    try:
+                        server.quit()
+                    except Exception:
+                        # Ignore errors when closing connection
+                        pass
+        
+        return result
     
     def send_otp_email(self, to_email: str, otp: str, username: str = "") -> bool:
         """Send OTP verification email"""

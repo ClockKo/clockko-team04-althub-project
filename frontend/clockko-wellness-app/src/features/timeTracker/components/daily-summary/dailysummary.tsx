@@ -29,7 +29,7 @@ const DailySummary: React.FC<DailySummaryProps> = ({
         </div>
         <div className="first-panel-text">
           <p>{totalFocusSessions} sessions</p>
-          <p>Total Focus Sessions</p>
+          <p>Total Sessions</p>
         </div>
       </div>
       {/* second summary panel */}

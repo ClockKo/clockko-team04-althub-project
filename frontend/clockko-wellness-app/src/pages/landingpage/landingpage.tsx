@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import frame1 from "../../assets/images/frame1.png";
 import { Link } from "react-router-dom";
 import { MoveUpRight } from "lucide-react";
+import { useHomeSEO } from '../../seo/useSEO';
 import TaskExapanded from "../../assets/design/landing-page design/taskExpanded.png";
 import timer1 from "../../assets/design/landing-page design/timer1.png"
 import framer3 from "../../assets/images/frame3.png"
@@ -54,6 +55,9 @@ const cardData = [
 ];
 
 export const LandingPage: React.FC = () => {
+  // Advanced SEO with structured data for homepage
+  useHomeSEO();
+
   return (
     <main className="font-sans bg-white text-gray-900 overflow-hidden">
          {/* Logo */}

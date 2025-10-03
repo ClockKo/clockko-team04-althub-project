@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useHead } from '@unhead/react';
 import AuthLayout from './AuthLayout';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
@@ -10,6 +11,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { loginUser } from './api';
 import { useAuth } from './authcontext';
 import googleLogo from '../../assets/images/google.png';
+import toast from 'react-hot-toast';
 
 // Validation schema for the sign-in form
 const signInSchema = z.object({
@@ -20,9 +22,32 @@ const signInSchema = z.object({
 type SignInFormData = z.infer<typeof signInSchema>
 
 const SignInPage: React.FC = () => {
+  // Set meta tags for sign-in page
+  useHead({
+    title: 'Sign In - ClockKo | Access Your Productivity Dashboard',
+    meta: [
+      {
+        name: 'description',
+        content: 'Sign in to your ClockKo account to access your productivity dashboard, track time, manage tasks, and boost your wellness.'
+      },
+      {
+        name: 'robots',
+        content: 'noindex, nofollow' // Auth pages should not be indexed
+      }
+    ]
+  });
+
   const navigate = useNavigate();
   const { setAuthToken } = useAuth(); // Get setAuthToken
   const [apiError, setApiError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+
+  // Check if user came from email verification
+  useEffect(() => {
+    if (searchParams.get('verified') === 'true') {
+      toast.success('Email verified successfully! You can now log in.');
+    }
+  }, [searchParams]);
 
   // React-hook-form
   const {
@@ -87,8 +112,8 @@ const SignInPage: React.FC = () => {
 
   return (
     <AuthLayout hideHeader={true}>
-      <div className="w-full text-left">
-        <h1 className="text-[44px] text-center font-bold mb-2">Sign in to your account</h1>
+      <div className="w-full text-left px-4 md:px-0">
+        <h1 className="text-[24px] text-center font-bold mb-2">Sign in to your account</h1>
         <p className="text-gray-500 text-center mb-8">Pick up where you left off</p>
 
         {/* The main form */}

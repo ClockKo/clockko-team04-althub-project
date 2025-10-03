@@ -15,6 +15,7 @@ export function useTasks() {
     queryKey: TASKS_KEY,
     queryFn: async () => {
       const tasks = await fetchTasks()
+      console.log('🔍 Raw tasks from API:', tasks) // for debugging
       return Array.isArray(tasks) ? tasks : []
     },
   })
@@ -30,15 +31,39 @@ export function useTasks() {
   }
 
   tasks?.forEach((task) => {
-    const dueDate = typeof task.dueAt === 'string' ? parseISO(task.dueAt) : task.dueAt
-
+    console.log('🔍 Processing task:', task.title, 'dueAt:', task.dueAt, 'completed:', task.completed)
+    
+    // Handle completed tasks
     if (task.completed) {
       done.push(task)
-    } else if (dueDate && isToday(dueDate)) {
-      today.push(task)
-    } else if (dueDate && isFuture(dueDate)) {
+      return
+    }
+
+    // Parse due date if it exists
+    const dueDate = task.dueAt ? 
+      (typeof task.dueAt === 'string' ? parseISO(task.dueAt) : task.dueAt) : 
+      null
+
+    if (dueDate) {
+      if (isToday(dueDate)) {
+        today.push(task)
+      } else if (isFuture(dueDate)) {
+        upcoming.push(task)
+      } else {
+        // Past due - put in today for attention
+        today.push(task)
+      }
+    } else {
+      // No due date - put in upcoming as general tasks
       upcoming.push(task)
     }
+  })
+
+  console.log('📊 Task categorization:', {
+    total: tasks.length,
+    today: today.length,
+    upcoming: upcoming.length,
+    done: done.length
   })
 
   return {

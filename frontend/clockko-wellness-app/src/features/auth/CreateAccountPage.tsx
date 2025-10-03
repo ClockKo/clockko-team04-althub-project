@@ -3,13 +3,15 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
+import { useHead } from '@unhead/react'
 import AuthLayout from './AuthLayout'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
-import { registerUser, googleSignUp } from './api'
+import { registerUser, googleSignUp} from './api' 
 import { useAuth } from './authcontext'
 import { useGoogleLogin } from '@react-oauth/google'
 import googleLogo from '../../assets/images/google.png'
+import toast from 'react-hot-toast'
 
 
 // Validation schema
@@ -25,6 +27,21 @@ const createAccountSchema = z.object({
 type CreateAccountFormData = z.infer<typeof createAccountSchema>
 
 const CreateAccountPage: React.FC = () => {
+  // Set meta tags for create account page
+  useHead({
+    title: 'Create Account - ClockKo | Join the Productivity Revolution',
+    meta: [
+      {
+        name: 'description',
+        content: 'Create your free ClockKo account to start tracking time, managing tasks, and boosting your productivity with wellness features.'
+      },
+      {
+        name: 'robots',
+        content: 'noindex, nofollow' // Auth pages should not be indexed
+      }
+    ]
+  });
+
   const navigate = useNavigate()
   const { setAuthToken } = useAuth() // Get the setAuthToken function
   const [apiError, setApiError] = useState<string | null>(null)
@@ -38,42 +55,30 @@ const CreateAccountPage: React.FC = () => {
     resolver: zodResolver(createAccountSchema),
   })
 
-  // Handle form submission
-  const onSubmit = async (data: CreateAccountFormData) => {
-    const { agree, ...registrationData } = data
-    try {
-      const response = await registerUser(registrationData)
-      console.log('Registration successful:', response)
+ 
+ const onSubmit = async (data: CreateAccountFormData) => {
+  const { agree: _agree, ...registrationData } = data;
+  setApiError(null);
 
-      // Store the token from the registration response
-      if (response.access_token) {
-        setAuthToken(response.access_token)
-        // Navigate to the dashboard
-        navigate('/dashboard')
-      } else {
-        // If no token, maybe send to a "please log in" page
-        navigate('/signin')
-      }
-    } catch (error: any) {
-      console.error('Registration failed:', error)
-      // Handle and display error
-    }
+  console.log('Data being sent to backend:', registrationData);
+
+  try {
+    const response = await registerUser(registrationData);
+    console.log('Registration successful:', response);
+
+    // Show success toast
+    toast.success('Account created successfully! Please check your email for verification.');
+    
+    // Navigate to email verification page with email as query parameter
+    navigate(`/verify-email?email=${encodeURIComponent(registrationData.email)}`);
+  } catch (error: any) {
+    console.error('Registration failed:', error);
+    const errorMessage = error.response?.data?.detail || 'Registration failed. Please try again.';
+    toast.error(errorMessage);
+    setApiError(errorMessage);
   }
+};
 
-  // const handleGoogleSuccess = async (tokenResponse: any) => {
-  //   const accessToken = tokenResponse.access_token
-  //   console.log('Google Access Token:', accessToken)
-
-  //   try {
-  //     // TODO: Send this access token to your backend for verification and user creation
-  //     const response = await googleSignUp(accessToken);
-  //     setAuthToken(response.access_token);
-  //     navigate('/dashboard');
-  //   } catch (error) {
-  //     console.error('Google sign-up failed:', error)
-  //     setApiError('An error occurred during Google sign-up.')
-  //   }
-  // }
 
   const handleGoogleSuccess = async (tokenResponse: any) => {
     const googleAccessToken = tokenResponse.access_token;
@@ -106,8 +111,8 @@ const CreateAccountPage: React.FC = () => {
 
   return (
     <AuthLayout hideHeader={true}>
-      <div className="w-full text-left">
-        <h1 className="text-[44px] font-bold mb-2 text-center">Create your account</h1>
+      <div className="w-full text-left px-4 md:px-0">
+        <h1 className="text-[24px] font-bold mb-2 text-center">Create your account</h1>
         <p className="text-gray-500 mb-8 text-center text-[16px]">
           Get started on ClockKo for free
         </p>

@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
+import { useQueryClient } from '@tanstack/react-query'
+import { useHead } from '@unhead/react'
 import { DashboardHeader } from './headerWidget'
 import { WorkSessionCard } from './workWidget'
 import { ProgressCard } from './productivityWidget'
@@ -7,16 +9,33 @@ import { TaskBacklogCard } from './taskWidget'
 import { ShutdownStreakCard } from './shutdownWidget'
 import { useCurrentSession, useClockIn, useClockOut, useDashboardData } from './dashboardHooks'
 import { ShutdownModal } from './shutdownModals/modal'
+import { AuthDebugPanel } from '../../components/AuthDebugPanel'
 import type { Task } from '../../types/typesGlobal'
 import { Skeleton } from '../../components/ui/skeleton'
 
 // ------------------ MAIN DASHBOARD PAGE ------------------
 
 export default function DashboardPage() {
+  // Set meta tags for dashboard
+  useHead({
+    title: 'Dashboard - ClockKo | Your Productivity Hub',
+    meta: [
+      {
+        name: 'description',
+        content: 'Track your work sessions, manage tasks, monitor productivity, and maintain wellness streaks all from your ClockKo dashboard.'
+      },
+      {
+        name: 'robots',
+        content: 'noindex, nofollow' // Dashboard should not be indexed
+      }
+    ]
+  });
+
   const { data: session, isLoading: sessionLoading } = useCurrentSession()
   const { data: dashboardData } = useDashboardData()
   const clockInMutation = useClockIn()
   const clockOutMutation = useClockOut()
+  const queryClient = useQueryClient()
   const [showShutdown, setShowShutdown] = useState<boolean>(false)
 
   // Handlers for clock in 
@@ -36,6 +55,11 @@ export default function DashboardPage() {
   // handler to close shutdown modal
   function handleCloseShutdown() {
     setShowShutdown(false)
+    // Force refresh of session data to update UI state
+    queryClient.invalidateQueries({ queryKey: ["currentSession"] })
+    queryClient.invalidateQueries({ queryKey: ["dashboardData"] })
+    clockInMutation.reset() // Clear any pending states
+    clockOutMutation.reset() // Clear any pending states
   }
 
   // Handler to open shutdown modal for testing
@@ -87,11 +111,18 @@ export default function DashboardPage() {
               focusTime={progressData.focusTime}
               focusGoal={progressData.focusGoal}
             />
-            <TaskBacklogCard pendingTasks={progressData.pendingTasks} />
+            <TaskBacklogCard />
             <ShutdownStreakCard shutdownStreak={progressData.shutdownStreak} />
           </>
         )}
       </div>
+      
+      {/* Debug Panel - Development Only */}
+      {import.meta.env.DEV && (
+        <div className="mt-6">
+          <AuthDebugPanel />
+        </div>
+      )}
       <AnimatePresence>
         {showShutdown && <ShutdownModal open={showShutdown} onClose={handleCloseShutdown} />}
       </AnimatePresence>

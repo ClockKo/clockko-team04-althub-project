@@ -242,6 +242,13 @@ def get_current_session(db: Session, user_id):
             
     ).order_by(Timelog.start_time.desc()).first()
 
+def get_last_session(db: Session, user_id):
+    """Get the most recent session (completed or active) for display purposes"""
+    return db.query(Timelog).filter(
+        Timelog.user_id == user_id,
+        Timelog.type == "work"  # Only work sessions for the work widget
+    ).order_by(Timelog.start_time.desc()).first()
+
 
 def get_focus_time(db: Session, user_id):
     summary = get_daily_summary(db, user_id)

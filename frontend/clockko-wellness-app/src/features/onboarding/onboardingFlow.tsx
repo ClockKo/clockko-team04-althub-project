@@ -9,9 +9,11 @@ import { AvatarModal } from "./modals/avatarModal";
 import { ReminderModal } from "./modals/reminderModal";
 import { useOnboarding } from "../../contexts/OnboardingContext";
 import { useNavigate } from "react-router-dom";
+import { completeOnboarding as saveOnboardingToBackend } from "./api";
+import toast from 'react-hot-toast';
 
 export function OnboardingFlow() {
-  const { completeOnboarding } = useOnboarding();
+  const { completeOnboarding: markOnboardingComplete } = useOnboarding();
   const [step, setStep] = useState(0); // 0: Welcome, 1: Work days, 2: Clock out...
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [clockOut, setClockOut] = useState({ hour: '', minute: '' });
@@ -25,10 +27,47 @@ export function OnboardingFlow() {
   });
   const navigate = useNavigate();
 
-  const handleOnboardingComplete = () => {
-    completeOnboarding();
-    // Optionally, redirect to dashboard or another page
-    navigate('/dashboard');
+  const handleOnboardingComplete = async () => {
+    try {
+      // Show loading toast
+      const loadingToast = toast.loading('Saving your preferences...');
+      
+      // Save avatar to localStorage (until backend API is ready)
+      if (avatar) {
+        localStorage.setItem('userAvatar', avatar);
+        console.log('💾 Avatar saved to localStorage:', avatar);
+      }
+      
+      // Save onboarding data to backend
+      await saveOnboardingToBackend({
+        selectedDays,
+        clockOut,
+        ampm,
+        focusTimer,
+        reminders,
+      });
+      
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+      
+      // Show success toast
+      toast.success('Welcome to ClockKo! Your preferences have been saved.');
+      
+      // Mark onboarding as complete
+      markOnboardingComplete();
+      
+      // Navigate to dashboard
+      navigate('/dashboard');
+    } catch (error: any) {
+      console.error('Error completing onboarding:', error);
+      
+      // Show error toast
+      toast.error(error.message || 'Failed to save your preferences. Please try again.');
+      
+      // Still complete onboarding locally to avoid blocking user
+      markOnboardingComplete();
+      navigate('/dashboard');
+    }
   };
 
   return (

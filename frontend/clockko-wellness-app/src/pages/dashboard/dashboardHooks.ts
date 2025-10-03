@@ -9,6 +9,8 @@ export function useCurrentSession() {
     queryKey: ["currentSession"],
     queryFn: fetchCurrentSession,
     retry: false,
+    refetchOnWindowFocus: true, // Refetch when window gets focus
+    staleTime: 0, // Always consider data stale to force refresh
   });
 }
 

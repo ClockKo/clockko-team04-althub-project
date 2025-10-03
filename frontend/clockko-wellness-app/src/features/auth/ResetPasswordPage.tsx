@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-// import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useHead } from '@unhead/react';
 import AuthLayout from './AuthLayout';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
+import toast from 'react-hot-toast';
+import { sendPasswordResetEmail } from './api';
 
 // Define the validation schema
 const resetPasswordSchema = z.object({
@@ -15,7 +18,23 @@ const resetPasswordSchema = z.object({
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 const ResetPasswordPage: React.FC = () => {
-//   const navigate = useNavigate();
+  // Set meta tags for password reset page
+  useHead({
+    title: 'Reset Password - ClockKo | Recover Your Account',
+    meta: [
+      {
+        name: 'description',
+        content: 'Reset your ClockKo password. Enter your email to receive password reset instructions and regain access to your productivity dashboard.'
+      },
+      {
+        name: 'robots',
+        content: 'noindex, nofollow' // Auth pages should not be indexed
+      }
+    ]
+  });
+
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Set up react-hook-form
   const {
@@ -27,17 +46,32 @@ const ResetPasswordPage: React.FC = () => {
   });
 
   // Handle form submission
-  const onSubmit = (data: ResetPasswordFormData) => {
+  const onSubmit = async (data: ResetPasswordFormData) => {
     console.log('Password reset requested for:', data.email);
-    // TODO: Call API to send password reset link
-    // You might navigate to a confirmation page after this
-    // navigate('/check-inbox-reset');
+    setIsLoading(true);
+    
+    try {
+      await sendPasswordResetEmail(data.email);
+      toast.success('If the email is registered, a reset code has been sent. Please check your inbox.');
+      
+      // Navigate to OTP confirmation page with email as parameter
+      setTimeout(() => {
+        navigate(`/reset-password-confirm?email=${encodeURIComponent(data.email)}`);
+      }, 2000);
+      
+    } catch (error: any) {
+      console.error('Password reset request failed:', error);
+      const errorMessage = error?.response?.data?.message || 'Failed to send reset email. Please try again.';
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <AuthLayout hideHeader={true}>
-      <div className="w-full text-left">
-        <h1 className="text-[44px] text-center font-bold mb-2">Reset Password</h1>
+  <div className="w-full text-left px-4 md:px-0">
+        <h1 className="text-[24px] text-center font-bold mb-2">Reset Password</h1>
         <p className="text-gray-500 text[16px] text-center mb-8">Enter your registered email address</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -47,10 +81,27 @@ const ResetPasswordPage: React.FC = () => {
             {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>}
           </div>
 
-          <Button type="submit" className="w-full bg-[#34559E] hover:bg-[#2c4885] py-6 text-md mt-4 rounded-[24px]">
-            Send Reset Link
+          <Button 
+            type="submit" 
+            className="w-full bg-[#34559E] hover:bg-[#2c4885] py-6 text-md mt-4 rounded-[24px]"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Sending...' : 'Send Reset Link'}
           </Button>
         </form>
+        <div className="mt-4">
+          <p className="text-sm text-gray-600 text-center">
+            Remembered your password?{' '}
+            <a href="/sign-in" className="text-blue1 hover:underline">
+              Sign In
+            </a>
+            {/* go back to the home page */}
+            <a href="/" className="text-blue1 hover:underline">  
+              {' '} homepage
+            </a>
+          </p>
+        </div>
+       
       </div>
     </AuthLayout>
   );

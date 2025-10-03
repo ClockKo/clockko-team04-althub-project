@@ -9,9 +9,14 @@ import koPose from "../../assets/images/KoPoses.png";
 
 export function DashboardHeader() {
   // const { resetOnboarding } = useOnboarding(); // for testing purposes and rember to remove in production
-  const { data: user, isLoading } = useUserData();
+  const { data: user, isLoading, error } = useUserData();
   
-  const userName = user?.username || "Guest";
+  const userName = user?.name || "Guest";
+  
+  // Debug logging
+  console.log("🔍 DashboardHeader - User data:", { user, isLoading, error, userName });
+  console.log("🔍 DashboardHeader - Auth token exists:", !!localStorage.getItem('authToken'));
+  
   const greeting = getGreetingMessage(userName);
 
   return (
@@ -25,14 +30,6 @@ export function DashboardHeader() {
           <p className="text-gray-600 xs:text-base">Let's start the day with intention and end with satisfaction.</p>
         </div>
       </div>
-      {/* Reset onboarding button for testing - remove in production */}
-      {/* <button
-        onClick={resetOnboarding}
-        className="px-3 py-1 text-xs bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors"
-        title="Reset onboarding (for testing)"
-      >
-        Reset Onboarding
-      </button> */}
     </div>
   );
 }

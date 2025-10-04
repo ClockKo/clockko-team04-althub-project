@@ -183,6 +183,7 @@ fix_*.py
 setup_*.py
 *_test.py
 *_tests.py
+tmp_*.py
 
 # Email configuration debug files
 email_setup_guide.py
@@ -222,10 +223,10 @@ start_server.py
 hello.py
 run.py
 
-# Documentation files that are for development only
-DATABASE_SETUP.md
-EMAIL_OTP_SETUP.md
-POSTGRESQL_SETUP.md
+# Documentation files that should be tracked (remove from gitignore)
+# DATABASE_SETUP.md
+# EMAIL_OTP_SETUP.md
+# POSTGRESQL_SETUP.md
 
 # Alembic version files (keep structure but ignore generated migrations if needed)
 # alembic/versions/*.py

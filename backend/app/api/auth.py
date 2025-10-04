@@ -9,6 +9,7 @@ from app.core.security import create_access_token, hash_password, verify_passwor
 from typing import Union
 import uuid
 import json
+from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(tags=["auth"])
 
@@ -168,3 +169,34 @@ def reset_password(payload: schema.ResetPasswordRequest, db: Session = Depends(g
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Password reset failed: {str(e)}")
+
+
+@router.put("/user", response_model=schema.UserResponse)
+def update_user_profile(
+    profile_update: schema.UserProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update the current user's profile information"""
+    try:
+        # Update only the fields that are provided (not None)
+        if profile_update.name is not None:
+            current_user.full_name = profile_update.name
+        
+        if profile_update.phone_number is not None:
+            current_user.phone_number = profile_update.phone_number
+        
+        if profile_update.avatar_url is not None:
+            current_user.avatar_url = profile_update.avatar_url
+        
+        db.commit()
+        db.refresh(current_user)
+        
+        return schema.UserResponse.from_user_model(current_user)
+    
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Profile update failed: Invalid data provided")
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Profile update failed: {str(e)}")

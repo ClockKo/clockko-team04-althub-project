@@ -13,7 +13,7 @@ def build_focus_session_response(session: Timelog) -> FocusSessionResponse:
             session.start_time = session.start_time.replace(tzinfo=timezone.utc)
         if session.end_time.tzinfo is None:
             session.end_time = session.end_time.replace(tzinfo=timezone.utc)
-        actual_duration = int((session.end_time - session.start_time).total_seconds() // 60)
+        actual_duration = max(0, int((session.end_time - session.start_time).total_seconds() // 60))
 
     return FocusSessionResponse(
         session_id=session.session_id,
@@ -43,19 +43,32 @@ def start_session(db: Session, request: StartSessionRequest, type: str):
     active_session = db.query(Timelog).filter(
         Timelog.user_id == request.user_id,
         Timelog.status == "active"
-    ). first ()
+    ).first()
 
     if active_session:
         if active_session.type == type:
             raise HTTPException(status_code=409, detail=f"You already have an active {type} session.")
         
-        else:
-            raise HTTPException(status_code=409, detail=f"Cannot start a {type} session while a {active_session.type} session is still active. Please end it first.")    
+        # Allow focus sessions to run alongside work sessions
+        # Allow work sessions to run alongside focus sessions
+        # Only block if trying to start break without paused focus
+        if type == "break":
+            # For breaks, we need a paused focus session
+            paused_focus = db.query(Timelog).filter(
+                Timelog.user_id == request.user_id,
+                Timelog.type == "focus",
+                Timelog.status == "paused"
+            ).order_by(Timelog.start_time.desc()).first()
+            if not paused_focus:
+                raise HTTPException(status_code=400, detail="Cannot start a break unless a focus session is paused.")
+        
+        # Focus and work sessions can coexist - no blocking needed
     
+    # Original break logic moved above, but keeping this for completeness
     if type == "break":
         paused_focus = db.query(Timelog).filter(
             Timelog.user_id == request.user_id,
-            Timelog.type  == "focus",
+            Timelog.type == "focus",
             Timelog.status == "paused"
         ).order_by(Timelog.start_time.desc()).first()
         if not paused_focus:
@@ -115,18 +128,33 @@ def end_session(db: Session, request: EndSessionRequest, type: str):
     
     now = datetime.now(timezone.utc)
     
-    session.end_time =request.end_time or now
-
-    if session.start_time and session.end_time:
-        if session.start_time.tzinfo is None:
-            session.start_time = session.start_time.replace(tzinfo=timezone.utc)
-        if session.end_time.tzinfo is None:
-            session.end_time = session.end_time.replace(tzinfo=timezone.utc)
-
+    # Use provided end_time or current time
+    end_time = request.end_time or now
     
-    if session.planned_duration:
-        elapsed = int((session.end_time - session.start_time).total_seconds() // 60)
-        if elapsed < session.planned_duration:
+    # Debug logging
+    print(f"🔍 Backend end_session debug:")
+    print(f"  Original start_time: {session.start_time} (tzinfo: {session.start_time.tzinfo})")
+    print(f"  Request end_time: {request.end_time}")
+    print(f"  Processed end_time: {end_time} (tzinfo: {end_time.tzinfo})")
+    
+    # Ensure both times are timezone-aware UTC
+    if session.start_time.tzinfo is None:
+        session.start_time = session.start_time.replace(tzinfo=timezone.utc)
+        print(f"  Fixed start_time: {session.start_time}")
+    if end_time.tzinfo is None:
+        end_time = end_time.replace(tzinfo=timezone.utc)
+        print(f"  Fixed end_time: {end_time}")
+    
+    session.end_time = end_time
+
+    # Calculate actual duration in minutes
+    if session.start_time and session.end_time:
+        elapsed_minutes = int((session.end_time - session.start_time).total_seconds() // 60)
+        session.actual_duration = max(0, elapsed_minutes)  # Ensure non-negative duration
+        print(f"  Calculated duration: {elapsed_minutes} minutes")
+        
+        # Determine status based on planned vs actual duration
+        if session.planned_duration and elapsed_minutes < session.planned_duration:
             session.status = "stopped"
         else:
             session.status = "completed"
@@ -135,6 +163,12 @@ def end_session(db: Session, request: EndSessionRequest, type: str):
 
     db.commit()
     db.refresh(session)
+    
+    # Debug the final result
+    print(f"  Final start_time: {session.start_time}")
+    print(f"  Final end_time: {session.end_time}")
+    print(f"  Final actual_duration: {session.actual_duration}")
+    
     return build_focus_session_response(session)
 
 

@@ -35,219 +35,475 @@ class TimeTrackerService {
   async startFocusSession(durationMinutes: number, sessionType: 'focus' | 'break' = 'focus'): Promise<FocusSession> {
     console.log('🚀 Starting focus session:', { durationMinutes, sessionType })
     
-    // Check for existing active session
-    const currentSession = this.getCurrentSession()
-    if (currentSession) {
-      throw new Error(`Active ${currentSession.sessionType} session already exists`)
+    // Check for existing active session via API first (ignore errors for now)
+    try {
+      const currentSession = await this.getCurrentSessionFromAPI()
+      if (currentSession && currentSession.sessionType === sessionType) {
+        // Same session type - offer to complete the existing one
+        const shouldComplete = confirm(
+          `You have an active ${currentSession.sessionType} session.\n` +
+          `Started: ${currentSession.startTime.toLocaleTimeString()}\n\n` +
+          `Complete it and start a new ${sessionType} session?`
+        )
+        
+        if (shouldComplete) {
+          await this.completeFocusSession(currentSession.id)
+          console.log('✅ Previous session completed, starting new one...')
+          // Continue to start new session
+        } else {
+          throw new Error(`Cannot start new ${sessionType} session - you have an active ${currentSession.sessionType} session`)
+        }
+      } else if (currentSession && currentSession.sessionType !== sessionType) {
+        // Different session type - handle based on logic
+        if (sessionType === 'break' && currentSession.sessionType === 'focus') {
+          // User wants to take a break - pause the focus session
+          const shouldPause = confirm(
+            `You have an active focus session.\n` +
+            `Pause it and start a break?`
+          )
+          
+          if (shouldPause) {
+            await this.pauseFocusSession(currentSession.id)
+            console.log('⏸️ Focus session paused, starting break...')
+            // Continue to start break session
+          } else {
+            throw new Error('Cannot start break - focus session is still active')
+          }
+        } else {
+          // Other combinations - just inform user
+          throw new Error(`You have an active ${currentSession.sessionType} session. Complete it first.`)
+        }
+      }
+    } catch (error) {
+      console.log('⚠️ Could not check for existing session (backend might be starting):', error)
+      // If it's our own error from above, re-throw it
+      if (error instanceof Error && (error.message.includes('Cannot start') || error.message.includes('Complete it first'))) {
+        throw error
+      }
+      // Otherwise continue - the backend will handle conflicts
+    }
+    // Allow different session types to coexist (work + focus)
+
+    // Get auth token from localStorage
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      throw new Error('User not authenticated')
     }
 
-    const session: FocusSession = {
-      id: `session_${Date.now()}`,
-      startTime: new Date(),
-      plannedDuration: durationMinutes,
-      sessionType,
-      status: 'active'
-    }
-
-    // Store current session
-    localStorage.setItem(this.STORAGE_KEYS.CURRENT_SESSION, JSON.stringify(session))
+    // Get user data to get user ID
+    const userResponse = await fetch('http://localhost:8000/api/auth/user', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
     
-    console.log('✅ Focus session started:', session)
+    if (!userResponse.ok) {
+      throw new Error('Failed to get user data')
+    }
+    
+    const userData = await userResponse.json()
+    const userId = userData.id
+
+    // Prepare API request
+    const requestData = {
+      user_id: userId,
+      type: sessionType,
+      start_time: new Date().toISOString(),
+      planned_duration: durationMinutes
+    }
+
+    // Make API call
+    const endpoint = sessionType === 'focus' ? '/focus-sessions/start' : '/break-sessions/start'
+    const response = await fetch(`http://localhost:8000/api${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestData)
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`API call failed: ${response.status} ${response.statusText} - ${errorText}`)
+    }
+
+    const responseData = await response.json()
+    
+    // Convert backend response to frontend session format
+    const session: FocusSession = {
+      id: responseData.session_id,
+      startTime: new Date(responseData.start_time),
+      endTime: responseData.end_time ? new Date(responseData.end_time) : undefined,
+      plannedDuration: responseData.planned_duration,
+      actualDuration: responseData.actual_duration,
+      sessionType: responseData.type as 'focus' | 'break',
+      status: responseData.status as 'active' | 'completed' | 'stopped' | 'paused'
+    }
+    
+    // TODO: REMOVED localStorage for testing - Store current session locally for offline support only
+    // localStorage.setItem(this.STORAGE_KEYS.CURRENT_SESSION, JSON.stringify(session))
+    
+    console.log('✅ Focus session started via API:', session)
     return session
   }
 
   async completeFocusSession(sessionId: string): Promise<FocusSession> {
     console.log('🏁 Completing focus session:', sessionId)
     
-    const currentSession = this.getCurrentSession()
+    // Get current session from API first
+    const currentSession = await this.getCurrentSessionFromAPI()
     if (!currentSession || currentSession.id !== sessionId) {
       throw new Error('Active session not found')
     }
 
-    const now = new Date()
-    const completedSession: FocusSession = {
-      ...currentSession,
-      endTime: now,
-      actualDuration: Math.round((now.getTime() - currentSession.startTime.getTime()) / 60000),
-      status: 'completed'
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      throw new Error('User not authenticated')
     }
 
-    // Clear current session
-    localStorage.removeItem(this.STORAGE_KEYS.CURRENT_SESSION)
+    // Prepare API request
+    const now = new Date()
+    const requestData = {
+      session_id: sessionId,
+      end_time: now.toISOString()
+    }
+
+    console.log('📅 Completion time data:', {
+      sessionId,
+      localTime: now.toString(),
+      isoTime: now.toISOString(),
+      startTime: currentSession.startTime.toString(),
+      startTimeISO: currentSession.startTime.toISOString()
+    })
+
+    // Make API call to end session
+    const endpoint = currentSession.sessionType === 'focus' 
+      ? `/focus-sessions/${sessionId}/end` 
+      : `/break-sessions/${sessionId}/end`
     
-    // Add to daily summary
-    this.addSessionToDailySummary(completedSession)
+    const response = await fetch(`http://localhost:8000/api${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestData)
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`API call failed: ${response.status} ${response.statusText} - ${errorText}`)
+    }
+
+    const responseData = await response.json()
     
-    console.log('✅ Focus session completed:', completedSession)
+    // Convert backend response to frontend session format
+    const completedSession: FocusSession = {
+      id: responseData.session_id,
+      startTime: new Date(responseData.start_time),
+      endTime: new Date(responseData.end_time),
+      plannedDuration: responseData.planned_duration,
+      actualDuration: responseData.actual_duration,
+      sessionType: responseData.type as 'focus' | 'break',
+      status: responseData.status as 'active' | 'completed' | 'stopped' | 'paused'
+    }
+
+    // TODO: REMOVED localStorage for testing - Clear current session from localStorage
+    // localStorage.removeItem(this.STORAGE_KEYS.CURRENT_SESSION)
+    
+    // TODO: REMOVED localStorage for testing - Add to daily summary locally for immediate UI update
+    // this.addSessionToDailySummary(completedSession)
+    
+    console.log('✅ Focus session completed via API:', completedSession)
     return completedSession
   }
 
   async pauseFocusSession(sessionId: string): Promise<FocusSession> {
     console.log('⏸️ Pausing focus session:', sessionId)
     
-    const currentSession = this.getCurrentSession()
+    // Get current session from API first
+    const currentSession = await this.getCurrentSessionFromAPI()
     if (!currentSession || currentSession.id !== sessionId) {
       throw new Error('Active session not found')
     }
 
-    const pausedSession: FocusSession = {
-      ...currentSession,
-      status: 'paused'
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      throw new Error('User not authenticated')
     }
 
-    // Store paused session separately and clear current session
-    localStorage.setItem(this.STORAGE_KEYS.PAUSED_SESSION, JSON.stringify(pausedSession))
-    localStorage.removeItem(this.STORAGE_KEYS.CURRENT_SESSION)
+    // Make API call to pause session
+    const now = new Date()
+    const response = await fetch(`http://localhost:8000/api/focus-sessions/${sessionId}/pause`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        session_id: sessionId,
+        paused_at: now.toISOString()
+      })
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`API call failed: ${response.status} ${response.statusText} - ${errorText}`)
+    }
+
+    const responseData = await response.json()
     
-    console.log('⏸️ Focus session paused and moved to paused storage:', pausedSession)
+    // Convert backend response to frontend session format
+    const pausedSession: FocusSession = {
+      id: responseData.session_id,
+      startTime: new Date(responseData.start_time),
+      endTime: responseData.end_time ? new Date(responseData.end_time) : undefined,
+      plannedDuration: responseData.planned_duration,
+      actualDuration: responseData.actual_duration,
+      sessionType: responseData.type as 'focus' | 'break',
+      status: 'paused' as const
+    }
+    
+    console.log('⏸️ Focus session paused via API:', pausedSession)
     return pausedSession
   }
 
   async resumeFocusSession(sessionId: string): Promise<FocusSession> {
     console.log('▶️ Resuming focus session:', sessionId)
     
-    const pausedSession = this.getPausedSession()
-    if (!pausedSession || pausedSession.id !== sessionId) {
-      throw new Error('Paused session not found')
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      throw new Error('User not authenticated')
     }
 
-    const resumedSession: FocusSession = {
-      ...pausedSession,
-      status: 'active'
+    // Make API call to resume session
+    const response = await fetch(`http://localhost:8000/api/focus-sessions/${sessionId}/resume`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        session_id: sessionId
+      })
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`API call failed: ${response.status} ${response.statusText} - ${errorText}`)
     }
 
-    // Move session back to current session storage and clear paused storage
-    localStorage.setItem(this.STORAGE_KEYS.CURRENT_SESSION, JSON.stringify(resumedSession))
-    localStorage.removeItem(this.STORAGE_KEYS.PAUSED_SESSION)
+    const responseData = await response.json()
     
-    console.log('▶️ Focus session resumed:', resumedSession)
+    // Convert backend response to frontend session format
+    const resumedSession: FocusSession = {
+      id: responseData.session_id,
+      startTime: new Date(responseData.start_time),
+      endTime: responseData.end_time ? new Date(responseData.end_time) : undefined,
+      plannedDuration: responseData.planned_duration,
+      actualDuration: responseData.actual_duration,
+      sessionType: responseData.type as 'focus' | 'break',
+      status: 'active' as const
+    }
+    
+    console.log('▶️ Focus session resumed via API:', resumedSession)
     return resumedSession
   }
 
   async stopFocusSession(sessionId: string): Promise<FocusSession> {
     console.log('⏹️ Stopping focus session:', sessionId)
     
-    const currentSession = this.getCurrentSession()
-    if (!currentSession || currentSession.id !== sessionId) {
-      throw new Error('Active session not found')
-    }
-
-    const now = new Date()
-    const stoppedSession: FocusSession = {
-      ...currentSession,
-      endTime: now,
-      actualDuration: Math.round((now.getTime() - currentSession.startTime.getTime()) / 60000),
-      status: 'stopped'
-    }
-
-    // Clear current session
-    localStorage.removeItem(this.STORAGE_KEYS.CURRENT_SESSION)
+    // TODO: REMOVED localStorage for testing - Use API instead
+    throw new Error('Stop functionality not implemented for API-only testing')
     
-    // Add to daily summary
-    this.addSessionToDailySummary(stoppedSession)
+    // const currentSession = this.getCurrentSession()
+    // if (!currentSession || currentSession.id !== sessionId) {
+    //   throw new Error('Active session not found')
+    // }
+
+    // const now = new Date()
+    // const stoppedSession: FocusSession = {
+    //   ...currentSession,
+    //   endTime: now,
+    //   actualDuration: Math.round((now.getTime() - currentSession.startTime.getTime()) / 60000),
+    //   status: 'stopped'
+    // }
+
+    // // Clear current session
+    // localStorage.removeItem(this.STORAGE_KEYS.CURRENT_SESSION)
     
-    console.log('⏹️ Focus session stopped:', stoppedSession)
-    return stoppedSession
+    // // Add to daily summary
+    // this.addSessionToDailySummary(stoppedSession)
+    
+    // console.log('⏹️ Focus session stopped:', stoppedSession)
+    // return stoppedSession
   }
 
   // Method to manually stop a session that's not in current storage (for paused sessions)
-  async stopSessionManually(session: FocusSession): Promise<FocusSession> {
-    console.log('⏹️ Manually stopping session:', session.id)
+  // COMMENTED OUT FOR API-ONLY TESTING
+  // async stopSessionManually(session: FocusSession): Promise<FocusSession> {
+  //   console.log('⏹️ Manually stopping session:', session.id)
     
-    const now = new Date()
-    const stoppedSession: FocusSession = {
-      ...session,
-      endTime: now,
-      actualDuration: Math.round((now.getTime() - session.startTime.getTime()) / 60000),
-      status: 'stopped'
-    }
+  //   const now = new Date()
+  //   const stoppedSession: FocusSession = {
+  //     ...session,
+  //     endTime: now,
+  //     actualDuration: Math.round((now.getTime() - session.startTime.getTime()) / 60000),
+  //     status: 'stopped'
+  //   }
     
-    // Add to daily summary
-    this.addSessionToDailySummary(stoppedSession)
+  //   // Add to daily summary
+  //   this.addSessionToDailySummary(stoppedSession)
     
-    console.log('⏹️ Session manually stopped:', stoppedSession)
-    return stoppedSession
-  }
+  //   console.log('⏹️ Session manually stopped:', stoppedSession)
+  //   return stoppedSession
+  // }
 
-  getCurrentSession(): FocusSession | null {
+  // COMMENTED OUT FOR API-ONLY TESTING - localStorage version
+  // getCurrentSession(): FocusSession | null {
+  //   try {
+  //     const stored = localStorage.getItem(this.STORAGE_KEYS.CURRENT_SESSION)
+  //     if (!stored) return null
+      
+  //     const session = JSON.parse(stored)
+  //     // Convert date strings back to Date objects
+  //     session.startTime = new Date(session.startTime)
+  //     if (session.endTime) session.endTime = new Date(session.endTime)
+      
+  //     return session
+  //   } catch (error) {
+  //     console.error('Error getting current session:', error)
+  //     return null
+  //   }
+  // }
+
+  async getCurrentSessionFromAPI(): Promise<FocusSession | null> {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEYS.CURRENT_SESSION)
-      if (!stored) return null
+      const token = localStorage.getItem('authToken')
+      if (!token) return null
+
+      const response = await fetch('http://localhost:8000/api/time-logs/current', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null // No active session
+        }
+        throw new Error(`Failed to get current session: ${response.status}`)
+      }
+
+      const responseData = await response.json()
       
-      const session = JSON.parse(stored)
-      // Convert date strings back to Date objects
-      session.startTime = new Date(session.startTime)
-      if (session.endTime) session.endTime = new Date(session.endTime)
-      
-      return session
+      // Convert backend response to frontend session format
+      return {
+        id: responseData.session_id,
+        startTime: new Date(responseData.start_time),
+        endTime: responseData.end_time ? new Date(responseData.end_time) : undefined,
+        plannedDuration: responseData.planned_duration,
+        actualDuration: responseData.actual_duration,
+        sessionType: responseData.type as 'focus' | 'break',
+        status: responseData.status as 'active' | 'completed' | 'stopped' | 'paused'
+      }
     } catch (error) {
-      console.error('Error getting current session:', error)
+      console.error('Error fetching current session from API:', error)
       return null
     }
   }
 
-  getPausedSession(): FocusSession | null {
-    try {
-      const stored = localStorage.getItem(this.STORAGE_KEYS.PAUSED_SESSION)
-      if (!stored) return null
+  // COMMENTED OUT FOR API-ONLY TESTING - localStorage version
+  // getPausedSession(): FocusSession | null {
+  //   try {
+  //     const stored = localStorage.getItem(this.STORAGE_KEYS.PAUSED_SESSION)
+  //     if (!stored) return null
       
-      const session = JSON.parse(stored)
-      // Convert date strings back to Date objects
-      session.startTime = new Date(session.startTime)
-      if (session.endTime) session.endTime = new Date(session.endTime)
+  //     const session = JSON.parse(stored)
+  //     // Convert date strings back to Date objects
+  //     session.startTime = new Date(session.startTime)
+  //     if (session.endTime) session.endTime = new Date(session.endTime)
       
-      return session
-    } catch (error) {
-      console.error('Error getting paused session:', error)
-      return null
-    }
-  }
+  //     return session
+  //   } catch (error) {
+  //     console.error('Error getting paused session:', error)
+  //     return null
+  //   }
+  // }
 
   async getDailySummary(date?: string): Promise<DailySummary> {
     const targetDate = date || new Date().toISOString().split('T')[0]
     console.log('📊 Getting daily summary for:', targetDate)
     
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEYS.DAILY_SUMMARY)
-      const allSummaries: Record<string, DailySummary> = stored ? JSON.parse(stored) : {}
-      
-      let summary = allSummaries[targetDate] || {
-        date: targetDate,
-        totalFocusSessions: 0,
-        totalFocusTime: 0,
-        totalBreakTime: 0,
-        sessions: []
+      const token = localStorage.getItem('authToken')
+      if (!token) {
+        console.log('⚠️ No auth token found, returning empty summary')
+        return {
+          date: targetDate,
+          totalFocusSessions: 0,
+          totalFocusTime: 0,
+          totalBreakTime: 0,
+          sessions: []
+        }
       }
-      
-      // Recalculate totals from sessions to ensure data integrity
-      if (summary.sessions.length > 0) {
-        summary.totalFocusSessions = 0;
-        summary.totalFocusTime = 0;
-        summary.totalBreakTime = 0;
-        
-        summary.sessions.forEach(session => {
-          if ((session.status === 'completed' || session.status === 'stopped') && session.actualDuration) {
-            if (session.sessionType === 'focus') {
-              summary.totalFocusSessions += 1;
-              summary.totalFocusTime += session.actualDuration * 60; // convert to seconds
-            } else if (session.sessionType === 'break') {
-              summary.totalBreakTime += session.actualDuration * 60; // convert to seconds
-            }
+
+      // Fetch daily summary from API
+      const response = await fetch(`http://localhost:8000/api/time-logs/daily-summary?date=${targetDate}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log('📊 No data found for date, returning empty summary')
+          return {
+            date: targetDate,
+            totalFocusSessions: 0,
+            totalFocusTime: 0,
+            totalBreakTime: 0,
+            sessions: []
           }
-        });
-        
-        console.log('🔄 Recalculated totals from sessions:', {
-          sessions: summary.sessions.length,
-          focusSessions: summary.totalFocusSessions,
-          focusTime: summary.totalFocusTime,
-          breakTime: summary.totalBreakTime
-        });
+        }
+        throw new Error(`Failed to get daily summary: ${response.status}`)
       }
+
+      const responseData = await response.json()
+      
+      // Convert backend response to frontend format
+      const sessions: FocusSession[] = responseData.sessions?.map((session: any) => ({
+        id: session.session_id,
+        startTime: new Date(session.start_time),
+        endTime: session.end_time ? new Date(session.end_time) : undefined,
+        plannedDuration: session.planned_duration,
+        actualDuration: session.actual_duration,
+        sessionType: session.type as 'focus' | 'break',
+        status: session.status as 'active' | 'completed' | 'stopped' | 'paused'
+      })) || []
+
+      const summary: DailySummary = {
+        date: targetDate,
+        totalFocusSessions: responseData.total_focus_sessions || 0,
+        totalFocusTime: responseData.total_focus_time || 0,
+        totalBreakTime: responseData.total_break_time || 0,
+        sessions: sessions
+      }
+
+      console.log('🔄 Recalculated totals from sessions:', { 
+        sessions: sessions.length, 
+        focusSessions: summary.totalFocusSessions, 
+        focusTime: summary.totalFocusTime, 
+        breakTime: summary.totalBreakTime 
+      })
       
       console.log('📊 Daily summary:', summary)
       return summary
+
     } catch (error) {
-      console.error('Error getting daily summary:', error)
+      console.error('Failed to get daily summary from API:', error)
+      // Fallback to empty summary
       return {
         date: targetDate,
         totalFocusSessions: 0,
@@ -258,61 +514,64 @@ class TimeTrackerService {
     }
   }
 
-  private addSessionToDailySummary(session: FocusSession) {
-    // Ensure startTime is a Date object for proper date extraction
-    const startTime = typeof session.startTime === 'string' ? new Date(session.startTime) : session.startTime;
-    const date = startTime.toISOString().split('T')[0]
+  // COMMENTED OUT FOR API-ONLY TESTING - localStorage daily summary
+  // private addSessionToDailySummary(session: FocusSession) {
+  //   // Ensure startTime is a Date object for proper date extraction
+  //   const startTime = typeof session.startTime === 'string' ? new Date(session.startTime) : session.startTime;
+  //   const date = startTime.toISOString().split('T')[0]
     
-    console.log('💾 Adding session to daily summary:', { sessionId: session.id, date, sessionType: session.sessionType, status: session.status });
+  //   console.log('💾 Adding session to daily summary:', { sessionId: session.id, date, sessionType: session.sessionType, status: session.status });
     
-    try {
-      const stored = localStorage.getItem(this.STORAGE_KEYS.DAILY_SUMMARY)
-      const allSummaries: Record<string, DailySummary> = stored ? JSON.parse(stored) : {}
+  //   try {
+  //     const stored = localStorage.getItem(this.STORAGE_KEYS.DAILY_SUMMARY)
+  //     const allSummaries: Record<string, DailySummary> = stored ? JSON.parse(stored) : {}
       
-      if (!allSummaries[date]) {
-        allSummaries[date] = {
-          date,
-          totalFocusSessions: 0,
-          totalFocusTime: 0,
-          totalBreakTime: 0,
-          sessions: []
-        }
-      }
+  //     if (!allSummaries[date]) {
+  //       allSummaries[date] = {
+  //         date,
+  //         totalFocusSessions: 0,
+  //         totalFocusTime: 0,
+  //         totalBreakTime: 0,
+  //         sessions: []
+  //       }
+  //     }
       
-      const summary = allSummaries[date]
-      summary.sessions.push(session)
+  //     const summary = allSummaries[date]
+  //     summary.sessions.push(session)
       
-      // Count both completed and stopped sessions (stopped still counts as productive time)
-      if ((session.status === 'completed' || session.status === 'stopped') && session.actualDuration) {
-        if (session.sessionType === 'focus') {
-          summary.totalFocusSessions += 1
-          summary.totalFocusTime += session.actualDuration * 60 // convert to seconds
-        } else if (session.sessionType === 'break') {
-          summary.totalBreakTime += session.actualDuration * 60 // convert to seconds
-        }
-        console.log(`📊 Updated totals: ${session.sessionType} sessions: ${summary.totalFocusSessions}, focus time: ${summary.totalFocusTime}s`);
-      }
+  //     // Count both completed and stopped sessions (stopped still counts as productive time)
+  //     if ((session.status === 'completed' || session.status === 'stopped') && session.actualDuration) {
+  //       if (session.sessionType === 'focus') {
+  //         summary.totalFocusSessions += 1
+  //         summary.totalFocusTime += session.actualDuration * 60 // convert to seconds
+  //       } else if (session.sessionType === 'break') {
+  //         summary.totalBreakTime += session.actualDuration * 60 // convert to seconds
+  //       }
+  //       console.log(`📊 Updated totals: ${session.sessionType} sessions: ${summary.totalFocusSessions}, focus time: ${summary.totalFocusTime}s`);
+  //     }
       
-      localStorage.setItem(this.STORAGE_KEYS.DAILY_SUMMARY, JSON.stringify(allSummaries))
-      console.log('💾 Session added to daily summary:', { date, session })
+  //     localStorage.setItem(this.STORAGE_KEYS.DAILY_SUMMARY, JSON.stringify(allSummaries))
+  //     console.log('💾 Session added to daily summary:', { date, session })
       
-    } catch (error) {
-      console.error('Error adding session to daily summary:', error)
-    }
-  }
+  //   } catch (error) {
+  //     console.error('Error adding session to daily summary:', error)
+  //   }
+  // }
 
   // Helper method to clear all data (for testing)
-  clearAllData() {
-    Object.values(this.STORAGE_KEYS).forEach(key => {
-      localStorage.removeItem(key)
-    })
-    console.log('🗑️ All time tracker data cleared')
-  }
+  // COMMENTED OUT FOR API-ONLY TESTING
+  // clearAllData() {
+  //   Object.values(this.STORAGE_KEYS).forEach(key => {
+  //     localStorage.removeItem(key)
+  //   })
+  //   console.log('🗑️ All time tracker data cleared')
+  // }
 
   // Helper method to check if there's a paused session
-  hasPausedSession(): boolean {
-    return this.getPausedSession() !== null
-  }
+  // COMMENTED OUT FOR API-ONLY TESTING
+  // hasPausedSession(): boolean {
+  //   return this.getPausedSession() !== null
+  // }
 }
 
 // Export singleton instance

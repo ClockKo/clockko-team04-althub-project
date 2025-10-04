@@ -29,6 +29,42 @@ def get_current_session(db: Session = Depends(get_db), user = Depends(get_curren
         raise HTTPException(status_code=404, detail="No ongoing session")
     return result
 
+@router.get("/last-session", response_model=TimeLogResponse)
+def get_last_session(db: Session = Depends(get_db), user = Depends(get_current_user)):
+    # Get the most recent completed work session
+    result = timetrackerservice.get_last_session(db, user.id)
+    if not result:
+        raise HTTPException(status_code=404, detail="No completed session found")
+    return result
+
+@router.get("/data")
+def get_dashboard_data(db: Session = Depends(get_db), user = Depends(get_current_user)):
+    # Get dashboard data for the frontend
+    try:
+        # Get tasks (this might need to be implemented)
+        tasks = taskservice.get_user_tasks(db, user.id) if hasattr(taskservice, 'get_user_tasks') else []
+        
+        # Get today's focus time
+        total_focus_time = timetrackerservice.get_focus_time(db, user.id)
+        
+        # Return data in expected format
+        return {
+            "tasks": tasks,
+            "todaySummary": {
+                "duration": total_focus_time
+            },
+            "points": 0  # Placeholder for user points/streak
+        }
+    except Exception as e:
+        # Return default data if there's an error
+        return {
+            "tasks": [],
+            "todaySummary": {
+                "duration": 0
+            },
+            "points": 0
+        }
+
 # Today's progress Focus Time 
 @router.get("/focus-sessions/all-daily-focus", response_model=FocusTimeResponse)
 def get_focus_time(db: Session = Depends(get_db), user = Depends(get_current_user)):

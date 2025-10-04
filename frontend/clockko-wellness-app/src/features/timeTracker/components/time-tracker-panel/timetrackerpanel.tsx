@@ -1,6 +1,38 @@
 /*
   # Includes localStorage service integration for immediate functionality
-  # Ready for backend API integration when available
+  # Ready for backend API i    // Handle sound theme change
+    const handleThemeChange = (theme: SoundTheme) => {
+        setCurrentSoundTheme(theme);
+        soundService.setTheme(theme);
+        // Play preview of the new theme
+        soundService.playThemePreview(theme);
+    };
+
+    // Helper function to resume a paused focus session
+    const resumePausedFocusSession = (pausedSession: FocusSession, remainingTimeSeconds: number) => {
+        timeTrackerService.resumeFocusSession(pausedSession.id).then(resumedSession => {
+            setCurrentSession(resumedSession);
+            
+            // Restore focus mode and remaining time
+            setMode('focus');
+            setTimeLeft(remainingTimeSeconds);
+            setFocusDuration(pausedSession.plannedDuration * 60); // plannedDuration is in minutes, convert to seconds for UI
+            setIsRunning(true); // Resume the timer automatically
+            
+            // Clear the paused session state
+            setPausedFocusSession(null);
+            setPausedFocusTimeLeft(null);
+            
+            console.log("✅ Focus session resumed with", remainingTimeSeconds, "seconds remaining, auto-starting timer");
+        }).catch(error => {
+            console.error("Failed to resume focus session:", error);
+            // Fallback: go to initial state
+            setMode('initial');
+            setTimeLeft(FOCUS_DEFAULT_DURATION);
+            setPausedFocusSession(null);
+            setPausedFocusTimeLeft(null);
+        });
+    };ion when available
 */
 
 import { useState, useEffect, useRef } from "react";
@@ -54,12 +86,13 @@ function TimeTrackerPanel() {
 
     // Remember, this is a debug function only - remove or disable in production
     // Debug function to manually clear stuck sessions and refresh data
-    const clearStuckSession = () => {
-        const currentSession = timeTrackerService.getCurrentSession();
-        const pausedSession = timeTrackerService.getPausedSession();
+    const clearStuckSession = async () => {
+        // Check for active session via API
+        const activeSession = await timeTrackerService.getCurrentSessionFromAPI();
         
-        if (currentSession || pausedSession || pausedFocusSession) {
-            console.log("🧹 Manually clearing sessions:", { currentSession, pausedSession, pausedFocusSession });
+        if (activeSession || currentSession || pausedFocusSession) {
+            console.log("🧹 Manually clearing sessions:", { activeSession, currentSession, pausedFocusSession });
+            // Clear localStorage fallbacks (still needed for UI state)
             localStorage.removeItem('timetracker_current_session');
             localStorage.removeItem('timetracker_paused_session');
             setCurrentSession(null);
@@ -126,7 +159,7 @@ function TimeTrackerPanel() {
     const [currentSession, setCurrentSession] = useState<FocusSession | null>(null); // Current active session
     const [pausedFocusSession, setPausedFocusSession] = useState<FocusSession | null>(null); // Paused focus session during break
     const [pausedFocusTimeLeft, setPausedFocusTimeLeft] = useState<number | null>(null); // Time left on paused focus session
-    const [isDataLoaded, setIsDataLoaded] = useState(false); // Track if data has been loaded
+    const [isDataLoaded] = useState(false); // Track if data has been loaded (read-only for now)
 
     // --- Sound Settings State ---
     const [soundEnabled, setSoundEnabled] = useState(true);
@@ -236,31 +269,26 @@ function TimeTrackerPanel() {
         
         // Stop active session if it exists
         if (currentSession) {
-            timeTrackerService.stopFocusSession(currentSession.id).then(stoppedSession => {
-                console.log("🛑 Session stopped:", stoppedSession);
-                setCurrentSession(null);
-                
-                // Refresh daily summary to show updated stats
-                return refreshDailySummary();
-            }).catch(error => {
-                console.error("Failed to stop session:", error);
+            // For API-only testing, we're not implementing stop functionality
+            console.log("🛑 Would stop session:", currentSession.id, "but stop functionality disabled for API-only testing");
+            setCurrentSession(null);
+            
+            // Refresh daily summary to show updated stats
+            refreshDailySummary().catch(error => {
+                console.error("Failed to refresh daily summary:", error);
             });
         }
         
-        // If there's a paused focus session, stop it using the service
-        const servicePausedSession = timeTrackerService.getPausedSession();
-        if (servicePausedSession || pausedFocusSession) {
-            const sessionToStop = servicePausedSession || pausedFocusSession;
-            timeTrackerService.stopSessionManually(sessionToStop!).then(stoppedSession => {
-                console.log("🛑 Paused focus session stopped:", stoppedSession);
-                
-                // Clear paused session storage
-                localStorage.removeItem('timetracker_paused_session');
-                
-                // Refresh daily summary to show updated stats
-                return refreshDailySummary();
-            }).catch(error => {
-                console.error("Failed to stop paused session:", error);
+        // If there's a paused focus session, clear it (for API-only testing)
+        if (pausedFocusSession) {
+            console.log("🛑 Clearing paused focus session for API-only testing:", pausedFocusSession);
+            
+            // Clear paused session storage
+            localStorage.removeItem('timetracker_paused_session');
+            
+            // Refresh daily summary to show updated stats
+            refreshDailySummary().catch(error => {
+                console.error("Failed to refresh daily summary:", error);
             });
         }
         
@@ -273,6 +301,32 @@ function TimeTrackerPanel() {
         setPausedFocusTimeLeft(null); // Clear paused time
         setIsDropdownOpen(false); // Close start dropdown
         setIsBreakDropdownOpen(false); // Close break dropdown
+    };
+
+    // Helper function to resume a paused focus session
+    const resumePausedFocusSession = (pausedSession: FocusSession, remainingTimeSeconds: number) => {
+        timeTrackerService.resumeFocusSession(pausedSession.id).then(resumedSession => {
+            setCurrentSession(resumedSession);
+            
+            // Restore focus mode and remaining time
+            setMode('focus');
+            setTimeLeft(remainingTimeSeconds);
+            setFocusDuration(pausedSession.plannedDuration * 60); // plannedDuration is in minutes, convert to seconds for UI
+            setIsRunning(true); // Resume the timer automatically
+            
+            // Clear the paused session state
+            setPausedFocusSession(null);
+            setPausedFocusTimeLeft(null);
+            
+            console.log("✅ Focus session resumed with", remainingTimeSeconds, "seconds remaining, auto-starting timer");
+        }).catch(error => {
+            console.error("Failed to resume focus session:", error);
+            // Fallback: go to initial state
+            setMode('initial');
+            setTimeLeft(FOCUS_DEFAULT_DURATION);
+            setPausedFocusSession(null);
+            setPausedFocusTimeLeft(null);
+        });
     };
 
     // Handler for when the timer reaches 0
@@ -330,35 +384,31 @@ function TimeTrackerPanel() {
             setTotalBreakTime(prev => prev + breakDuration); // Add completed break duration (legacy)
             
             // Check if there's a paused focus session to resume
+            // First check component state, then check backend for paused sessions
             if (pausedFocusSession && pausedFocusTimeLeft !== null) {
-                console.log("🔄 Resuming paused focus session after break:", pausedFocusSession);
-                
-                // Resume the focus session using the service
-                timeTrackerService.resumeFocusSession(pausedFocusSession.id).then(resumedSession => {
-                    setCurrentSession(resumedSession);
-                    
-                    // Restore focus mode and remaining time
-                    setMode('focus');
-                    setTimeLeft(pausedFocusTimeLeft);
-                    setFocusDuration(pausedFocusSession.plannedDuration * 60); // Convert back to seconds
-                    
-                    // Clear the paused session state
-                    setPausedFocusSession(null);
-                    setPausedFocusTimeLeft(null);
-                    
-                    console.log("✅ Focus session resumed with", pausedFocusTimeLeft, "seconds remaining");
-                }).catch(error => {
-                    console.error("Failed to resume focus session:", error);
-                    // Fallback: go to initial state
-                    setMode('initial');
-                    setTimeLeft(focusDuration);
-                    setPausedFocusSession(null);
-                    setPausedFocusTimeLeft(null);
-                });
+                console.log("🔄 Resuming paused focus session from component state:", pausedFocusSession);
+                resumePausedFocusSession(pausedFocusSession, pausedFocusTimeLeft);
             } else {
-                // No paused focus session, go back to initial state
-                setMode('initial');
-                setTimeLeft(focusDuration); // Set time back to the last selected focus duration
+                // Check backend for any paused focus sessions
+                console.log("🔍 Checking backend for paused focus sessions...");
+                timeTrackerService.getCurrentSessionFromAPI().then(backendSession => {
+                    if (backendSession && backendSession.status === 'paused' && backendSession.sessionType === 'focus') {
+                        console.log("🔄 Found paused focus session in backend:", backendSession);
+                        // Calculate remaining time based on planned duration and elapsed time
+                        const elapsedMinutes = backendSession.actualDuration || 0;
+                        const remainingSeconds = Math.max(0, (backendSession.plannedDuration - elapsedMinutes) * 60);
+                        resumePausedFocusSession(backendSession, remainingSeconds);
+                    } else {
+                        // No paused focus session, go back to initial state
+                        setMode('initial');
+                        setTimeLeft(FOCUS_DEFAULT_DURATION);
+                        console.log("ℹ️ No paused focus session found, returning to initial state");
+                    }
+                }).catch(error => {
+                    console.error("Failed to check for paused sessions:", error);
+                    setMode('initial');
+                    setTimeLeft(FOCUS_DEFAULT_DURATION);
+                });
             }
         }
         setIsRunning(false); // Ensure timer is not running
@@ -453,20 +503,17 @@ function TimeTrackerPanel() {
             // If there's a stuck active session, try to clean it up and retry
             if (error.message.includes("Active") && error.message.includes("session already exists")) {
                 console.log("🔄 Attempting to clean up stuck session and retry...");
-                const stuckSession = timeTrackerService.getCurrentSession();
-                if (stuckSession) {
-                    // Force clear the stuck session
-                    localStorage.removeItem('timetracker_current_session');
-                    console.log("🧹 Cleared stuck session, retrying...");
-                    
-                    // Retry starting the session
-                    timeTrackerService.startFocusSession(minutes, 'focus').then(session => {
-                        setCurrentSession(session);
-                        console.log("✅ Focus session started after cleanup:", session);
-                    }).catch(retryError => {
-                        console.error("❌ Still failed after cleanup:", retryError);
-                    });
-                }
+                // For API-only testing, we'll just clear localStorage and retry
+                localStorage.removeItem('timetracker_current_session');
+                console.log("🧹 Cleared stuck session from localStorage, retrying...");
+                
+                // Retry starting the session
+                timeTrackerService.startFocusSession(minutes, 'focus').then(session => {
+                    setCurrentSession(session);
+                    console.log("✅ Focus session started after cleanup:", session);
+                }).catch(retryError => {
+                    console.error("❌ Still failed after cleanup:", retryError);
+                });
             }
         });
     };
@@ -499,7 +546,13 @@ function TimeTrackerPanel() {
                             {/* Temporary debug buttons - remove in production */}
                             <div style={{ marginTop: '5px', display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                                 <button 
-                                    onClick={clearStuckSession} 
+                                    onClick={() => {
+                                        localStorage.removeItem('timetracker_daily_summary');
+                                        localStorage.removeItem('timetracker_current_session');
+                                        localStorage.removeItem('timetracker_paused_session');
+                                        console.log('🧹 Cleared all localStorage data');
+                                        refreshDailySummary();
+                                    }} 
                                     style={{
                                         background: '#ff6b6b', 
                                         color: 'white', 
@@ -510,10 +563,19 @@ function TimeTrackerPanel() {
                                         cursor: 'pointer'
                                     }}
                                 >
-                                    🧹 Clear Stuck Session
+                                    🗑️ Clear All Data
                                 </button>
                                 <button 
-                                    onClick={forceRefreshSummary} 
+                                    onClick={() => {
+                                        const token = localStorage.getItem('authToken');
+                                        const userData = localStorage.getItem('userData');
+                                        console.log('🔐 Auth Status:', {
+                                            hasToken: !!token,
+                                            tokenLength: token?.length || 0,
+                                            hasUserData: !!userData,
+                                            userData: userData ? JSON.parse(userData) : null
+                                        });
+                                    }} 
                                     style={{
                                         background: '#4ecdc4', 
                                         color: 'white', 
@@ -524,7 +586,7 @@ function TimeTrackerPanel() {
                                         cursor: 'pointer'
                                     }}
                                 >
-                                    🔄 Refresh Summary
+                                    � Check Auth
                                 </button>
                                 <button 
                                     onClick={toggleSound} 
@@ -569,7 +631,7 @@ function TimeTrackerPanel() {
                                 }}>
                                     {isDataLoaded ? '✅ Data Loaded' : '⏳ Loading...'}
                                 </span>
-                                {(pausedFocusSession || timeTrackerService.hasPausedSession()) && (
+                                {pausedFocusSession && (
                                     <span style={{ 
                                         fontSize: '12px', 
                                         color: '#ff9800',

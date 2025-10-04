@@ -46,7 +46,7 @@ app.add_middleware(
 
 # Include API routers
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
-app.include_router(timetracker.router, prefix="", tags=["time-log"])
+app.include_router(timetracker.router, prefix="/api", tags=["time-log"])
 app.include_router(users.router, prefix="/api/users", tags=["User Management"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])

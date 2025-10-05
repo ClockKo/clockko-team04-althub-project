@@ -616,11 +616,19 @@ class TimeTrackerService {
     console.log('🧹 Clearing all timetracker sessions...')
     
     const token = localStorage.getItem('authToken')
+    console.log('🔍 Token check:', { 
+      exists: !!token, 
+      preview: token?.substring(0, 20) + '...' 
+    })
+    
     if (!token) {
-      throw new Error('User not authenticated')
+      const errorMsg = 'User not authenticated - no authToken found'
+      console.error('❌', errorMsg)
+      throw new Error(errorMsg)
     }
 
     try {
+      console.log('📡 Making DELETE request to clear-all endpoint...')
       const response = await fetch('http://localhost:8000/api/time-logs/clear-all', {
         method: 'DELETE',
         headers: {
@@ -629,19 +637,24 @@ class TimeTrackerService {
         }
       })
 
+      console.log('📡 Response status:', response.status)
+      console.log('📡 Response ok:', response.ok)
+
       if (!response.ok) {
-        throw new Error(`Failed to clear sessions: ${response.status}`)
+        const errorText = await response.text()
+        console.error('❌ API Error:', { status: response.status, text: errorText })
+        throw new Error(`Failed to clear sessions: ${response.status} - ${errorText}`)
       }
 
-      const result = await response.json()
-      console.log('✅ Sessions cleared:', result)
+      const clearResult = await response.json()
+      console.log('✅ Clear successful:', clearResult)
       
       // Clear any localStorage as well for complete clean slate
       localStorage.removeItem('timetracker_current_session')
       localStorage.removeItem('timetracker_daily_summary')
       localStorage.removeItem('timetracker_paused_session')
       
-      return result
+      return clearResult
     } catch (error) {
       console.error('Failed to clear sessions:', error)
       throw error

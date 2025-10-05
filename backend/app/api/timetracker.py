@@ -68,6 +68,11 @@ def clear_all_sessions(db: Session = Depends(get_db), user = Depends(get_current
     """Clear all timetracker sessions for clean slate"""
     return timetrackerservice.clear_all_sessions(db, user.id)
 
+@router.delete("/time-logs/clear-today")
+def clear_today_sessions(db: Session = Depends(get_db), user = Depends(get_current_user)):
+    """Clear only today's timetracker sessions for fresh start"""
+    return timetrackerservice.clear_today_sessions(db, user.id)
+
 # @router.get("/paused_session", response_model=FocusSessionResponse)
 # def get_current_paused_session(user_id: str, db: Session = Depends(get_db)):
 #     return

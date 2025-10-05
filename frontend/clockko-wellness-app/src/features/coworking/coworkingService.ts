@@ -1,22 +1,23 @@
 /*
-coworkingService.ts - Enhanced co-working service with WebRTC audio streaming
-Handles room functionality with real-time audio transmission between users
+coworkingService.ts - Enhanced co-working service with backend API integration
+Handles room functionality with real-time communication through backend API
 */
 
 import type { Room, RoomSummary, Participant, Message } from '../../types/typesGlobal';
 import { webRTCService } from './webRTCService';
+import * as api from './api';
 
 // Get current user with proper name resolution (same as dashboard)
 const getCurrentUser = async (): Promise<Participant> => {
   const savedAvatar = localStorage.getItem('userAvatar');
   
-  // Try to get user data the same way the dashboard does
+  // Try to get user data from the working auth endpoint
   let userData: any = null;
   try {
     const token = localStorage.getItem('authToken');
     if (token) {
-      // Use the same API call as dashboard
-      const response = await fetch('http://localhost:8000/api/users/profile', {
+      // Use the working auth/user endpoint
+      const response = await fetch('http://localhost:8000/api/auth/user', {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -25,7 +26,7 @@ const getCurrentUser = async (): Promise<Participant> => {
       
       if (response.ok) {
         const data = await response.json();
-        userData = data.user || data; // Support both nested and flat response formats
+        userData = data; // This endpoint returns user data directly
         console.log('🎯 Coworking: Fetched user data from API:', userData);
       }
     }
@@ -48,7 +49,7 @@ const getCurrentUser = async (): Promise<Participant> => {
     }
   }
   
-  // Create unique session ID
+  // Create unique session ID (for client-side reference only)
   const port = window.location.port;
   let sessionId = localStorage.getItem('coworking_session_id');
   if (!sessionId) {
@@ -72,28 +73,12 @@ const getCurrentUser = async (): Promise<Participant> => {
 };
 
 class CoworkingService {
-  private storageKeys = {
-    rooms: 'coworking_rooms',
-    currentRoom: 'coworking_current_room',
-    userSession: 'coworking_user_session'
-  };
-
   private eventListeners: Map<string, Set<(data: any) => void>> = new Map();
+  private currentRoomId: string | null = null;
 
   constructor() {
-    this.initializeDefaultRooms();
     this.setupEventListeners();
-    // Force reset rooms to ensure clean state for demonstration
-    this.resetAllRooms();
-  }
-
-  // Force reset all rooms to empty state
-  private resetAllRooms() {
-    const roomIds = ["focus", "pomodoro", "casual", "study"];
-    roomIds.forEach(roomId => {
-      localStorage.removeItem(`coworking_room_${roomId}`);
-    });
-    console.log('🔄 Reset all rooms to empty state');
+    console.log('🏢 CoworkingService initialized with backend API integration');
   }
 
   // Setup event listeners for cleanup
@@ -105,9 +90,8 @@ class CoworkingService {
 
   // Cleanup method
   private cleanup() {
-    const session = this.getCurrentSession();
-    if (session) {
-      this.leaveRoom(session.roomId);
+    if (this.currentRoomId) {
+      this.leaveRoom(this.currentRoomId);
     }
   }
 
@@ -127,32 +111,22 @@ class CoworkingService {
     this.eventListeners.get(event)?.forEach(callback => callback(data));
   }
 
-  // Initialize default rooms if none exist
-  private initializeDefaultRooms() {
-    // Always reset rooms to ensure clean state
-    const defaultRooms: RoomSummary[] = [
-      { id: "focus", name: "Focus Zone", description: "Deep Work", status: "active", count: 0, color: "bg-grayBlue" },
-      { id: "pomodoro", name: "Pomodoro Power", description: "30 min Sessions", status: "active", count: 0, color: "bg-green-50" },
-      { id: "casual", name: "Casual Work", description: "Light collaboration", status: "active", count: 0, color: "bg-blue-50" },
-      { id: "study", name: "Study Hall", description: "Silent study time", status: "active", count: 0, color: "bg-purple-50" },
-    ];
-    
-    localStorage.setItem(this.storageKeys.rooms, JSON.stringify(defaultRooms));
-    
-    // Clear any existing room data to ensure fresh start
-    defaultRooms.forEach(room => {
-      localStorage.removeItem(`coworking_room_${room.id}`);
-    });
-    
-    console.log('🏢 Initialized clean rooms with zero participants');
-  }
-
-  // Get all available rooms with accurate counts
+  // Get all available rooms using backend API
   async getRooms(): Promise<RoomSummary[]> {
     try {
+      console.log('🏢 Fetching rooms from backend API...');
+      const rooms = await api.fetchRooms();
+      console.log('✅ Rooms fetched:', rooms);
+      return rooms;
+    } catch (error) {
+      console.error('❌ Failed to fetch rooms:', error);
+      
+      // Comment out localStorage fallback for debugging - we want to see API issues
+      /*
+      console.log('🔄 Falling back to localStorage...');
       await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API call
       
-      const rooms = JSON.parse(localStorage.getItem(this.storageKeys.rooms) || '[]');
+      const rooms = JSON.parse(localStorage.getItem('coworking_rooms') || '[]');
       
       // Update room counts based on actual participants
       rooms.forEach((room: RoomSummary) => {
@@ -165,17 +139,27 @@ class CoworkingService {
         }
       });
       
-      localStorage.setItem(this.storageKeys.rooms, JSON.stringify(rooms));
       return rooms;
-    } catch (error) {
-      console.error('Failed to fetch rooms:', error);
-      return [];
+      */
+      
+      // For now, throw the error so we can debug API issues
+      throw error;
     }
   }
 
-  // Get specific room details
+  // Get specific room details using backend API
   async getRoom(roomId: string): Promise<Room | null> {
     try {
+      console.log(`🏠 Fetching room ${roomId} from backend API...`);
+      const room = await api.fetchRoom(roomId);
+      console.log('✅ Room fetched:', room);
+      return room;
+    } catch (error) {
+      console.error(`❌ Failed to fetch room ${roomId}:`, error);
+      
+      // Comment out localStorage fallback for debugging
+      /*
+      console.log('🔄 Falling back to localStorage...');
       const roomKey = `coworking_room_${roomId}`;
       const roomData = localStorage.getItem(roomKey);
       
@@ -204,17 +188,47 @@ class CoworkingService {
         localStorage.setItem(roomKey, JSON.stringify(newRoom));
         return newRoom;
       }
-
-      return null;
-    } catch (error) {
-      console.error('Failed to fetch room:', error);
-      return null;
+      */
+      
+      // For now, throw the error so we can debug API issues
+      throw error;
     }
   }
 
-  // Join a room
+  // Join a room using backend API
   async joinRoom(roomId: string): Promise<Room | null> {
     try {
+      console.log(`🚪 Joining room ${roomId} via backend API...`);
+      const room = await api.joinRoom(roomId);
+      
+      if (room) {
+        this.currentRoomId = roomId;
+        
+        // Store current room for cleanup
+        localStorage.setItem('coworking_current_room', roomId);
+        
+        // Initialize WebRTC for voice transmission (testing mode)
+        try {
+          const currentUser = await getCurrentUser();
+          await webRTCService.initializeRoom(roomId, currentUser.id);
+          console.log('🔗 WebRTC initialized for voice transmission');
+        } catch (error) {
+          console.log('⚠️ WebRTC initialization failed (continuing without voice):', error);
+        }
+        
+        console.log(`✅ Successfully joined room "${room.name}". Total participants: ${room.participants.length}`);
+        console.log('📋 Current participants:', room.participants.map(p => `${p.name} (${p.id})`));
+        
+        this.emit('roomJoined', { roomId, room });
+      }
+      
+      return room;
+    } catch (error) {
+      console.error(`❌ Failed to join room ${roomId}:`, error);
+      
+      // Comment out localStorage fallback for debugging
+      /*
+      console.log('🔄 Falling back to localStorage...');
       const room = await this.getRoom(roomId);
       if (!room) return null;
 
@@ -230,58 +244,44 @@ class CoworkingService {
         localStorage.setItem(`coworking_room_${roomId}`, JSON.stringify(room));
         
         // Update user's current room session
-        localStorage.setItem(this.storageKeys.currentRoom, roomId);
-        localStorage.setItem(this.storageKeys.userSession, JSON.stringify({
-          roomId,
-          joinedAt: new Date().toISOString(),
-          isMuted: true,
-          isSpeaking: false
-        }));
-
-        // Initialize WebRTC for audio streaming (disabled until backend WebSocket ready)
-        /*
-        try {
-          await webRTCService.initializeRoom(roomId, currentUser.id);
-          console.log('🔗 WebRTC initialized for room audio streaming');
-        } catch (error) {
-          console.warn('⚠️ WebRTC initialization failed, continuing without audio:', error);
-        }
-        */
-        console.log('⚠️ WebRTC disabled - Backend WebSocket signaling required for real audio streaming');
-
-        // Add system message
-        await this.addMessage(roomId, {
-          id: `system_${Date.now()}`,
-          user: 'System',
-          avatar: '',
-          text: `${currentUser.name} joined the room`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
+        this.currentRoomId = roomId;
+        localStorage.setItem('coworking_current_room', roomId);
 
         console.log(`✅ ${currentUser.name} joined room "${room.name}". Total participants: ${room.participants.length}`);
-        
-        // Log all current participants for debugging
         console.log('📋 Current participants:', room.participants.map(p => `${p.name} (${p.id})`));
       }
 
       this.emit('roomJoined', { roomId, room });
       return room;
-    } catch (error) {
-      console.error('Failed to join room:', error);
-      return null;
+      */
+      
+      throw error;
     }
   }
 
-  // Leave a room
+  // Leave a room using backend API
   async leaveRoom(roomId: string): Promise<void> {
     try {
+      console.log(`🚪 Leaving room ${roomId} via backend API...`);
+      const success = await api.leaveRoom(roomId);
+      
+      if (success) {
+        this.currentRoomId = null;
+        localStorage.removeItem('coworking_current_room');
+        
+        console.log(`� Successfully left room ${roomId}`);
+        this.emit('roomLeft', { roomId });
+      }
+    } catch (error) {
+      console.error(`❌ Failed to leave room ${roomId}:`, error);
+      
+      // Comment out localStorage fallback for debugging
+      /*
+      console.log('🔄 Falling back to localStorage...');
       const room = await this.getRoom(roomId);
       if (!room) return;
 
       const currentUser = await getCurrentUser();
-      
-      // Leave WebRTC room first (disabled until backend ready)
-      // webRTCService.leaveRoom();
       
       // Remove user from participants
       room.participants = room.participants.filter(p => p.id !== currentUser.id);
@@ -291,129 +291,121 @@ class CoworkingService {
       localStorage.setItem(`coworking_room_${roomId}`, JSON.stringify(room));
       
       // Clear user session
-      localStorage.removeItem(this.storageKeys.currentRoom);
-      localStorage.removeItem(this.storageKeys.userSession);
-
-      // Add system message
-      await this.addMessage(roomId, {
-        id: `system_${Date.now()}`,
-        user: 'System',
-        avatar: '',
-        text: `${currentUser.name} left the room`,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      });
+      this.currentRoomId = null;
+      localStorage.removeItem('coworking_current_room');
 
       console.log(`👋 ${currentUser.name} left room "${room.name}". Total participants: ${room.participants.length}`);
       
-      // Log remaining participants for debugging
-      if (room.participants.length > 0) {
-        console.log('📋 Remaining participants:', room.participants.map(p => `${p.name} (${p.id})`));
-      } else {
-        console.log('📭 Room is now empty');
-      }
       this.emit('roomLeft', { roomId });
-    } catch (error) {
-      console.error('Failed to leave room:', error);
+      */
+      
+      throw error;
     }
   }
 
-  // Toggle microphone mute
+  // Toggle microphone mute using backend API
   async toggleMute(roomId: string): Promise<boolean> {
     try {
-      const room = await this.getRoom(roomId);
-      if (!room) return false;
-
-      const currentUser = await getCurrentUser();
-      const participant = room.participants.find(p => p.id === currentUser.id);
+      console.log(`🎤 Toggling microphone in room ${roomId}...`);
       
-      if (participant) {
-        participant.muted = !participant.muted;
-        room.lastUpdated = Date.now();
-        
-        // Update WebRTC mute state (disabled until backend ready)
-        // webRTCService.setMuted(participant.muted);
-        
-        localStorage.setItem(`coworking_room_${roomId}`, JSON.stringify(room));
-        
-        // Update user session
-        const session = JSON.parse(localStorage.getItem(this.storageKeys.userSession) || '{}');
-        session.isMuted = participant.muted;
-        localStorage.setItem(this.storageKeys.userSession, JSON.stringify(session));
-
-        console.log(`${currentUser.name} ${participant.muted ? 'muted' : 'unmuted'} in room ${roomId}`);
-        this.emit('micToggled', { roomId, muted: participant.muted });
-        return participant.muted;
+      // Get current mute status from local state instead of searching participants
+      // This avoids the name matching issue
+      let currentMuteStatus = true; // Default to muted
+      
+      // Try to get current user's mute status from the room data
+      try {
+        const room = await this.getRoom(roomId);
+        if (room) {
+          const currentUser = await getCurrentUser();
+          // Try to find participant by name or id (using properties that exist on both types)
+          const participant = room.participants.find(p => 
+            p.name === currentUser.name || 
+            p.name === (currentUser as any).full_name ||
+            p.name === (currentUser as any).username ||
+            p.id === currentUser.id
+          );
+          if (participant) {
+            currentMuteStatus = participant.muted;
+            console.log(`🎯 Found participant ${participant.name}, current mute status: ${currentMuteStatus}`);
+          } else {
+            console.log(`⚠️ Could not find current user in participants, using default muted state`);
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ Could not get current mute status, using default:', error);
       }
       
-      return false;
+      const newMuteStatus = !currentMuteStatus;
+      console.log(`🔄 Changing mute from ${currentMuteStatus} to ${newMuteStatus}`);
+      
+      const resultMuteStatus = await api.toggleMicrophone(roomId, newMuteStatus);
+      
+      console.log(`✅ Microphone toggled: ${resultMuteStatus ? 'muted' : 'unmuted'}`);
+      this.emit('micToggled', { roomId, muted: resultMuteStatus });
+      return resultMuteStatus;
     } catch (error) {
-      console.error('Failed to toggle mute:', error);
-      return false;
+      console.error(`❌ Failed to toggle microphone in room ${roomId}:`, error);
+      throw error;
     }
   }
 
-  // Update speaking status
+  // Update speaking status using backend API
   async updateSpeakingStatus(roomId: string, isSpeaking: boolean): Promise<void> {
     try {
-      const room = await this.getRoom(roomId);
-      if (!room) return;
-
-      const currentUser = await getCurrentUser();
-      const participant = room.participants.find(p => p.id === currentUser.id);
+      console.log(`🗣️ Updating speaking status in room ${roomId}: ${isSpeaking}`);
+      const resultSpeakingStatus = await api.updateSpeakingStatus(roomId, isSpeaking);
       
-      if (participant) {
-        participant.isSpeaking = isSpeaking && !participant.muted;
-        room.lastUpdated = Date.now();
-        
-        localStorage.setItem(`coworking_room_${roomId}`, JSON.stringify(room));
-        this.emit('speakingStatusChanged', { roomId, isSpeaking: participant.isSpeaking });
-      }
+      console.log(`✅ Speaking status updated: ${resultSpeakingStatus}`);
+      this.emit('speakingStatusChanged', { roomId, isSpeaking: resultSpeakingStatus });
     } catch (error) {
-      console.error('Failed to update speaking status:', error);
+      console.error(`❌ Failed to update speaking status in room ${roomId}:`, error);
+      throw error;
     }
   }
 
-  // Send a message
-  async addMessage(roomId: string, message: Message): Promise<void> {
+  // Send a message using backend API
+  async addMessage(roomId: string, message: Message | string): Promise<void> {
     try {
-      const room = await this.getRoom(roomId);
-      if (!room) return;
-
-      room.messages = room.messages || [];
-      room.messages.push(message);
+      const messageText = typeof message === 'string' ? message : message.text;
+      console.log(`💬 Sending message to room ${roomId}: ${messageText}`);
       
-      // Keep only last 50 messages
-      if (room.messages.length > 50) {
-        room.messages = room.messages.slice(-50);
-      }
+      const result = await api.sendMessage(roomId, messageText);
       
-      room.lastUpdated = Date.now();
-      localStorage.setItem(`coworking_room_${roomId}`, JSON.stringify(room));
-
-      console.log(`Message added to room ${roomId}: ${message.text}`);
-      this.emit('messageAdded', { roomId, message });
+      console.log(`✅ Message sent successfully:`, result);
+      this.emit('messageAdded', { roomId, message: result });
     } catch (error) {
-      console.error('Failed to add message:', error);
+      console.error(`❌ Failed to send message to room ${roomId}:`, error);
+      throw error;
     }
   }
 
-  // Send emoji reaction
+  // Send emoji reaction using backend API
   async addEmojiReaction(roomId: string, emoji: string): Promise<void> {
     try {
-      const currentUser = await getCurrentUser();
+      console.log(`😀 Sending emoji reaction to room ${roomId}: ${emoji}`);
+      const result = await api.sendEmoji(roomId, emoji);
       
-      console.log(`${currentUser.name} reacted with ${emoji} in room ${roomId}`);
-      this.emit('emojiReaction', { roomId, emoji, user: currentUser.name });
+      console.log(`✅ Emoji sent successfully:`, result);
+      this.emit('emojiReaction', { roomId, emoji, result });
     } catch (error) {
-      console.error('Failed to add emoji reaction:', error);
+      console.error(`❌ Failed to send emoji to room ${roomId}:`, error);
+      throw error;
     }
   }
 
   // Get current user's room session
   getCurrentSession(): { roomId: string; joinedAt: string; isMuted: boolean; isSpeaking: boolean } | null {
     try {
-      const session = localStorage.getItem(this.storageKeys.userSession);
-      return session ? JSON.parse(session) : null;
+      const roomId = localStorage.getItem('coworking_current_room');
+      if (roomId) {
+        return {
+          roomId,
+          joinedAt: new Date().toISOString(),
+          isMuted: true,
+          isSpeaking: false
+        };
+      }
+      return null;
     } catch {
       return null;
     }
@@ -421,13 +413,12 @@ class CoworkingService {
 
   // Cleanup and disconnect
   disconnect(): void {
-    const session = this.getCurrentSession();
-    if (session) {
-      this.leaveRoom(session.roomId);
+    if (this.currentRoomId) {
+      this.leaveRoom(this.currentRoomId);
     }
     
-    // Cleanup WebRTC (disabled until backend ready)
-    // webRTCService.destroy();
+    // Cleanup WebRTC connections
+    webRTCService.destroy();
     
     this.eventListeners.clear();
   }
@@ -437,17 +428,11 @@ class CoworkingService {
     return webRTCService;
   }
 
-  // Development helper: Clear all room data
+  // Development helper: For now, just clear localStorage since we're using backend
   clearAllRoomData(): void {
-    const roomIds = ["focus", "pomodoro", "casual", "study"];
-    roomIds.forEach(roomId => {
-      localStorage.removeItem(`coworking_room_${roomId}`);
-    });
-    localStorage.removeItem(this.storageKeys.rooms);
-    localStorage.removeItem(this.storageKeys.currentRoom);
-    localStorage.removeItem(this.storageKeys.userSession);
-    this.initializeDefaultRooms();
-    console.log('🧹 Cleared all room data and reinitialized');
+    localStorage.removeItem('coworking_current_room');
+    localStorage.removeItem('coworking_session_id');
+    console.log('🧹 Cleared local coworking data - backend handles room state');
   }
 }
 

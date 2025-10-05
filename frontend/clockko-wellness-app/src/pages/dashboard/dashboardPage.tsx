@@ -47,7 +47,12 @@ export default function DashboardPage() {
   function handleClockOut() {
     clockOutMutation.mutate(undefined, {
       onSuccess: () => {
-        setTimeout(() => setShowShutdown(true), 1000) // Show modal after 1s
+        // IMMEDIATELY refresh session data to stop the timer
+        queryClient.invalidateQueries({ queryKey: ["currentSession"] })
+        queryClient.invalidateQueries({ queryKey: ["dashboardData"] })
+        
+        // Then show shutdown modal after 1s
+        setTimeout(() => setShowShutdown(true), 1000)
       },
     })
   }

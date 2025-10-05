@@ -46,6 +46,7 @@ const ClockInOutButton: React.FC<ClockInOutButtonProps> = ({
           </button>
           {isDropdownOpen && (
             <div className="dropdown-menu">
+              <button onClick={() => selectFocusPresetAndStart(1)}>1 min</button>
               <button onClick={() => selectFocusPresetAndStart(5)}>5 min</button>
               <button onClick={() => selectFocusPresetAndStart(10)}>10 min</button>
               <button onClick={() => selectFocusPresetAndStart(15)}>15 min</button>

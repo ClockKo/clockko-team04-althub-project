@@ -15,6 +15,7 @@ class Timelog(Base):
     type = Column(String)
     date = Column(DateTime)
     planned_duration = Column(Integer)
+    # actual_duration = Column(Integer, nullable=True)  # Duration in minutes
     status = Column(String)
     paused_at = Column(DateTime, nullable=True)
     remaining_time = Column(Integer, nullable=True)

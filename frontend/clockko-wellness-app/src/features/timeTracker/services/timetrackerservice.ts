@@ -24,12 +24,12 @@ interface DailySummary {
 }
 
 class TimeTrackerService {
-  private readonly STORAGE_KEYS = {
-    DAILY_SUMMARY: 'timetracker_daily_summary',
-    CURRENT_SESSION: 'timetracker_current_session',
-    PAUSED_SESSION: 'timetracker_paused_session',
-    USER_SESSIONS: 'timetracker_user_sessions'
-  }
+  // private readonly STORAGE_KEYS = {
+  //   DAILY_SUMMARY: 'timetracker_daily_summary',
+  //   CURRENT_SESSION: 'timetracker_current_session',
+  //   PAUSED_SESSION: 'timetracker_paused_session',
+  //   USER_SESSIONS: 'timetracker_user_sessions'
+  // }
 
   // TODO: Replace with real API calls when backend is ready
   async startFocusSession(durationMinutes: number, sessionType: 'focus' | 'break' = 'focus'): Promise<FocusSession> {
@@ -39,39 +39,78 @@ class TimeTrackerService {
     try {
       const currentSession = await this.getCurrentSessionFromAPI()
       if (currentSession && currentSession.sessionType === sessionType) {
-        // Same session type - offer to complete the existing one
-        const shouldComplete = confirm(
-          `You have an active ${currentSession.sessionType} session.\n` +
-          `Started: ${currentSession.startTime.toLocaleTimeString()}\n\n` +
-          `Complete it and start a new ${sessionType} session?`
-        )
+        // Check if the session is stale (older than 2 hours)
+        const sessionAgeHours = (new Date().getTime() - currentSession.startTime.getTime()) / (1000 * 60 * 60)
+        const isStaleSession = sessionAgeHours > 2
         
-        if (shouldComplete) {
+        if (isStaleSession) {
+          console.log(`🕒 Detected stale ${currentSession.sessionType} session (${sessionAgeHours.toFixed(1)} hours old), auto-completing...`)
           await this.completeFocusSession(currentSession.id)
-          console.log('✅ Previous session completed, starting new one...')
+          console.log('✅ Stale session auto-completed, continuing with new session...')
           // Continue to start new session
         } else {
-          throw new Error(`Cannot start new ${sessionType} session - you have an active ${currentSession.sessionType} session`)
+          // Same session type - offer to complete the existing one
+          const shouldComplete = confirm(
+            `You have an active ${currentSession.sessionType} session.\n` +
+            `Started: ${currentSession.startTime.toLocaleTimeString()}\n\n` +
+            `Complete it and start a new ${sessionType} session?`
+          )
+          
+          if (shouldComplete) {
+            await this.completeFocusSession(currentSession.id)
+            console.log('✅ Previous session completed, starting new one...')
+            // Continue to start new session
+          } else {
+            throw new Error(`Cannot start new ${sessionType} session - you have an active ${currentSession.sessionType} session`)
+          }
         }
       } else if (currentSession && currentSession.sessionType !== sessionType) {
         // Different session type - handle based on logic
         if (sessionType === 'break' && currentSession.sessionType === 'focus') {
-          // User wants to take a break - pause the focus session
-          const shouldPause = confirm(
-            `You have an active focus session.\n` +
-            `Pause it and start a break?`
-          )
+          // Check if focus session is stale
+          const sessionAgeHours = (new Date().getTime() - currentSession.startTime.getTime()) / (1000 * 60 * 60)
+          const isStaleSession = sessionAgeHours > 2
           
-          if (shouldPause) {
-            await this.pauseFocusSession(currentSession.id)
-            console.log('⏸️ Focus session paused, starting break...')
+          if (isStaleSession) {
+            console.log(`🕒 Detected stale focus session (${sessionAgeHours.toFixed(1)} hours old), auto-completing before break...`)
+            await this.completeFocusSession(currentSession.id)
+            console.log('✅ Stale focus session auto-completed, starting break...')
             // Continue to start break session
           } else {
-            throw new Error('Cannot start break - focus session is still active')
+            // Check if the focus session is already paused (paused by UI before calling this)
+            if (currentSession.status === 'paused') {
+              console.log('🔄 Focus session is already paused, proceeding with break...')
+              // Focus session is already paused, continue to start break
+            } else {
+              // User wants to take a break - pause the focus session
+              const shouldPause = confirm(
+                `You have an active focus session.\n` +
+                `Pause it and start a break?`
+              )
+              
+              if (shouldPause) {
+                await this.pauseFocusSession(currentSession.id)
+                console.log('⏸️ Focus session paused, starting break...')
+                // Continue to start break session
+              } else {
+                throw new Error('Cannot start break - focus session is still active')
+              }
+            }
           }
         } else {
-          // Other combinations - just inform user
-          throw new Error(`You have an active ${currentSession.sessionType} session. Complete it first.`)
+          // Other combinations - check for stale sessions
+          const sessionAgeHours = (new Date().getTime() - currentSession.startTime.getTime()) / (1000 * 60 * 60)
+          const isStaleSession = sessionAgeHours > 2
+          
+          if (isStaleSession) {
+            console.log(`🕒 Detected stale ${currentSession.sessionType} session (${sessionAgeHours.toFixed(1)} hours old), auto-completing...`)
+            await this.completeFocusSession(currentSession.id)
+            console.log('✅ Stale session auto-completed, continuing with new session...')
+            // Continue to start new session
+          } else {
+            // Recent session - ask user
+            throw new Error(`You have an active ${currentSession.sessionType} session. Complete it first.`)
+          }
         }
       }
     } catch (error) {
@@ -234,7 +273,6 @@ class TimeTrackerService {
     }
 
     // Make API call to pause session
-    const now = new Date()
     const response = await fetch(`http://localhost:8000/api/focus-sessions/${sessionId}/pause`, {
       method: 'POST',
       headers: {
@@ -243,7 +281,7 @@ class TimeTrackerService {
       },
       body: JSON.stringify({
         session_id: sessionId,
-        paused_at: now.toISOString()
+        paused_at: new Date().toISOString()
       })
     })
 
@@ -285,7 +323,8 @@ class TimeTrackerService {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        session_id: sessionId
+        session_id: sessionId,
+        resumed_at: new Date().toISOString()
       })
     })
 
@@ -397,6 +436,11 @@ class TimeTrackerService {
       }
 
       const responseData = await response.json()
+      
+      // Only return focus and break sessions (work sessions are handled by work widget)
+      if (responseData.type !== 'focus' && responseData.type !== 'break') {
+        return null // Not a timetracker session
+      }
       
       // Convert backend response to frontend session format
       return {
@@ -566,6 +610,43 @@ class TimeTrackerService {
   //   })
   //   console.log('🗑️ All time tracker data cleared')
   // }
+
+  // Clear all timetracker sessions via API for clean slate
+  async clearAllSessions(): Promise<void> {
+    console.log('🧹 Clearing all timetracker sessions...')
+    
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      throw new Error('User not authenticated')
+    }
+
+    try {
+      const response = await fetch('http://localhost:8000/api/time-logs/clear-all', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to clear sessions: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('✅ Sessions cleared:', result)
+      
+      // Clear any localStorage as well for complete clean slate
+      localStorage.removeItem('timetracker_current_session')
+      localStorage.removeItem('timetracker_daily_summary')
+      localStorage.removeItem('timetracker_paused_session')
+      
+      return result
+    } catch (error) {
+      console.error('Failed to clear sessions:', error)
+      throw error
+    }
+  }
 
   // Helper method to check if there's a paused session
   // COMMENTED OUT FOR API-ONLY TESTING

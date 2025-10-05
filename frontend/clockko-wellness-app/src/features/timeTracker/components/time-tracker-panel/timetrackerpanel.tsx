@@ -10,7 +10,20 @@
 
     // Helper function to resume a paused focus session
     const resumePausedFocusSession = (pausedSession: FocusSession, remainingTimeSeconds: number) => {
-        timeTrackerService.resumeFocusSession(pausedSession.id).then(resumedSession => {
+        timeTrackerService.resumeFocusSession(pausedSession.i                                <button 
+                                    onClick={clearAllSessions}
+                                    style={{
+                                        backgroundColor: '#dc3545', 
+                                        color: 'white', 
+                                        border: 'none', 
+                                        padding: '5px 10px', 
+                                        borderRadius: '4px',
+                                        fontSize: '12px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    🗑️ Clear All Data
+                                </button>edSession => {
             setCurrentSession(resumedSession);
             
             // Restore focus mode and remaining time
@@ -119,6 +132,33 @@ function TimeTrackerPanel() {
         console.log("📊 Daily summary in localStorage:", dailySummary ? JSON.parse(dailySummary) : null);
         
         refreshDailySummary();
+    };
+
+    // Clear all sessions function for clean slate
+    const clearAllSessions = async () => {
+        try {
+            console.log("🧹 Clearing all timetracker sessions...");
+            await timeTrackerService.clearAllSessions();
+            
+            // Reset all state to initial values
+            setMode('initial');
+            setTimeLeft(FOCUS_DEFAULT_DURATION);
+            setIsRunning(false);
+            setCurrentSession(null);
+            setPausedFocusSession(null);
+            setPausedFocusTimeLeft(null);
+            setTotalFocusSessions(0);
+            setTotalFocusTime(0);
+            
+            // Refresh the daily summary to show cleared state
+            await refreshDailySummary();
+            
+            console.log("✅ All sessions cleared successfully");
+            alert("All timetracker sessions cleared successfully!");
+        } catch (error) {
+            console.error("Failed to clear sessions:", error);
+            alert("Failed to clear sessions. Please try again.");
+        }
     };
 
     // Sound settings toggle
@@ -376,52 +416,67 @@ function TimeTrackerPanel() {
                     
                     // Update UI with fresh data
                     return refreshDailySummary();
+                }).then(() => {
+                    // AFTER break session is fully completed, check for paused focus sessions
+                    console.log("📋 Break session fully completed, now checking for paused focus sessions...");
+                    
+                    // Check if there's a paused focus session to resume
+                    // First check component state, then check backend for paused sessions
+                    if (pausedFocusSession && pausedFocusTimeLeft !== null) {
+                        console.log("🔄 Resuming paused focus session from component state:", pausedFocusSession);
+                        resumePausedFocusSession(pausedFocusSession, pausedFocusTimeLeft);
+                    } else {
+                        // Check backend for any paused focus sessions
+                        console.log("🔍 Checking backend for paused focus sessions...");
+                        timeTrackerService.getCurrentSessionFromAPI().then(backendSession => {
+                            if (backendSession && backendSession.status === 'paused' && backendSession.sessionType === 'focus') {
+                                console.log("🔄 Found paused focus session in backend:", backendSession);
+                                // Calculate remaining time based on planned duration and elapsed time
+                                const elapsedMinutes = backendSession.actualDuration || 0;
+                                const remainingSeconds = Math.max(0, (backendSession.plannedDuration - elapsedMinutes) * 60);
+                                resumePausedFocusSession(backendSession, remainingSeconds);
+                            } else {
+                                // No paused focus session, go back to initial state
+                                setMode('initial');
+                                setTimeLeft(FOCUS_DEFAULT_DURATION);
+                                console.log("ℹ️ No paused focus session found, returning to initial state");
+                            }
+                        }).catch(error => {
+                            console.error("Failed to check for paused sessions:", error);
+                            setMode('initial');
+                            setTimeLeft(FOCUS_DEFAULT_DURATION);
+                        });
+                    }
                 }).catch(error => {
                     console.error("Failed to complete break session:", error);
                 });
+            } else {
+                // If no current break session to complete, directly check for paused focus sessions
+                if (pausedFocusSession && pausedFocusTimeLeft !== null) {
+                    console.log("🔄 Resuming paused focus session from component state:", pausedFocusSession);
+                    resumePausedFocusSession(pausedFocusSession, pausedFocusTimeLeft);
+                } else {
+                    setMode('initial');
+                    setTimeLeft(FOCUS_DEFAULT_DURATION);
+                }
             }
             
             setTotalBreakTime(prev => prev + breakDuration); // Add completed break duration (legacy)
-            
-            // Check if there's a paused focus session to resume
-            // First check component state, then check backend for paused sessions
-            if (pausedFocusSession && pausedFocusTimeLeft !== null) {
-                console.log("🔄 Resuming paused focus session from component state:", pausedFocusSession);
-                resumePausedFocusSession(pausedFocusSession, pausedFocusTimeLeft);
-            } else {
-                // Check backend for any paused focus sessions
-                console.log("🔍 Checking backend for paused focus sessions...");
-                timeTrackerService.getCurrentSessionFromAPI().then(backendSession => {
-                    if (backendSession && backendSession.status === 'paused' && backendSession.sessionType === 'focus') {
-                        console.log("🔄 Found paused focus session in backend:", backendSession);
-                        // Calculate remaining time based on planned duration and elapsed time
-                        const elapsedMinutes = backendSession.actualDuration || 0;
-                        const remainingSeconds = Math.max(0, (backendSession.plannedDuration - elapsedMinutes) * 60);
-                        resumePausedFocusSession(backendSession, remainingSeconds);
-                    } else {
-                        // No paused focus session, go back to initial state
-                        setMode('initial');
-                        setTimeLeft(FOCUS_DEFAULT_DURATION);
-                        console.log("ℹ️ No paused focus session found, returning to initial state");
-                    }
-                }).catch(error => {
-                    console.error("Failed to check for paused sessions:", error);
-                    setMode('initial');
-                    setTimeLeft(FOCUS_DEFAULT_DURATION);
-                });
-            }
         }
         setIsRunning(false); // Ensure timer is not running
         setIsBreakDropdownOpen(false); // Close break dropdown if open
     };
 
     // Starts a break timer with a specified duration
+    // Supports two scenarios:
+    // 1. Standalone break (independent of focus sessions)
+    // 2. Paused focus break (pause active focus, take break, then can resume focus)
     const startBreak = (minutes: number) => {
         if (timerRef.current) {
             window.clearInterval(timerRef.current); // Using window.clearInterval
         }
         
-        // Preserve the paused focus session if it exists and is a focus session
+        // Scenario 2: If there's an active focus session, pause it for the break
         if (currentSession && currentSession.sessionType === 'focus' && mode === 'focus') {
             console.log("💾 Pausing focus session for break:", currentSession);
             
@@ -430,7 +485,7 @@ function TimeTrackerPanel() {
                 setPausedFocusSession(pausedSession);
                 setPausedFocusTimeLeft(timeLeft); // Save the remaining time for UI
                 setCurrentSession(null); // Clear from UI state
-                console.log("⏸️ Focus session paused in service:", pausedSession);
+                console.log("⏸️ Focus session paused in service for break:", pausedSession);
             }).catch(error => {
                 console.error("Failed to pause focus session:", error);
                 // Fallback to old method if service fails
@@ -438,6 +493,10 @@ function TimeTrackerPanel() {
                 setPausedFocusTimeLeft(timeLeft);
                 setCurrentSession(null);
             });
+        }
+        // Scenario 1: Standalone break (no active focus session to pause)
+        else {
+            console.log("🌴 Starting standalone break session (no active focus to pause)");
         }
         
         const duration = minutes * 60; // Convert minutes to seconds
@@ -448,7 +507,7 @@ function TimeTrackerPanel() {
         setIsDropdownOpen(false); // Close any open dropdowns
         setIsBreakDropdownOpen(false);
         
-        // Start break session tracking with localStorage service
+        // Start break session tracking - works for both standalone and paused-focus breaks
         timeTrackerService.startFocusSession(minutes, 'break').then(session => {
             setCurrentSession(session);
             console.log("🌴 Break session started:", session);
@@ -681,6 +740,39 @@ function TimeTrackerPanel() {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    {/* Temporary Debug/Clear Buttons */}
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', justifyContent: 'center' }}>
+                        <button 
+                            onClick={forceRefreshSummary}
+                            style={{ 
+                                padding: '5px 10px', 
+                                backgroundColor: '#007bff', 
+                                color: 'white', 
+                                border: 'none', 
+                                borderRadius: '4px',
+                                fontSize: '12px'
+                            }}
+                        >
+                            🔄 Refresh Summary
+                        </button>
+                        <button 
+                            onClick={() => {
+                                console.log("🔴 Clear button clicked!");
+                                alert("Clear button clicked!");
+                                clearAllSessions();
+                            }}
+                            style={{ 
+                                padding: '5px 10px', 
+                                backgroundColor: '#dc3545', 
+                                color: 'white', 
+                                border: 'none', 
+                                borderRadius: '4px',
+                                fontSize: '12px'
+                            }}
+                        >
+                            🧹 Clear All Sessions
+                        </button>
                     </div>
                     {/* Daily Summary Component */}
                     <DailySummary

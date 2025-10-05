@@ -63,6 +63,11 @@ def current_session(db: Session = Depends(get_db), user = Depends(get_current_us
         raise HTTPException(status_code=404, detail="No ongoing session")
     return timetrackerservice.build_focus_session_response(result)
 
+@router.delete("/time-logs/clear-all")
+def clear_all_sessions(db: Session = Depends(get_db), user = Depends(get_current_user)):
+    """Clear all timetracker sessions for clean slate"""
+    return timetrackerservice.clear_all_sessions(db, user.id)
+
 # @router.get("/paused_session", response_model=FocusSessionResponse)
 # def get_current_paused_session(user_id: str, db: Session = Depends(get_db)):
 #     return

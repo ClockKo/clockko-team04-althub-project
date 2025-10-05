@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.services import timetrackerservice, taskservice
+from app.services import timetrackerservice, taskservice, shutdownservice
 from app.core.database import get_db
 from app.core.auth import get_current_user
 from app.schemas.timelog import TimeLogResponse, EndSessionRequest, FocusTimeResponse
+from app.schemas.shutdown import ShutdownReflectionCreate, ShutdownReflectionResponse, ShutdownSummaryResponse
+from typing import List
 
 router = APIRouter(tags=["Dashboard"])
 
@@ -76,3 +78,46 @@ def get_focus_time(db: Session = Depends(get_db), user = Depends(get_current_use
 # @router.get("/task-completed/all")
 # def get_all_tasks():
 #     return
+
+
+# Shutdown Reflection Endpoints
+
+@router.get("/shutdown-summary", response_model=ShutdownSummaryResponse)
+def get_shutdown_summary(db: Session = Depends(get_db), user = Depends(get_current_user)):
+    """
+    Get today's shutdown summary including:
+    - Tasks completed today
+    - Total focus time
+    - Current shutdown streak
+    - Points earned
+    """
+    summary = shutdownservice.get_shutdown_summary(db, user.id)
+    return summary
+
+
+@router.post("/shutdown-reflection", response_model=ShutdownReflectionResponse)
+def create_shutdown_reflection(
+    reflection: ShutdownReflectionCreate,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    """
+    Create a new shutdown reflection for today.
+    Records productivity rating, reflection notes, and mindful disconnect checklist.
+    """
+    new_reflection = shutdownservice.create_shutdown_reflection(db, reflection, user.id)
+    return new_reflection
+
+
+@router.get("/shutdown-history", response_model=List[ShutdownReflectionResponse])
+def get_shutdown_history(
+    limit: int = 30,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    """
+    Get shutdown reflection history.
+    Returns the last N reflections (default: 30).
+    """
+    history = shutdownservice.get_shutdown_history(db, user.id, limit)
+    return history

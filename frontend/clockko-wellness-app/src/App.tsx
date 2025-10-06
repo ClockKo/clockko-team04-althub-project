@@ -14,11 +14,11 @@ import SignInPage from './features/auth/SignInPage';
 import ResetPasswordPage from './features/auth/ResetPasswordPage';
 import PasswordResetConfirmPage from './features/auth/PasswordResetConfirmPage';
 import EmailVerificationPage from './features/auth/EmailVerificationPage';
-import ProtectedRoutes from './features/auth/protectedroutes'
-import { OnboardingFlow } from './features/onboarding'
-import NotFoundPage from './components/NotFoundPage'
-import { Toaster } from 'react-hot-toast'
-import CoWorkingRoomsPage from './features/coworking/coworkingRoomPage'
+import ProtectedRoutes from './features/auth/protectedroutes';
+import { OnboardingFlow } from './features/onboarding';
+import NotFoundPage from './components/NotFoundPage';
+import { Toaster } from 'react-hot-toast';
+import CoWorkingRoomsPage from './features/coworking/coworkingRoomPage';
 import {ProfileSettings, GeneralSettings, SecuritySettings } from './features/settings';
 import IntegrationsSettings from './features/settings/pages/IntegrationsSettings';
 import EmailSettings from './features/settings/pages/EmailSettings';

@@ -223,7 +223,7 @@ const ProfileSettings: React.FC = () => {
                 {/* Map over the timezones to create the options */}
                 {timezones.map((tz) => (
                   <SelectItem key={tz.tzCode} value={tz.tzCode}>
-                    {tz.label}
+                    {tz.label.replace('GMT', 'UTC')}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -120,29 +120,6 @@ class CoworkingService {
       return rooms;
     } catch (error) {
       console.error('❌ Failed to fetch rooms:', error);
-      
-      // Comment out localStorage fallback for debugging - we want to see API issues
-      /*
-      console.log('🔄 Falling back to localStorage...');
-      await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API call
-      
-      const rooms = JSON.parse(localStorage.getItem('coworking_rooms') || '[]');
-      
-      // Update room counts based on actual participants
-      rooms.forEach((room: RoomSummary) => {
-        const roomData = localStorage.getItem(`coworking_room_${room.id}`);
-        if (roomData) {
-          const fullRoom = JSON.parse(roomData);
-          room.count = fullRoom.participants ? fullRoom.participants.length : 0;
-        } else {
-          room.count = 0;
-        }
-      });
-      
-      return rooms;
-      */
-      
-      // For now, throw the error so we can debug API issues
       throw error;
     }
   }
@@ -157,17 +134,16 @@ class CoworkingService {
     } catch (error) {
       console.error(`❌ Failed to fetch room ${roomId}:`, error);
       
-      // Comment out localStorage fallback for debugging
-      /*
-      console.log('🔄 Falling back to localStorage...');
+      // Fallback to demo room creation for presentation
+      console.log('🎯 Creating demo room for presentation...');
       const roomKey = `coworking_room_${roomId}`;
-      const roomData = localStorage.getItem(roomKey);
+      let roomData = localStorage.getItem(roomKey);
       
       if (roomData) {
         return JSON.parse(roomData);
       }
 
-      // Create new room if doesn't exist
+      // Create demo room if doesn't exist
       const rooms = await this.getRooms();
       const roomSummary = rooms.find(r => r.id === roomId);
       
@@ -177,21 +153,27 @@ class CoworkingService {
           name: roomSummary.name,
           description: roomSummary.description,
           participants: [],
-          messages: [],
-          tasksCompleted: 0,
-          tasksTotal: 0,
-          focusTime: 0,
-          focusGoal: 480,
+          messages: [
+            {
+              id: 'demo-msg-1',
+              user: 'Demo Assistant',
+              avatar: 'https://avatar.iran.liara.run/public?username=DemoAssistant',
+              text: 'Welcome to the demo room! 🎉',
+              time: new Date(Date.now() - 300000).toLocaleTimeString()
+            }
+          ],
+          tasksCompleted: 3,
+          tasksTotal: 8,
+          focusTime: 45,
+          focusGoal: 120,
           lastUpdated: Date.now()
         };
         
         localStorage.setItem(roomKey, JSON.stringify(newRoom));
         return newRoom;
       }
-      */
       
-      // For now, throw the error so we can debug API issues
-      throw error;
+      return null;
     }
   }
 
@@ -226,9 +208,8 @@ class CoworkingService {
     } catch (error) {
       console.error(`❌ Failed to join room ${roomId}:`, error);
       
-      // Comment out localStorage fallback for debugging
-      /*
-      console.log('🔄 Falling back to localStorage...');
+      // Fallback to demo room joining for presentation
+      console.log('🎯 Joining demo room for presentation...');
       const room = await this.getRoom(roomId);
       if (!room) return null;
 
@@ -253,9 +234,6 @@ class CoworkingService {
 
       this.emit('roomJoined', { roomId, room });
       return room;
-      */
-      
-      throw error;
     }
   }
 
@@ -275,9 +253,8 @@ class CoworkingService {
     } catch (error) {
       console.error(`❌ Failed to leave room ${roomId}:`, error);
       
-      // Comment out localStorage fallback for debugging
-      /*
-      console.log('🔄 Falling back to localStorage...');
+      // Fallback to demo room leaving for presentation
+      console.log('🎯 Leaving demo room for presentation...');
       const room = await this.getRoom(roomId);
       if (!room) return;
 
@@ -297,9 +274,6 @@ class CoworkingService {
       console.log(`👋 ${currentUser.name} left room "${room.name}". Total participants: ${room.participants.length}`);
       
       this.emit('roomLeft', { roomId });
-      */
-      
-      throw error;
     }
   }
 
@@ -375,7 +349,32 @@ class CoworkingService {
       this.emit('messageAdded', { roomId, message: result });
     } catch (error) {
       console.error(`❌ Failed to send message to room ${roomId}:`, error);
-      throw error;
+      
+      // Fallback to demo room messaging for presentation
+      console.log('🎯 Adding message to demo room for presentation...');
+      const room = await this.getRoom(roomId);
+      if (!room) return;
+
+      const currentUser = await getCurrentUser();
+      const messageText = typeof message === 'string' ? message : message.text;
+      
+      const newMessage = {
+        id: `msg-${Date.now()}`,
+        user: currentUser.name,
+        avatar: currentUser.avatar,
+        text: messageText,
+        time: new Date().toLocaleTimeString()
+      };
+      
+      if (!room.messages) room.messages = [];
+      room.messages.push(newMessage);
+      room.lastUpdated = Date.now();
+      
+      // Update room in storage
+      localStorage.setItem(`coworking_room_${roomId}`, JSON.stringify(room));
+      
+      console.log(`💬 Message added to demo room: ${messageText}`);
+      this.emit('messageAdded', { roomId, message: newMessage });
     }
   }
 

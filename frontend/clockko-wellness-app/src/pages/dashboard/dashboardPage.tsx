@@ -114,7 +114,6 @@ export default function DashboardPage() {
               tasksCompleted={progressData.tasksCompleted}
               tasksTotal={progressData.tasksTotal}
               focusTime={progressData.focusTime}
-              focusGoal={progressData.focusGoal}
             />
             <TaskBacklogCard />
             <ShutdownStreakCard shutdownStreak={progressData.shutdownStreak} />

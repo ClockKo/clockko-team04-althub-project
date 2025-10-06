@@ -88,3 +88,55 @@ def get_focus_time(db: Session = Depends(get_db), user = Depends(get_current_use
 # @router.get("/task-completed/all")
 # def get_all_tasks():
 #     return
+
+@router.get("/shutdown-summary")
+def get_shutdown_summary(db: Session = Depends(get_db), user = Depends(get_current_user)):
+    """Get summary data for shutdown modal"""
+    try:
+        # Get today's focus time
+        total_focus_time = timetrackerservice.get_focus_time(db, user.id)
+        
+        # Get tasks (placeholder - implement when task service is ready)
+        tasks_completed = 0
+        tasks_total = 0
+        pending_tasks = 0
+        today_tasks = []
+        
+        # Calculate other metrics
+        focus_goal = 120  # Default 2 hours in minutes
+        shutdown_streak = 1  # Placeholder
+        points_earned = 10  # Base points
+        
+        # Add points for focus time
+        if total_focus_time >= focus_goal:
+            points_earned += 15
+            
+        # Add points for completed tasks
+        points_earned += tasks_completed * 5
+        
+        return {
+            "tasksCompleted": tasks_completed,
+            "tasksTotal": tasks_total, 
+            "focusTime": total_focus_time,  # This will show actual focus time from timetracker
+            "focusGoal": focus_goal,
+            "pendingTasks": pending_tasks,
+            "shutdownStreak": shutdown_streak,
+            "pointsEarned": points_earned,
+            "clockedOutTime": None,  # Will be set by frontend
+            "todayTasks": today_tasks
+        }
+        
+    except Exception as e:
+        print(f"Error getting shutdown summary: {e}")
+        # Return default data if there's an error
+        return {
+            "tasksCompleted": 0,
+            "tasksTotal": 0,
+            "focusTime": 0,
+            "focusGoal": 120,
+            "pendingTasks": 0,
+            "shutdownStreak": 0,
+            "pointsEarned": 10,
+            "clockedOutTime": None,
+            "todayTasks": []
+        }

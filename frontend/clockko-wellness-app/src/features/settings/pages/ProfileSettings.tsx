@@ -22,12 +22,24 @@ import {
 import { useUserData } from '../../../pages/dashboard/dashboardHooks';
 import { getData } from 'country-list';
 import timezones from 'timezones-list';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '../../../components/ui/alert-dialog';
 
 const defaultAvatar =
   'https://ui-avatars.com/api/?name=User&background=E0E7FF&color=1E40AF&size=128';
 
 const ProfileSettings: React.FC = () => {
   const [selectedCountry, setSelectedCountry] = useState<string>('NG');
+  // No longer need showDeleteDialog, handled by AlertDialog
   const countries = getData();
   const { data: user, isLoading } = useUserData();
 
@@ -119,7 +131,7 @@ const ProfileSettings: React.FC = () => {
 
       {/* Profile Card */}
       <section className="bg-white rounded-lg shadow-sm p-6 mb-8">
-        <h2 className="text-lg font-semibold mb-6 text-gray-800">Profile</h2>
+        {/* ...existing code... */}
         <div className="flex items-center gap-4 mb-6">
           <img
             src={user?.avatar || defaultAvatar}
@@ -191,10 +203,12 @@ const ProfileSettings: React.FC = () => {
 
       {/* Language, Time & Region Card */}
       <section className="bg-white rounded-lg shadow-sm p-6 mb-8">
+        {/* ...existing code... */}
         <h2 className="text-lg font-semibold mb-6 text-gray-800">
           Language, Time & Region
         </h2>
         <div className="space-y-6">
+          {/* ...existing code... */}
           <div className="flex justify-between items-center">
             <div>
               <h4 className="font-medium text-gray-800">Language</h4>
@@ -284,21 +298,44 @@ const ProfileSettings: React.FC = () => {
             </div>
             <Switch />
           </div>
-          <Link
-            to="/settings/delete-account"
-            className="flex justify-between items-center p-4 -mx-4 rounded-lg hover:bg-red-50"
-          >
-            <div>
-              <h4 className="font-medium text-red-600">Delete my account</h4>
-              <p className="text-sm text-gray-500">
-                Permanently delete the account and remove access from all
-                workspaces.
-              </p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-gray-400" />
-          </Link>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                type="button"
+                className="flex justify-between items-center p-4 -mx-4 rounded-lg hover:bg-red-50 w-full"
+              >
+                <div>
+                  <h4 className="font-medium text-red-600 text-left">Delete my account</h4>
+                  <p className="text-sm text-gray-500">
+                    Permanently delete the account and remove access from all
+                    workspaces.
+                  </p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-gray-400" />
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-red-600">Confirm Account Deletion</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete your account? <br />
+                  <span className="font-semibold text-red-600">This action is irreversible.</span> All your data will be permanently wiped out and you will lose access to all workspaces.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction asChild>
+                  <Button variant="destructive" onClick={() => {/* TODO: Add delete logic */}}>
+                    Delete Account
+                  </Button>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </section>
+
+      {/* Dialog now handled by AlertDialog above */}
     </div>
   );
 };

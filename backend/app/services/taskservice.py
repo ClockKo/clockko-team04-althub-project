@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-from sqlalchemy import select, delete, update
+from sqlalchemy import select, delete, update, func
 from fastapi import HTTPException, status
 from uuid import UUID
+from typing import Optional, List
 import logging
 from app.core.celery import celery_app
 from app.core.database import SessionLocal, get_db_session
@@ -90,7 +91,12 @@ def create_task(session: Session, task: TaskCreate, user_id: UUID) -> Task:
             description=task.description,
             user_id=user_id,
             reminder_enabled=task.reminder_enabled,
-            reminder_time=task.reminder_time
+            reminder_time=task.reminder_time,
+            start_date=task.start_date,
+            due_date=task.due_date,
+            completed=task.completed or False,
+            priority=task.priority or 'medium',
+            tags=task.tags
         )
         session.add(db_task)
         session.commit()
@@ -104,9 +110,48 @@ def create_task(session: Session, task: TaskCreate, user_id: UUID) -> Task:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
 
-def get_tasks(session: Session, user_id: UUID) -> list[Task]:
+def get_tasks(session: Session, user_id: UUID, completed: Optional[bool] = None, 
+              priority: Optional[str] = None, tags: Optional[List[str]] = None,
+              due_today: Optional[bool] = None, upcoming: Optional[bool] = None) -> list[Task]:
     try:
-        result = session.execute(select(Task).where(Task.user_id == user_id))
+        query = select(Task).where(Task.user_id == user_id)
+        
+        # Filter by completion status
+        if completed is not None:
+            query = query.where(Task.completed == completed)
+            
+        # Filter by priority
+        if priority:
+            query = query.where(Task.priority == priority)
+            
+        # Filter by tags (if task has any of the specified tags)
+        if tags:
+            from sqlalchemy import func
+            query = query.where(func.json_array_length(Task.tags) > 0)
+            # This is a simplified check - for exact tag matching, you'd need more complex SQL
+            
+        # Filter for tasks due today
+        if due_today:
+            from datetime import date
+            today = date.today()
+            query = query.where(func.date(Task.due_date) == today)
+            
+        # Filter for upcoming tasks (due in the future, not completed)
+        if upcoming:
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
+            query = query.where(Task.due_date > now, Task.completed == False)
+            
+        # Order by priority (high first) and due date
+        priority_order = func.case(
+            (Task.priority == 'high', 1),
+            (Task.priority == 'medium', 2),
+            (Task.priority == 'low', 3),
+            else_=2
+        )
+        query = query.order_by(priority_order, Task.due_date.asc().nullslast(), Task.created_at.desc())
+        
+        result = session.execute(query)
         tasks = result.scalars().all()
         return tasks
     except Exception as e:

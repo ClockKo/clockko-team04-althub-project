@@ -535,9 +535,9 @@ useEffect(() => {
             {showProgressDropdown && (
               loading || showSkeleton ? <ProgressSkeleton /> :
               <div className="mt-2">
-                {(room && typeof room.tasksCompleted === 'number' && typeof room.tasksTotal === 'number' && typeof room.focusTime === 'number' && typeof room.focusGoal === 'number')
-                  ? <ProgressCard tasksCompleted={room.tasksCompleted} tasksTotal={room.tasksTotal} focusTime={room.focusTime} focusGoal={room.focusGoal} />
-                  : <ProgressCard tasksCompleted={0} tasksTotal={0} focusTime={0} focusGoal={0} />
+                {(room && typeof room.tasksCompleted === 'number' && typeof room.tasksTotal === 'number' && typeof room.focusTime === 'number')
+                  ? <ProgressCard tasksCompleted={room.tasksCompleted} tasksTotal={room.tasksTotal} focusTime={room.focusTime} />
+                  : <ProgressCard tasksCompleted={0} tasksTotal={0} focusTime={0} />
                 }
               </div>
             )}
@@ -684,9 +684,9 @@ useEffect(() => {
             </div>
             {showProgressDropdown && (
               <div className="mt-2">
-                {(room && typeof room.tasksCompleted === 'number' && typeof room.tasksTotal === 'number' && typeof room.focusTime === 'number' && typeof room.focusGoal === 'number')
-                  ? <ProgressCard tasksCompleted={room.tasksCompleted} tasksTotal={room.tasksTotal} focusTime={room.focusTime} focusGoal={room.focusGoal} />
-                  : <ProgressCard tasksCompleted={0} tasksTotal={0} focusTime={0} focusGoal={0} />
+                {(room && typeof room.tasksCompleted === 'number' && typeof room.tasksTotal === 'number' && typeof room.focusTime === 'number')
+                  ? <ProgressCard tasksCompleted={room.tasksCompleted} tasksTotal={room.tasksTotal} focusTime={room.focusTime} />
+                  : <ProgressCard tasksCompleted={0} tasksTotal={0} focusTime={0} />
                 }
               </div>
             )}

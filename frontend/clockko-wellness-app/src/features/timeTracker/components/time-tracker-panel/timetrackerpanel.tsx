@@ -172,10 +172,14 @@ function TimeTrackerPanel() {
 
   // Effect for updating Koala Image and Speech Bubble text based on mode and running status
   useEffect(() => {
-    if (mode === 'initial') {
+    // Use global timer states when available, fallback to local states
+    const currentMode = globalTimer.mode !== 'initial' ? globalTimer.mode : mode
+    const currentIsRunning = globalTimer.timeLeft > 0 ? globalTimer.isRunning : isRunning
+    
+    if (currentMode === 'initial') {
       setCurrentKoalaImage(koalaInitial)
-      setCurrentSpeechBubbleText('Wake me up when it’s time to get serious')
-    } else if (isRunning && mode === 'focus') {
+      setCurrentSpeechBubbleText("Wake me up when it's time to get serious")
+    } else if (currentIsRunning && currentMode === 'focus') {
       // Timer is running and it's a FOCUS session
       setCurrentKoalaImage(koalaFocus)
       setCurrentSpeechBubbleText(`You're locked in, ${name}. Let's do this!`)
@@ -187,7 +191,7 @@ function TimeTrackerPanel() {
       setCurrentKoalaImage(koalaHappy)
       setCurrentSpeechBubbleText(`Hey ${name}. Great Job! Need a break?`)
     }
-  }, [mode, isRunning, name]) // Rerun when mode, isRunning, or name changes
+  }, [mode, isRunning, name, globalTimer.mode, globalTimer.isRunning, globalTimer.timeLeft]) // Include global timer dependencies
 
   // Effect for initializing sound settings on mount
   useEffect(() => {
@@ -492,71 +496,14 @@ function TimeTrackerPanel() {
   // 1. Standalone break (independent of focus sessions)
   // 2. Paused focus break (pause active focus, take break, then can resume focus)
   const startBreak = (minutes: number) => {
-    if (timerRef.current) {
-      window.clearInterval(timerRef.current) // Using window.clearInterval
-    }
-
-    // Scenario 2: If there's an active focus session, pause it for the break
-    if (currentSession && currentSession.sessionType === 'focus' && mode === 'focus') {
-      console.log('💾 Pausing focus session for break:', currentSession)
-
-      // Pause the focus session using the service (it will handle storage)
-      timeTrackerService
-        .pauseFocusSession(currentSession.id)
-        .then((pausedSession) => {
-          setPausedFocusSession(pausedSession)
-          setPausedFocusTimeLeft(timeLeft) // Save the remaining time for UI
-          setCurrentSession(null) // Clear from UI state
-          console.log('⏸️ Focus session paused in service for break:', pausedSession)
-        })
-        .catch((error) => {
-          console.error('Failed to pause focus session:', error)
-          // Fallback to old method if service fails
-          setPausedFocusSession(currentSession)
-          setPausedFocusTimeLeft(timeLeft)
-          setCurrentSession(null)
-        })
-    }
-    // Scenario 1: Standalone break (no active focus session to pause)
-    else {
-      console.log('🌴 Starting standalone break session (no active focus to pause)')
-    }
-
-    const duration = minutes * 60 // Convert minutes to seconds
-    setIsRunning(true)
-    setMode('break')
-    setTimeLeft(duration)
-    setBreakDuration(duration) // Update current break duration state
-    setIsDropdownOpen(false) // Close any open dropdowns
+    console.log('🌴 Starting break using global timer:', minutes, 'minutes')
+    
+    // Use the global timer service to start a break and pause the focus session
+    globalTimer.startBreakSession(minutes, true) // true = pauseFocusSession
+    
+    // Close dropdowns
+    setIsDropdownOpen(false)
     setIsBreakDropdownOpen(false)
-
-    // Start break session tracking - works for both standalone and paused-focus breaks
-    timeTrackerService
-      .startFocusSession(minutes, 'break')
-      .then((session) => {
-        setCurrentSession(session)
-        console.log('🌴 Break session started:', session)
-      })
-      .catch((error) => {
-        console.error('Failed to start break session:', error)
-
-        // If there's a stuck session, clear it and retry
-        if (error.message.includes('Active') && error.message.includes('session already exists')) {
-          console.log('🔄 Clearing stuck session for break...')
-          localStorage.removeItem('timetracker_current_session')
-
-          // Retry starting break session
-          timeTrackerService
-            .startFocusSession(minutes, 'break')
-            .then((session) => {
-              setCurrentSession(session)
-              console.log('✅ Break session started after cleanup:', session)
-            })
-            .catch((retryError) => {
-              console.error('❌ Still failed to start break after cleanup:', retryError)
-            })
-        }
-      })
   }
 
   // Selects a focus preset duration and starts the timer
@@ -718,8 +665,8 @@ function TimeTrackerPanel() {
                     BREAK_DEFAULT_DURATION={BREAK_DEFAULT_DURATION} // Passed constant
                   />
 
-                  {/* BreakTracker only shows when paused during a focus/break session */}
-                  {!isRunning && mode !== 'initial' && mode !== 'completed' && (
+                  {/* BreakTracker only shows when focus session is paused */}
+                  {!globalTimer.isRunning && globalTimer.mode === 'focus' && globalTimer.timeLeft > 0 && (
                     <BreakTracker
                       isBreakDropdownOpen={isBreakDropdownOpen}
                       setIsBreakDropdownOpen={setIsBreakDropdownOpen}

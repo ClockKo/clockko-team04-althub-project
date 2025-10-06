@@ -40,7 +40,5 @@ export const formatTotalTime = (totalSeconds: number): string => {
         formattedString += "<1min";
     }
 
-    // console.log('🕰️ formatTotalTime result:', formattedString)
-    return formattedString;
-    // return formattedString.trim(); // Remove trailing space if only minutes were added
+    return formattedString.trim(); // Remove trailing space if only minutes were added
 };

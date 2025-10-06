@@ -47,8 +47,8 @@ def register(user_data: schema.UserCreate, db: Session = Depends(get_db)):
             verification_token=verification_token,
             is_active=True,
             is_verified=False,
-            otp_verified=False,
-            # onboarding_completed=False  # New users haven't completed onboarding
+            otp_verified=False
+            # onboarding_completed=False  # Field is commented out in User model
         )
         
         # Save user to database

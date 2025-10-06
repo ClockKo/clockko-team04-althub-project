@@ -290,18 +290,23 @@ class GlobalTimerService {
         soundService.playBreakComplete()
         this.showNotification('Break Complete!', 'Ready to get back to work?')
         
-        // Check if there's a paused focus session to resume
+        // Check if there's a paused focus session to resume BEFORE changing state
         if (this.state.pausedFocusSession && this.state.pausedFocusTimeLeft !== null) {
           await this.resumePausedFocusSession()
+          // Return early to avoid setting isRunning = false, since focus session is now active
           return
         } else {
           this.state.mode = 'initial'
+          this.state.isRunning = false
+          this.state.currentSession = null
+          this.emitEvent('complete', this.state)
         }
+      } else {
+        // Focus session completed
+        this.state.isRunning = false
+        this.state.currentSession = null
+        this.emitEvent('complete', this.state)
       }
-      
-      this.state.isRunning = false
-      this.state.currentSession = null
-      this.emitEvent('complete', this.state)
       
     } catch (error) {
       console.error('Failed to complete session:', error)

@@ -37,8 +37,7 @@ def create_room(
     """
     from app.models.room import CoworkingRoom, RoomStatus
     import uuid
-    
-    # Create new room
+
     new_room = CoworkingRoom(
         id=uuid.uuid4(),
         name=room_data.name,
@@ -47,12 +46,20 @@ def create_room(
         max_participants=room_data.max_participants or 15,
         color=room_data.color or "bg-grayBlue"
     )
-    
+
     db.add(new_room)
     db.commit()
     db.refresh(new_room)
-    
-    return new_room
+
+    return CoworkingRoomSummary(
+        id=new_room.id,
+        name=new_room.name,
+        description=new_room.description,
+        status=new_room.status.value if hasattr(new_room.status, "value") else str(new_room.status),
+        participant_count=0,
+        max_participants=new_room.max_participants,
+        color=new_room.color
+    )
 
 
 @router.get("/rooms", response_model=List[CoworkingRoomSummary])
@@ -198,32 +205,3 @@ def send_emoji(
 
 # Room Management Endpoints
 
-@router.post("/rooms", response_model=CoworkingRoomSummary, status_code=201)
-def create_room(
-    room_data: CoworkingRoomCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Create a new coworking room.
-    
-    Any authenticated user can create a room. The room will be set to active by default.
-    """
-    from app.models.room import CoworkingRoom, RoomStatus
-    import uuid
-    
-    # Create new room
-    new_room = CoworkingRoom(
-        id=uuid.uuid4(),
-        name=room_data.name,
-        description=room_data.description,
-        status=RoomStatus.active,
-        max_participants=room_data.max_participants or 15,
-        color=room_data.color or "bg-grayBlue"
-    )
-    
-    db.add(new_room)
-    db.commit()
-    db.refresh(new_room)
-    
-    return new_room

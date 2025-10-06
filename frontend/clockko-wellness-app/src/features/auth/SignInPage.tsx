@@ -81,8 +81,8 @@ const SignInPage: React.FC = () => {
     console.log('Google Access Token:', accessToken);
 
     try {
-      // Send the access token to your backend for verification
-      const response = await fetch('http://localhost:8000/api/auth/google', { // Ensure this URL is correct
+      // Send the access token to backend /api/auth/google/verify
+      const response = await fetch('http://localhost:8000/api/auth/google/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: accessToken }),
@@ -90,7 +90,6 @@ const SignInPage: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        // Assuming your backend returns its own token upon success
         if (data.access_token) {
           setAuthToken(data.access_token);
         }

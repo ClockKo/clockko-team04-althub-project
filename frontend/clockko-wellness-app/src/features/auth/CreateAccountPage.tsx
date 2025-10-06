@@ -7,7 +7,7 @@ import { useHead } from '@unhead/react'
 import AuthLayout from './AuthLayout'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
-import { registerUser, googleSignUp} from './api' 
+import { registerUser } from './api' 
 import { useAuth } from './authcontext'
 import { useGoogleLogin } from '@react-oauth/google'
 import googleLogo from '../../assets/images/google.png'
@@ -85,17 +85,23 @@ const CreateAccountPage: React.FC = () => {
     console.log('Google Access Token:', googleAccessToken);
 
     try {
-      // Send Google token to your backend and get your app's token
-      const response = await googleSignUp(googleAccessToken);
+      // Send Google token to backend /api/auth/google/verify
+      const response = await fetch('http://localhost:8000/api/auth/google/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: googleAccessToken }),
+      });
 
-      // Check if you received your app's access token
-      if (response.access_token) {
-        // Set the auth state in your app
-        setAuthToken(response.access_token);
-        // Now navigate to the dashboard
-        navigate('/dashboard');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.access_token) {
+          setAuthToken(data.access_token);
+          navigate('/onboarding');
+        } else {
+          setApiError('Failed to log in after Google sign-up.');
+        }
       } else {
-        setApiError('Failed to log in after Google sign-up.');
+        setApiError('Google sign-up failed. Please try again.');
       }
     } catch (error) {
       console.error('Google sign-up failed:', error);

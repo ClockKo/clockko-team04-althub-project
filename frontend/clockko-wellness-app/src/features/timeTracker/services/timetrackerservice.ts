@@ -527,13 +527,21 @@ class TimeTrackerService {
         status: session.status as 'active' | 'completed' | 'stopped' | 'paused'
       })) || []
 
+      console.log('🔍 Raw backend response data:', {
+        total_focus_time: responseData.total_focus_time,
+        total_break_time: responseData.total_break_time,
+        total_focus_sessions: responseData.total_focus_sessions
+      })
+
       const summary: DailySummary = {
         date: targetDate,
         totalFocusSessions: responseData.total_focus_sessions || 0,
-        totalFocusTime: responseData.total_focus_time || 0,
-        totalBreakTime: responseData.total_break_time || 0,
+        totalFocusTime: responseData.total_focus_time || 0, // Don't convert yet - let's see what backend returns
+        totalBreakTime: responseData.total_break_time || 0, // Don't convert yet - let's see what backend returns
         sessions: sessions
       }
+
+      console.log('🔍 Summary before any conversion:', summary)
 
       console.log('🔄 Recalculated totals from sessions:', { 
         sessions: sessions.length, 

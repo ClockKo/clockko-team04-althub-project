@@ -43,7 +43,7 @@ export function ProgressCard({ tasksCompleted, tasksTotal, focusTime, focusGoal 
               />
             </div>
             <div className="text-xs text-gray-500 mt-1">
-              {Math.floor(focusTime / 60)}h {focusTime % 60}m of {Math.floor(focusGoal / 60)}h {focusGoal % 60}m
+              {Math.floor(focusTime / 3600)}h {Math.floor((focusTime % 3600) / 60)}m 
             </div>
           </div>
         </>

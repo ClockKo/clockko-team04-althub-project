@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -82,9 +83,14 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, task, on
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
               <div className="w-4 h-4 bg-blue-600 rounded-sm"></div>
             </div>
-            <DialogTitle className="text-xl font-semibold text-gray-900">
-              Edit Task
-            </DialogTitle>
+            <div className="flex flex-col">
+              <DialogTitle className="text-xl font-semibold text-gray-900">
+                Edit Task
+              </DialogTitle>
+              <DialogDescription className="text-sm text-gray-600 mt-1">
+                Modify your task details and settings
+              </DialogDescription>
+            </div>
           </div>
         </DialogHeader>
 

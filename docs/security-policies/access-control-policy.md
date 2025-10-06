@@ -1,4 +1,4 @@
-**ClockKo Access Control Policy**
+# ClockKo Access Control Policy
 
 **Version:** 1.0
 
@@ -14,11 +14,12 @@
 
     The purpose of this Role-Based Access Control (RBAC) Policy is to establish a structured approach for managing access to ClockKo systems, data, and user reflections. This ensures that access is granted only to authorized individuals and services, in alignment with the principles of least privilege, data minimization, and accountability under the Nigeria Data Protection Act (NDPA) 2023 and NDPR.
 
-## 2. Scope 
+## 2. Scope
 
     This policy applies to all ClockKo team members, service accounts, and third-party service providers who interact with ClockKo systems, including production databases, APIs, and user reflections.
 
 ## 3. NDPA Compliance Principles
+
     ClockKo enforces access control in line with NDPA 2023, guided by the following principles:
 
 - Data Minimization: Access is restricted to only what is necessary to perform assigned duties.

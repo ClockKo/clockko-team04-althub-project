@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from '../../../components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../components/ui/dialog'
 import { Button } from '../../../components/ui/button'
 import { cn } from '../../../lib/utils'
 import { useState, useEffect } from 'react'
@@ -276,18 +276,31 @@ export function ShutdownModal({ open, onClose }: { open: boolean; onClose: () =>
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="py-8 px-6 rounded-2xl mx-auto">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <img src={facelogo} alt="Koala mascot" className="w-16 h-16 mb-4" />
-            <span className="text-lg text-gray-500">Loading shutdown summary...</span>
-          </div>
+          <>
+            <DialogHeader className="sr-only">
+              <DialogTitle>Loading Shutdown Summary</DialogTitle>
+              <DialogDescription>Please wait while we prepare your work session summary</DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center justify-center py-12">
+              <img src={facelogo} alt="Koala mascot" className="w-16 h-16 mb-4" />
+              <span className="text-lg text-gray-500">Loading shutdown summary...</span>
+            </div>
+          </>
         ) : (
           <>
-            <div className="flex items-center gap-2 mb-2">
-              <img src={facelogo} alt="Koala mascot" className="w-14 h-8" />
-              <span className="font-medium text-md ml-4">
-                Clock Out – Step {step + 1} of {steps.length}
-              </span>
-            </div>
+            <DialogHeader className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <img src={facelogo} alt="Koala mascot" className="w-14 h-8" />
+                <div className="flex flex-col ml-4">
+                  <DialogTitle className="font-medium text-md">
+                    Clock Out – Step {step + 1} of {steps.length}
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-gray-600 mt-1">
+                    Review your work session and reflect on your productivity
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
             <div className="bg-white p-4 rounded-lg shadow-md min-h-[240px] leading-[2.5]">
               <div className="font-bold text-lg mb-1">{steps[step].title}</div>
               <div className="text-gray-500 mb-3">{steps[step].subtitle}</div>

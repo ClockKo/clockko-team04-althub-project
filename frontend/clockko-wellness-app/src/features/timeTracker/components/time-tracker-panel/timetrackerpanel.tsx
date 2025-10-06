@@ -18,6 +18,9 @@ import { FOCUS_DEFAULT_DURATION, BREAK_DEFAULT_DURATION, formatTime } from '../.
 // --- Time Tracker Service ---
 import { timeTrackerService, type FocusSession } from '../../services/timetrackerservice'
 
+// --- Global Timer Hook ---
+import { useGlobalTimer } from '../../hooks/useGlobalTimer'
+
 // --- Sound Service ---
 import { soundService, type SoundTheme } from '../../services/soundService'
 
@@ -31,6 +34,9 @@ function TimeTrackerPanel() {
 
   // --- Smart Real-Time Features Integration ---
   const realTimeFeatures = useRealTimeFeatures('user-placeholder') // Replace with actual user ID when auth is ready
+
+  // --- Global Timer Integration ---
+  const globalTimer = useGlobalTimer()
 
   // Utility function to refresh UI with latest data
   const refreshDailySummary = async () => {
@@ -210,6 +216,54 @@ function TimeTrackerPanel() {
       }
     }
   }, []) // Run once on mount
+
+  // Effect for loading daily summary on component mount
+  useEffect(() => {
+    console.log('🔄 Loading daily summary on component mount...')
+    refreshDailySummary().catch((error) => {
+      console.error('Failed to load daily summary on mount:', error)
+    })
+  }, []) // Run once on mount
+
+  // Effect for handling global timer completion events
+  useEffect(() => {
+    console.log('🔍 Global timer state changed:', {
+      mode: globalTimer.mode,
+      timeLeft: globalTimer.timeLeft,
+      isRunning: globalTimer.isRunning,
+      currentSession: globalTimer.currentSession
+    })
+
+    // Handle when global timer completes a focus session (shows completion UI)
+    if (globalTimer.mode === 'completed') {
+      console.log('⏰ Focus session completed - showing completion UI!')
+      
+      // Set local mode to completed for UI consistency
+      setMode('completed')
+      
+      // Refresh daily summary to show updated stats (this will get the correct totals from API)
+      refreshDailySummary().catch((error) => {
+        console.error('Failed to refresh daily summary after completion:', error)
+      })
+      
+      // Clear current session
+      setCurrentSession(null)
+    }
+    
+    // Handle when global timer goes back to initial state (either from completion or manual stop)
+    else if (globalTimer.mode === 'initial' && !globalTimer.isRunning) {
+      console.log('⏰ Timer reset to initial state!')
+      
+      // Set local mode back to initial
+      setMode('initial')
+      setCurrentSession(null)
+      
+      // Refresh daily summary
+      refreshDailySummary().catch((error) => {
+        console.error('Failed to refresh daily summary after reset:', error)
+      })
+    }
+  }, [globalTimer.mode, globalTimer.timeLeft, globalTimer.isRunning, globalTimer.currentSession])
 
   // --- Timer Control Functions ---
 
@@ -649,19 +703,18 @@ function TimeTrackerPanel() {
             </div>
             <div className="panel-main">
               <div className="panel-timer">
-                <h1 className="timer-display">{formatTime(timeLeft)}</h1>
+                <h1 className="timer-display">{formatTime(globalTimer.timeLeft > 0 ? globalTimer.timeLeft : timeLeft)}</h1>
+                {/* Global Timer Status Indicator */}
+                {/* <p style={{ fontSize: '12px', color: '#666', margin: '5px 0' }}>
+                  Global Timer: {globalTimer.mode} | {formatTime(globalTimer.timeLeft)} | {globalTimer.isRunning ? 'Running' : 'Paused'}
+                </p> */}
                 <div className="timer-controls-group">
                   {/* ClockInOutButton handles rendering based on mode and isRunning */}
                   <ClockInOutButton
-                    mode={mode}
-                    isRunning={isRunning}
+                    mode={globalTimer.mode !== 'initial' ? globalTimer.mode : mode}
+                    isRunning={globalTimer.timeLeft > 0 ? globalTimer.isRunning : isRunning}
                     isDropdownOpen={isDropdownOpen}
                     setIsDropdownOpen={setIsDropdownOpen}
-                    selectFocusPresetAndStart={selectFocusPresetAndStart}
-                    resumeCurrentTimer={resumeCurrentTimer}
-                    pauseTimer={pauseTimer}
-                    stopTimer={stopTimer}
-                    startBreak={startBreak} // Passed for 'Start Break' button in completed mode
                     BREAK_DEFAULT_DURATION={BREAK_DEFAULT_DURATION} // Passed constant
                   />
 

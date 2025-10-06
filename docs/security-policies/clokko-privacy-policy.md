@@ -12,7 +12,7 @@
 
 **Author:** Beatrice Pepple
 
-## 1. YOUR PRIVACY 
+## 1. YOUR PRIVACY
 
 At ClockKo, we put your wellbeing first. We are committed to protecting your personal information and respect your privacy when you use our content and products via our website. This privacy policy explains how we collect, use, store and protect your personal data in full compliance with the provisions of the Nigeria Data Protection Act 2023 and other applicable data protection regulations.
 
@@ -78,12 +78,12 @@ ClockKo will not sell or rent your personally identifiable information to anyone
 - Community Activity. If you engage with other Platform users using our community features, we will share some information about you such as your name associated with your comment on a forum or other information you choose to share with other users.
 - Where permitted or required by law. We may share information about you with other parties for ClockKo’s business purposes or as permitted or required by law, including:
 
-1.  If we need to do so to comply with a court proceeding, other legal process or an applicable regulation;
-2.  To law enforcement authorities or other government officials, or other third parties pursuant to a court order or other legal process or requirement.
-3.  Where we reasonably believe that the disclosure is necessary or appropriate to prevent an imminent physical or non-physical harm.
-4.  To investigate violations of or enforce a user agreement or other legal terms applicable to any service;
-5.  To protect our property, services and legal rights;
-6.  To support our audit, compliance, and corporate governance functions.
+1. If we need to do so to comply with a court proceeding, other legal process or an applicable regulation;
+2. To law enforcement authorities or other government officials, or other third parties pursuant to a court order or other legal process or requirement.
+3. Where we reasonably believe that the disclosure is necessary or appropriate to prevent an imminent physical or non-physical harm.
+4. To investigate violations of or enforce a user agreement or other legal terms applicable to any service;
+5. To protect our property, services and legal rights;
+6. To support our audit, compliance, and corporate governance functions.
 
 - With your consent: We also will share your Personal Data and other information with your consent or direction.
 
@@ -113,18 +113,18 @@ We will keep your personal information for as long as needed to perform our obli
 
 According to the provision of Nigerian Data Protection Act 2023 (NDPA), data subjects have certain rights. The following rights are available to you under this Policy:
 
-1.  Requests to Access: You may at any time request for access to your personal information held by ClockKo.
-2.  Right to Recitfy: You have the right to ask us to correct your Personal Data if it is inaccurate, or update outdated or incomplete Personal Data without undue delay.
-3.  Right to Erasure: You have the right to ask us to delete your Personal Data. We may continue to retain such personal information as may be required for compliance with legal, regulatory or policy requirements.
-4.  Object to processing: You may elect to withdraw your consent to process your data at any time.
-5.  Requests for Portability: Subject to the directives of the Nigeria Data Protection Commission and technical possibilities, you can exercise you right to portability by requesting us to provide your data in a commonly used and machine-readable electronic format.
-6.  Except in scenarios clearly stated in the Nigerian Data Protection Act (NDPA). You have the right not to be subject to a decision based solely on automated processing, including profiling, which produces legal or similar significant effects about you.
+1. Requests to Access: You may at any time request for access to your personal information held by ClockKo.
+2. Right to Recitfy: You have the right to ask us to correct your Personal Data if it is inaccurate, or update outdated or incomplete Personal Data without undue delay.
+3. Right to Erasure: You have the right to ask us to delete your Personal Data. We may continue to retain such personal information as may be required for compliance with legal, regulatory or policy requirements.
+4. Object to processing: You may elect to withdraw your consent to process your data at any time.
+5. Requests for Portability: Subject to the directives of the Nigeria Data Protection Commission and technical possibilities, you can exercise you right to portability by requesting us to provide your data in a commonly used and machine-readable electronic format.
+6. Except in scenarios clearly stated in the Nigerian Data Protection Act (NDPA). You have the right not to be subject to a decision based solely on automated processing, including profiling, which produces legal or similar significant effects about you.
 
 ## 7. REMEDIES FOR VIOLATION AND TIME-FRAME FOR REMEDY
 
 In the unlikely event of violation of any of your rights a data subject, our Data Protection Officer shall within 30 days of our notice of the said violation, address the issue and redress the violation as practicable as possible. The available remedies include but not limited to correction or deletion of your data, grant of access to your data, due information on the processing of your data, restriction on further processing and other applicable remedies as the relevant laws prescribe.
 
-You also have the right to lodge a compliant directly with the supervisory authority, Nigeria Data Protection Commission (NDPC) where you suspect any misconduct or violations of the above listed rights in section. Email: Info@ndpc.gov.ng
+You also have the right to lodge a compliant directly with the supervisory authority, Nigeria Data Protection Commission (NDPC) where you suspect any misconduct or violations of the above listed rights in section. Email: <Info@ndpc.gov.ng>
 
 ## 11. UPDATES TO THIS PRIVACY POLICY
 

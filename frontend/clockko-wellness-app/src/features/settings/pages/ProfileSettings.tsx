@@ -1,8 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../auth/authcontext';
 import toast from 'react-hot-toast';
 import { updateUserProfile } from '../../../pages/dashboard/profileApi';
 import { useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Switch } from '../../../components/ui/switch';
@@ -30,14 +31,15 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
+  AlertDialogAction
 } from '../../../components/ui/alert-dialog';
 
 const defaultAvatar =
   'https://ui-avatars.com/api/?name=User&background=E0E7FF&color=1E40AF&size=128';
 
 const ProfileSettings: React.FC = () => {
+  const navigate = useNavigate();
+  const { logout, authToken } = useAuth();
   const [selectedCountry, setSelectedCountry] = useState<string>('NG');
   // No longer need showDeleteDialog, handled by AlertDialog
   const countries = getData();
@@ -317,15 +319,36 @@ const ProfileSettings: React.FC = () => {
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-red-600">Confirm Account Deletion</AlertDialogTitle>
-                <AlertDialogDescription>
+                <AlertDialogDescription className="text-black">
                   Are you sure you want to delete your account? <br />
                   <span className="font-semibold text-red-600">This action is irreversible.</span> All your data will be permanently wiped out and you will lose access to all workspaces.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction asChild>
-                  <Button variant="destructive" onClick={() => {/* TODO: Add delete logic */}}>
+                  <Button
+                    variant="destructive"
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('http://localhost:8000/api/users/delete', {
+                          method: 'DELETE',
+                          headers: {
+                            'Authorization': `Bearer ${authToken}`,
+                          },
+                        });
+                        if (res.ok) {
+                          toast.success('Account deleted successfully.');
+                          logout();
+                          navigate('/');
+                        } else {
+                          const data = await res.json().catch(() => ({}));
+                          toast.error(data.detail || 'Failed to delete account.');
+                        }
+                      } catch (err) {
+                        toast.error('Network error. Please try again.');
+                      }
+                    }}
+                  >
                     Delete Account
                   </Button>
                 </AlertDialogAction>

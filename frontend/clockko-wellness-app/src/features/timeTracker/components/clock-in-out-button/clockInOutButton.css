@@ -10,7 +10,7 @@
     border: none;
     padding: 10px 30px;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 13px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -153,7 +153,8 @@
     gap: 10px; 
     align-items: center;
     flex-wrap: wrap; 
-    justify-content: center; 
+    justify-content: center;
+    margin-bottom: 20px; 
 }
 
 
@@ -162,7 +163,7 @@
     background-color: var(--white); 
     color: var(--buttonColor); 
     border: 1px solid var(--buttonColor);
-    padding: 10px 30px;
+    padding: 6px 30px;
     border-radius: 8px;
     font-size: 16px;
     cursor: pointer;

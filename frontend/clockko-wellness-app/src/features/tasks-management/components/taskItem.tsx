@@ -39,11 +39,11 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
           <Checkbox
             checked={task.completed}
             disabled={true} // TODO: Enable when backend implements 'completed' field
-            onCheckedChange={(checked) => {
+            onCheckedChange={(_checked) => {
               // TODO: Uncomment when backend implements 'completed' field
               // updateTask({
               //   id: task.id,
-              //   updates: { completed: Boolean(checked) },
+              //   updates: { completed: Boolean(_checked) },
               // })
               console.log(
                 '⚠️ Task completion feature coming soon! Backend needs to implement "completed" field.'

@@ -100,8 +100,9 @@
     .summary-panel{
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 20px;
     align-items: center;
+    margin-top: 18rem;
 }
 }
 
@@ -113,6 +114,7 @@
     flex-wrap: wrap;
     gap: 30px;
     justify-content: center;
+    margin-top: 17rem;
    }
 }
 

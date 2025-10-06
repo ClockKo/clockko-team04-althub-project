@@ -5,12 +5,14 @@
 I've improved your existing toast notifications with:
 
 ### **Better Duration & Readability:**
+
 - **Break Reminders**: 12 seconds (was 8)
 - **Task Deadlines**: 15 seconds (was 10)  
 - **Focus Interruptions**: 10 seconds (was 6)
 - **Productivity Insights**: 12 seconds (was 6)
 
 ### **Enhanced Visual Design:**
+
 - **Larger padding**: 16px-20px for better readability
 - **Improved typography**: 14px font, proper font weights
 - **Better shadows**: Subtle depth with brand color shadows
@@ -19,6 +21,7 @@ I've improved your existing toast notifications with:
 - **Border highlights**: Subtle white borders for contrast
 
 ### **Priority-Based Styling:**
+
 - **High Priority Deadlines**: Red with stronger shadows, 15-second duration
 - **Break Reminders**: Green with gentle shadows
 - **Focus Interruptions**: Blue with focus-themed styling
@@ -27,7 +30,9 @@ I've improved your existing toast notifications with:
 ## 🆚 **Option Comparison**
 
 ### **Option 1: Enhanced Toasts (Current) ⭐ RECOMMENDED**
+
 **Pros:**
+
 - ✅ Easy to implement (already done!)
 - ✅ Uses your existing react-hot-toast setup
 - ✅ Non-disruptive, appears and disappears smoothly
@@ -38,7 +43,9 @@ I've improved your existing toast notifications with:
 **Best for:** Most users, clean UX, follows established patterns
 
 ### **Option 2: Popup Notifications (Available)**
+
 **Pros:**
+
 - ✅ Stays until manually dismissed (for important notifications)
 - ✅ Can stack multiple notifications
 - ✅ More prominent for urgent items
@@ -50,6 +57,7 @@ I've improved your existing toast notifications with:
 ## 🎯 **Current Enhanced Toast Features**
 
 ### **Smart Duration Logic:**
+
 ```typescript
 // Break reminders: 12 seconds - comfortable reading time
 // Deadlines: 15 seconds - important, needs attention  
@@ -58,6 +66,7 @@ I've improved your existing toast notifications with:
 ```
 
 ### **Visual Enhancements:**
+
 ```typescript
 style: {
   background: '#10b981',           // Brand colors
@@ -85,12 +94,14 @@ To see the improvements in action:
 ## 📊 **User Experience Improvements**
 
 ### **Before:**
+
 - 4-8 second toasts (too fast to read)
 - Basic styling
 - Small text, minimal padding
 - Hard to catch important messages
 
 ### **After:**
+
 - 10-15 second toasts (comfortable reading)
 - Beautiful, brand-consistent design
 - Larger, more readable text
@@ -100,12 +111,14 @@ To see the improvements in action:
 ## 💡 **Recommendation**
 
 **Stick with Enhanced Toasts** for now because:
+
 - ✅ Perfect balance of visibility and non-disruption
 - ✅ Users can read comfortably without being annoyed
 - ✅ Beautiful design that enhances your brand
 - ✅ Works seamlessly with your existing UI
 
 **Consider Popup Notifications later** if users request:
+
 - More persistent notifications for deadlines
 - Ability to review missed notifications
 - Stacking multiple alerts

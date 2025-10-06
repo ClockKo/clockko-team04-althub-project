@@ -9,7 +9,7 @@ import { TaskBacklogCard } from './taskWidget'
 import { ShutdownStreakCard } from './shutdownWidget'
 import { useCurrentSession, useClockIn, useClockOut, useDashboardData } from './dashboardHooks'
 import { ShutdownModal } from './shutdownModals/modal'
-import { AuthDebugPanel } from '../../components/AuthDebugPanel'
+// import { AuthDebugPanel } from '../../components/AuthDebugPanel'
 import type { Task } from '../../types/typesGlobal'
 import { Skeleton } from '../../components/ui/skeleton'
 
@@ -47,7 +47,12 @@ export default function DashboardPage() {
   function handleClockOut() {
     clockOutMutation.mutate(undefined, {
       onSuccess: () => {
-        setTimeout(() => setShowShutdown(true), 1000) // Show modal after 1s
+        // IMMEDIATELY refresh session data to stop the timer
+        queryClient.invalidateQueries({ queryKey: ["currentSession"] })
+        queryClient.invalidateQueries({ queryKey: ["dashboardData"] })
+        
+        // Then show shutdown modal after 1s
+        setTimeout(() => setShowShutdown(true), 1000)
       },
     })
   }
@@ -118,11 +123,11 @@ export default function DashboardPage() {
       </div>
       
       {/* Debug Panel - Development Only */}
-      {import.meta.env.DEV && (
+      {/* {import.meta.env.DEV && (
         <div className="mt-6">
           <AuthDebugPanel />
         </div>
-      )}
+      )} */}
       <AnimatePresence>
         {showShutdown && <ShutdownModal open={showShutdown} onClose={handleCloseShutdown} />}
       </AnimatePresence>

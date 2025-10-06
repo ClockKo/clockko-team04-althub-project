@@ -9,6 +9,7 @@ from app.core.security import create_access_token, hash_password, verify_passwor
 from typing import Union
 import uuid
 import json
+from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(tags=["auth"])
 
@@ -86,22 +87,43 @@ async def login(user_credentials: schema.UserLogin, db: Session = Depends(get_db
     try:
         # Authenticate user
         user = db.query(User).filter(User.email == user_credentials.email).first()
-        if not user or not verify_password(user_credentials.password, user.hashed_password):
+        if not user:
             raise HTTPException(
                 status_code=401,
                 detail="Incorrect email or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        
+        print(f"User found: {user.email}")
+        print(f"User is_active: {user.is_active}")
+        
+        if not verify_password(user_credentials.password, user.hashed_password):
+            print("Password verification failed")
+            raise HTTPException(
+                status_code=401,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        print("Password verification successful")
+        
         if not user.is_active:
             raise HTTPException(400, detail="Account is disabled")
         
+        print(f"Creating token for user ID: {user.id}")
+        
         # Create access token
         token = create_access_token({"sub": str(user.id)})
+        print(f"Token created successfully")
+        
         return {"access_token": token, "token_type": "bearer"}
         
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Login error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
 
 @router.get("/user", response_model=schema.UserResponse)
@@ -168,3 +190,34 @@ def reset_password(payload: schema.ResetPasswordRequest, db: Session = Depends(g
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Password reset failed: {str(e)}")
+
+
+@router.put("/user", response_model=schema.UserResponse)
+def update_user_profile(
+    profile_update: schema.UserProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update the current user's profile information"""
+    try:
+        # Update only the fields that are provided (not None)
+        if profile_update.name is not None:
+            current_user.full_name = profile_update.name
+        
+        if profile_update.phone_number is not None:
+            current_user.phone_number = profile_update.phone_number
+        
+        if profile_update.avatar_url is not None:
+            current_user.avatar_url = profile_update.avatar_url
+        
+        db.commit()
+        db.refresh(current_user)
+        
+        return schema.UserResponse.from_user_model(current_user)
+    
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Profile update failed: Invalid data provided")
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Profile update failed: {str(e)}")

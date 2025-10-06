@@ -9,7 +9,7 @@
 }
 
 .take-break-button {
-    min-width: 150px; /* Match other timer buttons for consistency */
+    min-width: 165px; /* Match other timer buttons for consistency */
     /* Inherits background-color, color, border from .timer-button defined in TimeTrackerPanel.css */
 }
 

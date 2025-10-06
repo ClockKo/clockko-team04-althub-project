@@ -82,6 +82,7 @@ const ProfileSettings: React.FC = () => {
             await updateUserProfile({ avatar: newAvatar });
             await queryClient.invalidateQueries({ queryKey: ['userData'] });
           } catch (err) {
+            console.error('Error updating avatar:', err);
             // Optionally show error toast
           } finally {
             setUploadingAvatar(false);
@@ -103,6 +104,7 @@ const ProfileSettings: React.FC = () => {
       await queryClient.invalidateQueries({ queryKey: ['userData'] });
       setIsEditingName(false);
     } catch (err) {
+      console.error('Error updating name:', err);
       // Optionally show error toast
     } finally {
       setUploadingAvatar(false);

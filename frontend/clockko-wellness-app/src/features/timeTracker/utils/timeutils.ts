@@ -39,5 +39,8 @@ export const formatTotalTime = (totalSeconds: number): string => {
         // If less than a minute but more than 0 seconds, show <1min
         formattedString += "<1min";
     }
-    return formattedString.trim(); // Remove trailing space if only minutes were added
+
+    // console.log('🕰️ formatTotalTime result:', formattedString)
+    return formattedString;
+    // return formattedString.trim(); // Remove trailing space if only minutes were added
 };

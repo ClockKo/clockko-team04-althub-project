@@ -1,40 +1,83 @@
+"""Service layer for user settings operations."""
 from sqlalchemy.orm import Session
+from sqlalchemy import UUID
 from app.models.user_settings import UserSettings
-from app.models.user import User
 from app.schemas.user_settings import UserSettingsCreate, UserSettingsUpdate
 from typing import Optional
 import uuid
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 def get_user_settings(db: Session, user_id: uuid.UUID) -> Optional[UserSettings]:
-    """Get user settings by user ID"""
+    """
+    Get user settings by user ID.
+    
+    Args:
+        db: Database session
+        user_id: User UUID
+        
+    Returns:
+        UserSettings object or None if not found
+    """
     return db.query(UserSettings).filter(UserSettings.user_id == user_id).first()
 
 
-def create_default_user_settings(db: Session, user_id: uuid.UUID) -> UserSettings:
-    """Create default user settings for a new user"""
-    try:
-        settings = UserSettings(user_id=user_id)
-        db.add(settings)
-        db.commit()
-        db.refresh(settings)
-        logger.info(f"Created default settings for user {user_id}")
-        return settings
-    except Exception as e:
-        logger.error(f"Failed to create default settings for user {user_id}: {e}")
-        db.rollback()
-        raise
-
-
-def get_or_create_user_settings(db: Session, user_id: uuid.UUID) -> UserSettings:
-    """Get user settings or create default ones if they don't exist"""
-    settings = get_user_settings(db, user_id)
-    if not settings:
-        settings = create_default_user_settings(db, user_id)
-    return settings
+def create_user_settings(
+    db: Session, 
+    user_id: uuid.UUID, 
+    settings: Optional[UserSettingsCreate] = None
+) -> UserSettings:
+    """
+    Create user settings with default values or provided settings.
+    
+    Args:
+        db: Database session
+        user_id: User UUID
+        settings: Optional settings data
+        
+    Returns:
+        Created UserSettings object
+    """
+    # Check if settings already exist
+    existing = get_user_settings(db, user_id)
+    if existing:
+        return existing
+    
+    # Create settings dict with defaults
+    settings_data = {
+        "user_id": user_id,
+        # Notification Preferences (defaults)
+        "break_reminders_enabled": True,
+        "overwork_notifications_enabled": True,
+        "wellness_check_enabled": True,
+        "email_notifications_enabled": True,
+        "push_notifications_enabled": True,
+        # Shutdown Settings (defaults)
+        "shutdown_reminders_enabled": False,
+        "shutdown_reflection_required": False,
+        # Localization Settings (defaults)
+        "timezone": "UTC",
+        "date_format": "YYYY-MM-DD",
+        "time_format": "24h",
+        # Privacy Settings (defaults)
+        "profile_visibility": "public",
+        "share_work_stats": True,
+        "share_wellness_data": False,
+        # Pomodoro Settings (defaults)
+        "pomodoro_work_duration": 25,
+        "pomodoro_break_duration": 5,
+        "pomodoro_long_break_duration": 15,
+    }
+    
+    # Override with provided settings if any
+    if settings:
+        settings_dict = settings.model_dump(exclude_unset=True)
+        settings_data.update(settings_dict)
+    
+    db_settings = UserSettings(**settings_data)
+    db.add(db_settings)
+    db.commit()
+    db.refresh(db_settings)
+    return db_settings
 
 
 def update_user_settings(
@@ -42,76 +85,67 @@ def update_user_settings(
     user_id: uuid.UUID, 
     settings_update: UserSettingsUpdate
 ) -> Optional[UserSettings]:
-    """Update user settings"""
-    try:
-        # Get existing settings or create default ones
-        settings = get_or_create_user_settings(db, user_id)
+    """
+    Update user settings.
+    
+    Args:
+        db: Database session
+        user_id: User UUID
+        settings_update: Settings update data
         
-        # Update only the fields that are provided (not None)
-        update_data = settings_update.model_dump(exclude_unset=True)
-        
-        for field, value in update_data.items():
-            if hasattr(settings, field):
-                setattr(settings, field, value)
-        
-        db.commit()
-        db.refresh(settings)
-        logger.info(f"Updated settings for user {user_id}")
-        return settings
-        
-    except Exception as e:
-        logger.error(f"Failed to update settings for user {user_id}: {e}")
-        db.rollback()
-        raise
-
-
-def reset_user_settings_to_default(db: Session, user_id: uuid.UUID) -> UserSettings:
-    """Reset user settings to default values"""
-    try:
-        # Delete existing settings
-        existing_settings = get_user_settings(db, user_id)
-        if existing_settings:
-            db.delete(existing_settings)
-            db.commit()
-        
-        # Create new default settings
-        return create_default_user_settings(db, user_id)
-        
-    except Exception as e:
-        logger.error(f"Failed to reset settings for user {user_id}: {e}")
-        db.rollback()
-        raise
+    Returns:
+        Updated UserSettings object or None if not found
+    """
+    db_settings = get_user_settings(db, user_id)
+    if not db_settings:
+        return None
+    
+    # Update only provided fields
+    update_data = settings_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_settings, field, value)
+    
+    # Update timestamp
+    from datetime import datetime
+    db_settings.updated_at = datetime.utcnow().isoformat()
+    
+    db.commit()
+    db.refresh(db_settings)
+    return db_settings
 
 
 def delete_user_settings(db: Session, user_id: uuid.UUID) -> bool:
-    """Delete user settings"""
-    try:
-        settings = get_user_settings(db, user_id)
-        if settings:
-            db.delete(settings)
-            db.commit()
-            logger.info(f"Deleted settings for user {user_id}")
-            return True
-        return False
+    """
+    Delete user settings.
+    
+    Args:
+        db: Database session
+        user_id: User UUID
         
-    except Exception as e:
-        logger.error(f"Failed to delete settings for user {user_id}: {e}")
-        db.rollback()
-        raise
-
-
-def validate_work_boundaries(settings_update: UserSettingsUpdate) -> bool:
-    """Validate work boundary settings"""
-    if (settings_update.work_start_time and settings_update.work_end_time and 
-        settings_update.work_start_time >= settings_update.work_end_time):
+    Returns:
+        True if deleted, False if not found
+    """
+    db_settings = get_user_settings(db, user_id)
+    if not db_settings:
         return False
+    
+    db.delete(db_settings)
+    db.commit()
     return True
 
 
-def validate_pomodoro_settings(settings_update: UserSettingsUpdate) -> bool:
-    """Validate pomodoro timer settings"""
-    # Ensure break duration is less than work duration
-    if (settings_update.pomodoro_work_duration and settings_update.pomodoro_break_duration and
-        settings_update.pomodoro_break_duration >= settings_update.pomodoro_work_duration):
-        return False
-    return True
+def get_or_create_user_settings(db: Session, user_id: uuid.UUID) -> UserSettings:
+    """
+    Get existing user settings or create default ones if they don't exist.
+    
+    Args:
+        db: Database session
+        user_id: User UUID
+        
+    Returns:
+        UserSettings object
+    """
+    settings = get_user_settings(db, user_id)
+    if not settings:
+        settings = create_user_settings(db, user_id)
+    return settings

@@ -10,11 +10,11 @@
 
 **Author:** Beatrice Pepple
 
-### Purpose 
+## Purpose
 
 This policy establishes how ClockKo collects, stores, retains, and deletes user data, ensuring compliance with the Nigeria Data Protection Act (NDPA) 2023. It protects user privacy while supporting ClockKo’s mission to promote wellness-focused productivity for remote workers.
 
-### Scope 
+### Scope
 
 This policy applies to all user data processed by ClockKo, including:
 

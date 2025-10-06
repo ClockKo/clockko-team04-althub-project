@@ -25,6 +25,7 @@ const BreakTracker: React.FC<BreakTrackerProps> = ({
       </button>
       {isBreakDropdownOpen && (
         <div className="dropdown-menu break-dropdown-menu">
+                    <button onClick={() => startBreak(1)}>1 min</button>
           <button onClick={() => startBreak(5)}>5 min</button>
           <button onClick={() => startBreak(10)}>10 min</button>
           <button onClick={() => startBreak(15)}>15 min</button>

@@ -1,27 +1,29 @@
-import uuid
-from datetime import datetime, time
-from sqlalchemy import Column, String, Boolean, DateTime, Time, Integer, Text, ForeignKey
+"""User settings model for managing user preferences and configurations."""
+from sqlalchemy import Column, String, Integer, Boolean, Time, Text, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.core.database import Base
-from app.models.user import GUID
+import uuid
+from datetime import datetime
 
 
 class UserSettings(Base):
-    """User settings model for wellness windows, work boundaries, and notifications"""
+    """Model for user preferences and configuration settings."""
+    
     __tablename__ = "user_settings"
 
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4, index=True)
-    user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, unique=True, index=True)
     
-    # Work Boundaries
-    work_start_time = Column(Time, nullable=True, default=time(9, 0))  # Default 9:00 AM
-    work_end_time = Column(Time, nullable=True, default=time(17, 0))   # Default 5:00 PM
-    max_daily_hours = Column(Integer, nullable=True, default=8)        # Max work hours per day
+    # Work Schedule Settings
+    work_start_time = Column(Time, nullable=True)
+    work_end_time = Column(Time, nullable=True)
+    max_daily_hours = Column(Integer, nullable=True)
     
-    # Wellness Windows
-    wellness_check_interval = Column(Integer, nullable=True, default=60)  # Minutes between wellness checks
-    break_reminder_interval = Column(Integer, nullable=True, default=30)  # Minutes between break reminders
-    max_continuous_work = Column(Integer, nullable=True, default=120)     # Max minutes of continuous work
+    # Wellness Settings
+    wellness_check_interval = Column(Integer, nullable=True)  # in minutes
+    break_reminder_interval = Column(Integer, nullable=True)  # in minutes
+    max_continuous_work = Column(Integer, nullable=True)  # in minutes
     
     # Notification Preferences
     break_reminders_enabled = Column(Boolean, default=True)
@@ -31,37 +33,35 @@ class UserSettings(Base):
     push_notifications_enabled = Column(Boolean, default=True)
     
     # Shutdown Settings
-    daily_shutdown_time = Column(Time, nullable=True, default=time(18, 0))  # Default 6:00 PM
-    shutdown_reminders_enabled = Column(Boolean, default=True)
+    daily_shutdown_time = Column(Time, nullable=True)
+    shutdown_reminders_enabled = Column(Boolean, default=False)
     shutdown_reflection_required = Column(Boolean, default=False)
     
-    # Time Zone and Locale
-    timezone = Column(String, nullable=True, default="UTC")
-    date_format = Column(String, nullable=True, default="YYYY-MM-DD")
-    time_format = Column(String, nullable=True, default="HH:mm")
+    # Localization Settings
+    timezone = Column(String, default="UTC")
+    date_format = Column(String, default="YYYY-MM-DD")
+    time_format = Column(String, default="24h")
     
     # Privacy Settings
-    profile_visibility = Column(String, nullable=True, default="public")  # public, private, friends
+    profile_visibility = Column(String, default="public")  # public, private, friends
     share_work_stats = Column(Boolean, default=True)
     share_wellness_data = Column(Boolean, default=False)
     
-    # Productivity Settings
-    pomodoro_work_duration = Column(Integer, nullable=True, default=25)   # Minutes
-    pomodoro_break_duration = Column(Integer, nullable=True, default=5)   # Minutes
-    pomodoro_long_break_duration = Column(Integer, nullable=True, default=15)  # Minutes
+    # Pomodoro Settings
+    pomodoro_work_duration = Column(Integer, default=25)  # in minutes
+    pomodoro_break_duration = Column(Integer, default=5)  # in minutes
+    pomodoro_long_break_duration = Column(Integer, default=15)  # in minutes
     
-    # Custom Notes
-    wellness_goals = Column(Text, nullable=True)
-    work_preferences = Column(Text, nullable=True)
+    # JSON fields for complex data
+    wellness_goals = Column(Text, nullable=True)  # JSON string
+    work_preferences = Column(Text, nullable=True)  # JSON string
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(String, default=lambda: datetime.utcnow().isoformat())
+    updated_at = Column(String, default=lambda: datetime.utcnow().isoformat(), onupdate=lambda: datetime.utcnow().isoformat())
     
-    # Relationship
+    # Relationship to User
     user = relationship("User", back_populates="settings")
 
-
-# Add the relationship to the User model
-# Note: This should be added to the existing User model
-# user = relationship("UserSettings", back_populates="user", uselist=False)
+    def __repr__(self):
+        return f"<UserSettings(user_id={self.user_id}, timezone={self.timezone})>"

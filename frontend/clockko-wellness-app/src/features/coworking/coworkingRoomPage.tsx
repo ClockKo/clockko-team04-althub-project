@@ -100,12 +100,26 @@ export default function CoWorkingRoomsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {rooms.length === 0 ? (
-            // Show skeleton if no rooms after loading
+          {loading ? (
+            // Show skeleton while loading
             [...Array(4)].map((_, i) => (
               <Skeleton key={i} className="rounded-2xl px-6 py-8 bg-grayBlue shadow-lg h-32" />
             ))
+          ) : rooms.length === 0 ? (
+            // Show empty state when no rooms available
+            <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+              <div className="text-6xl mb-4">🏢</div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">No Coworking Rooms Available</h3>
+              <p className="text-gray-500 mb-6">There are currently no active coworking rooms. Check back later or contact your administrator.</p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="bg-blue1 hover:bg-blue-800/70"
+              >
+                Refresh Page
+              </Button>
+            </div>
           ) : (
+            // Show actual rooms
             rooms.map((room) => (
               <div key={room.id} className={`rounded-3xl p-6 shadow flex flex-col justify-between ${room.color}`}>
                 <div>

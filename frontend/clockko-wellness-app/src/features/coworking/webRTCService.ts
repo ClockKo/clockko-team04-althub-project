@@ -61,15 +61,28 @@ export class WebRTCService {
     // Clean up any existing connections
     this.cleanup();
     
-    // Get local audio stream
+    // Get local audio stream with mobile-optimized settings
     try {
+      // Mobile detection
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      const audioConstraints = {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        sampleRate: isMobile ? 16000 : 48000, // Lower sample rate for mobile
+        channelCount: 1, // Mono for better mobile performance
+        ...(isMobile && {
+          // Mobile-specific optimizations
+          latency: 0.2, // Reduce latency for mobile
+          volume: 1.0
+        })
+      };
+      
+      console.log(`🎵 WebRTC: Requesting audio stream (${isMobile ? 'Mobile' : 'Desktop'} mode)`);
+      
       this.localStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 48000
-        }
+        audio: audioConstraints
       });
       
       console.log('🎵 WebRTC: Local audio stream acquired');

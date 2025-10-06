@@ -92,8 +92,12 @@ const SignInPage: React.FC = () => {
         const data = await response.json();
         if (data.access_token) {
           setAuthToken(data.access_token);
+          if (data.is_new_user) {
+            navigate('/onboarding');
+          } else {
+            navigate('/dashboard');
+          }
         }
-        navigate('/dashboard');
       } else {
         console.error('Google login failed on the backend');
         setApiError('Google login failed. Please try again.');

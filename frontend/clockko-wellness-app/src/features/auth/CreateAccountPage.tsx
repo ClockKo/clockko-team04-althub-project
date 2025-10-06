@@ -96,7 +96,11 @@ const CreateAccountPage: React.FC = () => {
         const data = await response.json();
         if (data.access_token) {
           setAuthToken(data.access_token);
-          navigate('/onboarding');
+          if (data.is_new_user) {
+            navigate('/onboarding');
+          } else {
+            navigate('/dashboard');
+          }
         } else {
           setApiError('Failed to log in after Google sign-up.');
         }

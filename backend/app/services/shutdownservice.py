@@ -44,7 +44,7 @@ def _serialize_reflection(reflection: ShutdownReflection) -> ShutdownReflectionR
     return ShutdownReflectionResponse(
         id=reflection.id,
         user_id=reflection.user_id,
-    productivity_rating=ProductivityRating(reflection.productivity_rating),
+    productivity_rating=reflection.productivity_rating,
         reflection_note=reflection.reflection_note,
         mindful_disconnect_completed=mindfulness_values,
         created_at=reflection.created_at,

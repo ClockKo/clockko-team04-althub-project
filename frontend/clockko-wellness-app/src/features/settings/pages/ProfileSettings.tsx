@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { updateUserProfile } from '../../../pages/dashboard/profileApi';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -102,10 +103,11 @@ const ProfileSettings: React.FC = () => {
     try {
       await updateUserProfile({ name: editName });
       await queryClient.invalidateQueries({ queryKey: ['userData'] });
+      toast.success('Name updated successfully!');
       setIsEditingName(false);
     } catch (err) {
       console.error('Error updating name:', err);
-      // Optionally show error toast
+      toast.error('Failed to update name.');
     } finally {
       setUploadingAvatar(false);
     }
@@ -225,7 +227,7 @@ const ProfileSettings: React.FC = () => {
                 {/* Map over the timezones to create the options */}
                 {timezones.map((tz) => (
                   <SelectItem key={tz.tzCode} value={tz.tzCode}>
-                    {tz.label}
+                    {tz.label.replace('GMT', 'UTC')}
                   </SelectItem>
                 ))}
               </SelectContent>

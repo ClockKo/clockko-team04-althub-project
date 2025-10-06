@@ -7,9 +7,33 @@ from app.core.database import get_db
 from app.core.auth import get_current_user
 from typing import Dict, Any
 import logging
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["User Management"])
+
+# --- PATCH: Add schema for profile update ---
+class UserProfileUpdateRequest(BaseModel):
+    name: str
+
+# --- PATCH: Add endpoint to update user profile (name) ---
+@router.put("/profile", status_code=200)
+def update_user_profile(
+    payload: UserProfileUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update user's profile information (currently only name).
+    """
+    try:
+        current_user.full_name = payload.name
+        db.commit()
+        db.refresh(current_user)
+        return {"message": "Profile updated successfully", "name": current_user.full_name}
+    except Exception as e:
+        logger.error(f"Failed to update profile for user {current_user.id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update profile")
 
 
 @router.get("/settings", response_model=settings_schema.UserSettingsResponse, status_code=200)

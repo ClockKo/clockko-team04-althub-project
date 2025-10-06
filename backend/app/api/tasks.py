@@ -33,6 +33,11 @@ def create(
 
 @router.get("/", response_model=list[TaskResponse])
 def read_all(
+    completed: bool = None,
+    priority: str = None, 
+    tags: str = None,  # Comma-separated tags
+    due_today: bool = None,
+    upcoming: bool = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -42,7 +47,13 @@ def read_all(
             user_id = UUID(str(user_id))
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid user ID")
-    return taskservice.get_tasks(db, user_id)
+    
+    # Parse tags from comma-separated string
+    tags_list = None
+    if tags:
+        tags_list = [tag.strip() for tag in tags.split(',') if tag.strip()]
+    
+    return taskservice.get_tasks(db, user_id, completed, priority, tags_list, due_today, upcoming)
 
 
 @router.get("/{task_id}", response_model=TaskResponse)
@@ -93,6 +104,44 @@ def delete(
             raise HTTPException(status_code=400, detail="Invalid user ID")
     taskservice.delete_task(db, task_id, user_id)
     return None
+
+
+@router.put("/{task_id}/complete", response_model=TaskResponse)
+def complete_task(
+    task_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Mark a task as completed"""
+    user_id = current_user.id
+    if not isinstance(user_id, UUID):
+        try:
+            user_id = UUID(str(user_id))
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid user ID")
+    
+    from app.schemas.task import TaskUpdate
+    task_update = TaskUpdate(completed=True)
+    return taskservice.update_task(db, task_id, task_update, user_id)
+
+
+@router.put("/{task_id}/uncomplete", response_model=TaskResponse) 
+def uncomplete_task(
+    task_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Mark a task as not completed"""
+    user_id = current_user.id
+    if not isinstance(user_id, UUID):
+        try:
+            user_id = UUID(str(user_id))
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid user ID")
+    
+    from app.schemas.task import TaskUpdate
+    task_update = TaskUpdate(completed=False)
+    return taskservice.update_task(db, task_id, task_update, user_id)
 
 
 @router.post("/{task_id}/start-timer", response_model=TimeLogResponse)

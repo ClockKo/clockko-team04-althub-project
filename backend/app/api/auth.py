@@ -83,7 +83,7 @@ def register(user_data: schema.UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 async def login(user_credentials: schema.UserLogin, db: Session = Depends(get_db)):
-    """Login endpoint - accepts JSON """
+    """Login endpoint - accepts JSON"""
     try:
         # Authenticate user
         user = db.query(User).filter(User.email == user_credentials.email).first()

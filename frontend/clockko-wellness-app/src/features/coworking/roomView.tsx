@@ -350,6 +350,12 @@ useEffect(() => {
   // Toggle microphone mute
   const handleMicToggle = async () => {
     try {
+      console.log('🎤 Starting mic toggle...');
+      
+      // Debug token before toggle
+      const token = localStorage.getItem('authToken');
+      console.log('🔍 Token check before mic toggle:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
+      
       const newMutedState = await coworkingService.toggleMute(roomId);
       setIsMuted(newMutedState);
       
@@ -381,7 +387,7 @@ useEffect(() => {
     try {
       const token = localStorage.getItem('authToken');
       if (token) {
-        const response = await fetch('http://localhost:8000/api/users/profile', {
+        const response = await fetch('http://localhost:8000/api/auth/user', {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -390,7 +396,7 @@ useEffect(() => {
         
         if (response.ok) {
           const data = await response.json();
-          userData = data.user || data;
+          userData = data; // auth/user returns user data directly
         }
       }
     } catch (error) {
@@ -529,9 +535,9 @@ useEffect(() => {
             {showProgressDropdown && (
               loading || showSkeleton ? <ProgressSkeleton /> :
               <div className="mt-2">
-                {(room && typeof room.tasksCompleted === 'number' && typeof room.tasksTotal === 'number' && typeof room.focusTime === 'number' && typeof room.focusGoal === 'number')
-                  ? <ProgressCard tasksCompleted={room.tasksCompleted} tasksTotal={room.tasksTotal} focusTime={room.focusTime} focusGoal={room.focusGoal} />
-                  : <ProgressCard tasksCompleted={0} tasksTotal={0} focusTime={0} focusGoal={0} />
+                {(room && typeof room.tasksCompleted === 'number' && typeof room.tasksTotal === 'number' && typeof room.focusTime === 'number')
+                  ? <ProgressCard tasksCompleted={room.tasksCompleted} tasksTotal={room.tasksTotal} focusTime={room.focusTime} />
+                  : <ProgressCard tasksCompleted={0} tasksTotal={0} focusTime={0} />
                 }
               </div>
             )}
@@ -678,9 +684,9 @@ useEffect(() => {
             </div>
             {showProgressDropdown && (
               <div className="mt-2">
-                {(room && typeof room.tasksCompleted === 'number' && typeof room.tasksTotal === 'number' && typeof room.focusTime === 'number' && typeof room.focusGoal === 'number')
-                  ? <ProgressCard tasksCompleted={room.tasksCompleted} tasksTotal={room.tasksTotal} focusTime={room.focusTime} focusGoal={room.focusGoal} />
-                  : <ProgressCard tasksCompleted={0} tasksTotal={0} focusTime={0} focusGoal={0} />
+                {(room && typeof room.tasksCompleted === 'number' && typeof room.tasksTotal === 'number' && typeof room.focusTime === 'number')
+                  ? <ProgressCard tasksCompleted={room.tasksCompleted} tasksTotal={room.tasksTotal} focusTime={room.focusTime} />
+                  : <ProgressCard tasksCompleted={0} tasksTotal={0} focusTime={0} />
                 }
               </div>
             )}

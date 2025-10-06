@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { format } from 'date-fns'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Calendar } from '@/components/ui/calendar'
@@ -97,12 +97,17 @@ export default function AddTaskModal({ showModal = false, setShowModal }: AddTas
   }
 
   return (
-    <Dialog open={showModal} onOpenChange={handleClose} aria-describedby="add-task-modal">
-      <DialogContent aria-describedby="add-task-modal" className="sm:max-w-[600px] rounded-2xl p-6" showCloseButton={false}>
+    <Dialog open={showModal} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[600px] rounded-2xl p-6" showCloseButton={false}>
         <DialogHeader className="flex flex-row items-start justify-between pb-6">
           <div className="flex items-center gap-3">
             <FacesIcon width={56} height={34} className="flex-shrink-0" />
-            <DialogTitle className="text-xl font-semibold text-gray-900">Add New Task</DialogTitle>
+            <div className="flex flex-col">
+              <DialogTitle className="text-xl font-semibold text-gray-900">Add New Task</DialogTitle>
+              <DialogDescription className="text-sm text-gray-600 mt-1">
+                Create a new task to organize your work
+              </DialogDescription>
+            </div>
           </div>
           <Button variant="ghost" size="icon" onClick={handleClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />

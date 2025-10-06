@@ -47,8 +47,8 @@ def register(user_data: schema.UserCreate, db: Session = Depends(get_db)):
             verification_token=verification_token,
             is_active=True,
             is_verified=False,
-            otp_verified=False,
-            onboarding_completed=False  # New users haven't completed onboarding
+            otp_verified=False
+            # onboarding_completed=False  # Field is commented out in User model
         )
         
         # Save user to database
@@ -87,22 +87,43 @@ async def login(user_credentials: schema.UserLogin, db: Session = Depends(get_db
     try:
         # Authenticate user
         user = db.query(User).filter(User.email == user_credentials.email).first()
-        if not user or not verify_password(user_credentials.password, user.hashed_password):
+        if not user:
             raise HTTPException(
                 status_code=401,
                 detail="Incorrect email or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        
+        print(f"User found: {user.email}")
+        print(f"User is_active: {user.is_active}")
+        
+        if not verify_password(user_credentials.password, user.hashed_password):
+            print("Password verification failed")
+            raise HTTPException(
+                status_code=401,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        print("Password verification successful")
+        
         if not user.is_active:
             raise HTTPException(400, detail="Account is disabled")
         
+        print(f"Creating token for user ID: {user.id}")
+        
         # Create access token
         token = create_access_token({"sub": str(user.id)})
+        print(f"Token created successfully")
+        
         return {"access_token": token, "token_type": "bearer"}
         
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Login error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
 
 @router.get("/user", response_model=schema.UserResponse)

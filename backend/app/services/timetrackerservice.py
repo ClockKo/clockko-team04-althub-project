@@ -13,7 +13,26 @@ def build_focus_session_response(session: Timelog) -> FocusSessionResponse:
             session.start_time = session.start_time.replace(tzinfo=timezone.utc)
         if session.end_time.tzinfo is None:
             session.end_time = session.end_time.replace(tzinfo=timezone.utc)
-        actual_duration = max(0, int((session.end_time - session.start_time).total_seconds() // 60))
+        
+        # Calculate raw duration (includes pause time)
+        raw_duration_seconds = (session.end_time - session.start_time).total_seconds()
+        raw_duration_minutes = int(raw_duration_seconds // 60)
+        
+        print(f"🕒 Duration calculation for {session.type} session {session.session_id}:")
+        print(f"   Raw duration: {raw_duration_seconds}s ({raw_duration_minutes}min)")
+        print(f"   Planned duration: {session.planned_duration}min")
+        print(f"   Was paused at: {session.paused_at}")
+        
+        # For focus sessions, if duration is close to planned duration (within 1 minute),
+        # use planned duration to avoid timing discrepancies from pauses
+        if (session.type == "focus" and session.planned_duration and 
+            abs(raw_duration_minutes - session.planned_duration) <= 1):
+            actual_duration = session.planned_duration
+            print(f"   ✅ Using planned duration: {actual_duration}min (close to raw)")
+        else:
+            # For other cases, use calculated duration but cap it reasonably
+            actual_duration = max(0, raw_duration_minutes)
+            print(f"   ⚠️ Using raw duration: {actual_duration}min")
 
     return FocusSessionResponse(
         session_id=session.session_id,
@@ -94,6 +113,11 @@ def pause_session(db: Session, request: PauseSessionRequest):
         raise HTTPException(status_code=404, detail="Session not found")
     
     print(f"🔍 Found session {request.session_id} with status: {session_any_status.status}")
+    
+    # Handle case where session is already paused (protect against duplicate calls)
+    if session_any_status.status == "paused":
+        print(f"✅ Session {request.session_id} is already paused, returning current state")
+        return build_focus_session_response(session_any_status)
     
     # Now check for active session
     session = db.query(Timelog).filter(
@@ -215,6 +239,11 @@ def resume_session(db: Session, request: ResumeSessionRequest):
     
     print(f"🔍 Resume: Found session {request.session_id} with status: {session_any_status.status}")
     
+    # Handle case where session is already active (protect against duplicate calls)
+    if session_any_status.status == "active":
+        print(f"✅ Session {request.session_id} is already active, returning current state")
+        return build_focus_session_response(session_any_status)
+    
     session = db.query(Timelog).filter(
         Timelog.session_id == request.session_id,
         Timelog.status == "paused"
@@ -227,13 +256,33 @@ def resume_session(db: Session, request: ResumeSessionRequest):
     
     # If resuming a focus session, make sure no break session is active or paused
     if session.type == "focus":
+        from datetime import datetime, timezone, timedelta
+        
+        # First check for truly active/recent break sessions (within last 2 hours)
+        two_hours_ago = datetime.now(timezone.utc) - timedelta(hours=2)
+        
         conflicting_break = db.query(Timelog).filter(
             Timelog.user_id == session.user_id,
             Timelog.type == "break",
-            Timelog.status.in_(["active", "paused"])
+            Timelog.status.in_(["active", "paused"]),
+            Timelog.end_time.is_(None),  # Only consider sessions that haven't ended
+            Timelog.start_time >= two_hours_ago  # Only recent sessions (not stale)
         ).first()
+        
+        # Debug: List all break sessions for this user
+        all_breaks = db.query(Timelog).filter(
+            Timelog.user_id == session.user_id,
+            Timelog.type == "break"
+        ).all()
+        print(f"🔍 Debug: All break sessions for user {session.user_id}:")
+        for br in all_breaks:
+            print(f"  - Session {br.session_id}: status={br.status}, end_time={br.end_time}")
+        
         if conflicting_break:
+            print(f"❌ Found conflicting break session {conflicting_break.session_id} with status {conflicting_break.status}")
             raise HTTPException(status_code=400, detail="Cannot resume focus session while a break session is active or paused. End/stop the break first.")
+        else:
+            print(f"✅ No conflicting break sessions found (checked for recent sessions within 2 hours)")
         
         # Resume the session
     session.status = "active"
@@ -279,22 +328,32 @@ def get_daily_summary(db: Session, user_id):
     print(f"📊 Daily summary for user {user_id}: Found {len(logs)} completed sessions today")
 
     for log in logs:
-        # Calculate duration in seconds
-        duration = (log.end_time - log.start_time).total_seconds()
+        # Calculate duration in seconds using the same logic as build_focus_session_response
+        raw_duration_seconds = (log.end_time - log.start_time).total_seconds()
+        raw_duration_minutes = int(raw_duration_seconds // 60)
         
-        print(f"  Session: {log.type}, Duration: {duration}s ({duration/60:.1f}min)")
+        # For focus sessions, use planned duration if close to actual (within 1 minute)
+        if (log.type == "focus" and log.planned_duration and 
+            abs(raw_duration_minutes - log.planned_duration) <= 1):
+            duration_seconds = log.planned_duration * 60  # Convert back to seconds for consistency
+            duration_minutes = log.planned_duration
+        else:
+            duration_seconds = raw_duration_seconds
+            duration_minutes = raw_duration_minutes
+        
+        print(f"  Session: {log.type}, Duration: {duration_seconds}s ({duration_minutes}min)")
 
         if log.type == "focus":
             total_focus_sessions += 1
-            total_focus_time += duration
+            total_focus_time += duration_seconds
             # build session response for each focus log
             focus_sessions.append({
                 "start_time": log.start_time,
                 "end_time": log.end_time,
-                "actual_duration": duration,
+                "actual_duration": duration_seconds,
             })
         elif log.type == "break":
-            total_break_time += duration
+            total_break_time += duration_seconds
 
     print(f"  📈 Summary: {total_focus_sessions} focus sessions, {total_focus_time}s focus, {total_break_time}s break")
     
@@ -369,4 +428,29 @@ def clear_all_sessions(db: Session, user_id):
     db.commit()
     print(f"✅ Cleared {deleted_count} timetracker sessions")
     return {"message": f"Cleared {deleted_count} sessions", "cleared_count": deleted_count}
+
+
+def clear_today_sessions(db: Session, user_id):
+    """Clear only today's timetracker sessions for a fresh start"""
+    from datetime import datetime, timezone, timedelta
+    
+    print(f"🧹 Clearing today's timetracker sessions for user {user_id}")
+    
+    # Get today's date range in UTC
+    now_utc = datetime.now(timezone.utc)
+    today = now_utc.date()
+    today_start = datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc)
+    today_end = today_start + timedelta(days=1)
+    
+    # Delete only today's focus/break sessions
+    deleted_count = db.query(Timelog).filter(
+        Timelog.user_id == user_id,
+        Timelog.type.in_(["focus", "break"]),
+        Timelog.start_time >= today_start,
+        Timelog.start_time < today_end
+    ).delete(synchronize_session=False)
+    
+    db.commit()
+    print(f"✅ Cleared {deleted_count} today's timetracker sessions")
+    return {"message": f"Cleared {deleted_count} today's sessions", "cleared_count": deleted_count}
 

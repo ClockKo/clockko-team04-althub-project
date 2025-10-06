@@ -28,9 +28,36 @@ class CrossDeviceSyncService {
   private syncInterval: number | null = null;
   private isOnline: boolean = navigator.onLine;
   private pendingChanges: Set<string> = new Set();
+  
+  // Store event listener references for proper cleanup
+  private onlineHandler: () => void;
+  private offlineHandler: () => void;
+  private beforeUnloadHandler: () => void;
 
   constructor() {
     this.deviceId = this.getOrCreateDeviceId();
+    
+    // Initialize event handlers
+    this.onlineHandler = () => {
+      this.isOnline = true;
+      console.log('🌐 Back online - resuming sync');
+      if (this.pendingChanges.size > 0) {
+        this.performSync();
+      }
+    };
+    
+    this.offlineHandler = () => {
+      this.isOnline = false;
+      console.log('📵 Offline - data will sync when connection returns');
+    };
+    
+    this.beforeUnloadHandler = () => {
+      // Final sync before page unload
+      if (this.isOnline && this.pendingChanges.size > 0) {
+        this.performSync();
+      }
+    };
+    
     this.setupOnlineListener();
     this.setupBeforeUnloadListener();
   }
@@ -384,27 +411,12 @@ class CrossDeviceSyncService {
   // === NETWORK STATUS ===
   
   private setupOnlineListener() {
-    window.addEventListener('online', () => {
-      this.isOnline = true;
-      console.log('🌐 Back online - resuming sync');
-      if (this.pendingChanges.size > 0) {
-        this.performSync();
-      }
-    });
-
-    window.addEventListener('offline', () => {
-      this.isOnline = false;
-      console.log('📵 Offline - data will sync when connection returns');
-    });
+    window.addEventListener('online', this.onlineHandler);
+    window.addEventListener('offline', this.offlineHandler);
   }
 
   private setupBeforeUnloadListener() {
-    window.addEventListener('beforeunload', () => {
-      // Final sync before page unload
-      if (this.isOnline && this.pendingChanges.size > 0) {
-        this.performSync();
-      }
-    });
+    window.addEventListener('beforeunload', this.beforeUnloadHandler);
   }
 
   // === DATA EXPORT/IMPORT ===
@@ -447,9 +459,9 @@ class CrossDeviceSyncService {
   
   destroy() {
     this.stopPeriodicSync();
-    window.removeEventListener('online', () => {});
-    window.removeEventListener('offline', () => {});
-    window.removeEventListener('beforeunload', () => {});
+    window.removeEventListener('online', this.onlineHandler);
+    window.removeEventListener('offline', this.offlineHandler);
+    window.removeEventListener('beforeunload', this.beforeUnloadHandler);
   }
 
   // === PUBLIC STATUS ===

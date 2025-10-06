@@ -48,8 +48,6 @@ class SmartNotificationService {
     frequency: 'normal'
   };
 
-  private notificationQueue: Array<{ id: string; type: string; scheduled: number }> = [];
-  private focusStartTime: number = 0;
   private isMonitoring: boolean = false;
 
   constructor() {
@@ -61,7 +59,6 @@ class SmartNotificationService {
   // === BREAK REMINDERS ===
   
   startFocusSession(plannedDuration: number) {
-    this.focusStartTime = Date.now();
     this.isMonitoring = true;
     
     // Schedule intelligent break reminder
@@ -76,7 +73,7 @@ class SmartNotificationService {
   }
 
   private calculateOptimalBreakTime(plannedDuration: number): number {
-    const { averageSessionLength, breakFrequency, lastBreakTime } = this.workPattern;
+    const { averageSessionLength, lastBreakTime } = this.workPattern;
     
     // Base calculation on user's historical patterns
     let optimalBreakTime = Math.min(plannedDuration * 0.8, averageSessionLength * 0.9);

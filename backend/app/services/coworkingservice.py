@@ -127,26 +127,36 @@ def join_room(db: Session, room_id: UUID, user_id: UUID) -> CoworkingRoomDetail:
     if current_participants >= room.max_participants:
         raise HTTPException(status_code=400, detail="Room is full")
 
-    # Check if user is already in the room
+    # Check if user has any existing participation record (active or not)
     existing_participant = db.query(RoomParticipant).filter(
         and_(
             RoomParticipant.room_id == room_id,
-            RoomParticipant.user_id == user_id,
-            RoomParticipant.left_at.is_(None)
+            RoomParticipant.user_id == user_id
         )
     ).first()
 
     if existing_participant:
-        raise HTTPException(status_code=400, detail="Already in this room")
-
-    # Create new participant
-    participant = RoomParticipant(
-        room_id=room_id,
-        user_id=user_id,
-        is_muted=True,
-        is_speaking=False
-    )
-    db.add(participant)
+        # If user already has a record, check if they're currently active
+        if existing_participant.left_at is None:
+            raise HTTPException(status_code=400, detail="Already in this room")
+        
+        # If they previously left, reactivate their participation
+        print(f"Reactivating participant {user_id} in room {room_id}")
+        existing_participant.left_at = None
+        existing_participant.is_muted = True
+        existing_participant.is_speaking = False
+        existing_participant.joined_at = func.now()
+        participant = existing_participant
+    else:
+        # Create new participant record
+        print(f"Creating new participant {user_id} in room {room_id}")
+        participant = RoomParticipant(
+            room_id=room_id,
+            user_id=user_id,
+            is_muted=True,
+            is_speaking=False
+        )
+        db.add(participant)
 
     # Add system message
     user = db.query(User).filter(User.id == user_id).first()

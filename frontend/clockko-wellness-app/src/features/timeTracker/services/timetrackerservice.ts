@@ -527,13 +527,21 @@ class TimeTrackerService {
         status: session.status as 'active' | 'completed' | 'stopped' | 'paused'
       })) || []
 
+      console.log('🔍 Raw backend response data:', {
+        total_focus_time: responseData.total_focus_time,
+        total_break_time: responseData.total_break_time,
+        total_focus_sessions: responseData.total_focus_sessions
+      })
+
       const summary: DailySummary = {
         date: targetDate,
         totalFocusSessions: responseData.total_focus_sessions || 0,
-        totalFocusTime: responseData.total_focus_time || 0,
-        totalBreakTime: responseData.total_break_time || 0,
+        totalFocusTime: responseData.total_focus_time || 0, // Don't convert yet - let's see what backend returns
+        totalBreakTime: responseData.total_break_time || 0, // Don't convert yet - let's see what backend returns
         sessions: sessions
       }
+
+      console.log('🔍 Summary before any conversion:', summary)
 
       console.log('🔄 Recalculated totals from sessions:', { 
         sessions: sessions.length, 
@@ -616,11 +624,19 @@ class TimeTrackerService {
     console.log('🧹 Clearing all timetracker sessions...')
     
     const token = localStorage.getItem('authToken')
+    console.log('🔍 Token check:', { 
+      exists: !!token, 
+      preview: token?.substring(0, 20) + '...' 
+    })
+    
     if (!token) {
-      throw new Error('User not authenticated')
+      const errorMsg = 'User not authenticated - no authToken found'
+      console.error('❌', errorMsg)
+      throw new Error(errorMsg)
     }
 
     try {
+      console.log('📡 Making DELETE request to clear-all endpoint...')
       const response = await fetch('http://localhost:8000/api/time-logs/clear-all', {
         method: 'DELETE',
         headers: {
@@ -629,19 +645,24 @@ class TimeTrackerService {
         }
       })
 
+      console.log('📡 Response status:', response.status)
+      console.log('📡 Response ok:', response.ok)
+
       if (!response.ok) {
-        throw new Error(`Failed to clear sessions: ${response.status}`)
+        const errorText = await response.text()
+        console.error('❌ API Error:', { status: response.status, text: errorText })
+        throw new Error(`Failed to clear sessions: ${response.status} - ${errorText}`)
       }
 
-      const result = await response.json()
-      console.log('✅ Sessions cleared:', result)
+      const clearResult = await response.json()
+      console.log('✅ Clear successful:', clearResult)
       
       // Clear any localStorage as well for complete clean slate
       localStorage.removeItem('timetracker_current_session')
       localStorage.removeItem('timetracker_daily_summary')
       localStorage.removeItem('timetracker_paused_session')
       
-      return result
+      return clearResult
     } catch (error) {
       console.error('Failed to clear sessions:', error)
       throw error

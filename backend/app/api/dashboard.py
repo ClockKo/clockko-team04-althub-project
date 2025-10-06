@@ -6,6 +6,7 @@ from app.core.auth import get_current_user
 from app.schemas.timelog import TimeLogResponse, EndSessionRequest, FocusTimeResponse
 from app.schemas.shutdown import ShutdownReflectionCreate, ShutdownReflectionResponse, ShutdownSummaryResponse
 from typing import List
+from app.models.timelog import Timelog
 
 router = APIRouter(tags=["Dashboard"])
 
@@ -16,19 +17,30 @@ def clock_in(db: Session = Depends(get_db), user=Depends(get_current_user)):
 
 @router.post("/clock-out", response_model=TimeLogResponse)
 def clock_out(db: Session = Depends(get_db), user=Depends(get_current_user)):
-    # Get the current active work session for the user
-    current_session = timetrackerservice.get_current_session(db, user.id)
-    if not current_session or current_session.type != "work" or current_session.end_time is not None:
+    # Get the current active work session specifically for the user
+    current_work_session = db.query(Timelog).filter(
+        Timelog.user_id == user.id,
+        Timelog.type == "work",
+        Timelog.end_time == None
+    ).order_by(Timelog.start_time.desc()).first()
+    
+    if not current_work_session:
         raise HTTPException(status_code=404, detail="No active work session found to end.")
-    # request = EndSessionRequest(session_id=current_session.session_id)
+    
     return timetrackerservice.clock_out(db, user.id)
 
 
 @router.get("/current-session", response_model=TimeLogResponse)
 def get_current_session(db: Session = Depends(get_db), user = Depends(get_current_user)):
-    result = timetrackerservice.get_current_session(db, user.id)
+    # Get current work session specifically for dashboard
+    result = db.query(Timelog).filter(
+        Timelog.user_id == user.id,
+        Timelog.type == "work",
+        Timelog.end_time == None
+    ).order_by(Timelog.start_time.desc()).first()
+    
     if not result:
-        raise HTTPException(status_code=404, detail="No ongoing session")
+        raise HTTPException(status_code=404, detail="No ongoing work session")
     return result
 
 @router.get("/last-session", response_model=TimeLogResponse)
@@ -117,3 +129,54 @@ def get_shutdown_history(
     Get historical shutdown reflections for the user.
     """
     return shutdownservice.get_shutdown_history(db, user.id, limit)
+@router.get("/shutdown-summary")
+def get_shutdown_summary(db: Session = Depends(get_db), user = Depends(get_current_user)):
+    """Get summary data for shutdown modal"""
+    try:
+        # Get today's focus time
+        total_focus_time = timetrackerservice.get_focus_time(db, user.id)
+        
+        # Get tasks (placeholder - implement when task service is ready)
+        tasks_completed = 0
+        tasks_total = 0
+        pending_tasks = 0
+        today_tasks = []
+        
+        # Calculate other metrics
+        focus_goal = 120  # Default 2 hours in minutes
+        shutdown_streak = 1  # Placeholder
+        points_earned = 10  # Base points
+        
+        # Add points for focus time
+        if total_focus_time >= focus_goal:
+            points_earned += 15
+            
+        # Add points for completed tasks
+        points_earned += tasks_completed * 5
+        
+        return {
+            "tasksCompleted": tasks_completed,
+            "tasksTotal": tasks_total, 
+            "focusTime": total_focus_time,  # This will show actual focus time from timetracker
+            "focusGoal": focus_goal,
+            "pendingTasks": pending_tasks,
+            "shutdownStreak": shutdown_streak,
+            "pointsEarned": points_earned,
+            "clockedOutTime": None,  # Will be set by frontend
+            "todayTasks": today_tasks
+        }
+        
+    except Exception as e:
+        print(f"Error getting shutdown summary: {e}")
+        # Return default data if there's an error
+        return {
+            "tasksCompleted": 0,
+            "tasksTotal": 0,
+            "focusTime": 0,
+            "focusGoal": 120,
+            "pendingTasks": 0,
+            "shutdownStreak": 0,
+            "pointsEarned": 10,
+            "clockedOutTime": None,
+            "todayTasks": []
+        }

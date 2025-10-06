@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import frame1 from '../../assets/images/frame1.png';
+import frame1 from '../../assets/images/brandLogo1.png';
 import authImage from '../../assets/images/signup-image.jpg'
 
 // Add hideHeader to the component's props

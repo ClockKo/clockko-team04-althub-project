@@ -65,7 +65,9 @@ def verify_google_id_token(body: GoogleToken, db: Session = Depends(get_db)):
 
     # Find or create user
     user = db.query(User).filter(User.email == email).first()
+    is_new_user = False
     if not user:
+        is_new_user = True
         # Ensure unique username from email local-part
         base_username = email.split("@")[0]
         unique_username = base_username
@@ -93,5 +95,6 @@ def verify_google_id_token(body: GoogleToken, db: Session = Depends(get_db)):
     return {
         "user": payload,
         "access_token": access_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "is_new_user": is_new_user
     }

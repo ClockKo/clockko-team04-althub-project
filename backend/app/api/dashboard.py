@@ -98,15 +98,13 @@ def get_shutdown_summary(db: Session = Depends(get_db), user = Depends(get_curre
 @router.post("/shutdown-reflection", response_model=ShutdownReflectionResponse)
 def create_shutdown_reflection(
     reflection: ShutdownReflectionCreate,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db), 
     user = Depends(get_current_user)
 ):
     """
-    Create a new shutdown reflection for today.
-    Records productivity rating, reflection notes, and mindful disconnect checklist.
+    Create a new shutdown reflection for today. Records productivity rating, reflection notes, and mindful disconnect checklist.
     """
-    new_reflection = shutdownservice.create_shutdown_reflection(db, reflection, user.id)
-    return new_reflection
+    return shutdownservice.create_shutdown_reflection(db, reflection, user.id)
 
 
 @router.get("/shutdown-history", response_model=List[ShutdownReflectionResponse])
@@ -116,8 +114,6 @@ def get_shutdown_history(
     user = Depends(get_current_user)
 ):
     """
-    Get shutdown reflection history.
-    Returns the last N reflections (default: 30).
+    Get historical shutdown reflections for the user.
     """
-    history = shutdownservice.get_shutdown_history(db, user.id, limit)
-    return history
+    return shutdownservice.get_shutdown_history(db, user.id, limit)

@@ -34,8 +34,19 @@ import {
   AlertDialogAction
 } from '../../../components/ui/alert-dialog';
 
-const defaultAvatar =
-  'https://ui-avatars.com/api/?name=User&background=E0E7FF&color=1E40AF&size=128';
+  // Helper to get initials from name
+  function getInitials(name: string | undefined) {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  // Default avatar fallback: initials
+  function getAvatarUrl(user: any) {
+    if (user?.avatar) return user.avatar;
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(getInitials(user?.name))}&background=E0E7FF&color=1E40AF&size=128`;
+  }
 
 const ProfileSettings: React.FC = () => {
   const navigate = useNavigate();
@@ -63,6 +74,19 @@ const ProfileSettings: React.FC = () => {
       setEditName(user.name || '');
     }
   }, [isEditingName, user]);
+
+  // Avatar delete handler
+  const handleDeleteAvatar = async () => {
+    if (!user) return;
+    try {
+      await updateUserProfile({ avatar: '' });
+      await queryClient.invalidateQueries({ queryKey: ['userData'] });
+      toast.success('Avatar deleted. Using initials instead.');
+    } catch (err) {
+      console.error('Error deleting avatar:', err);
+      toast.error('Failed to delete avatar.');
+    }
+  };
 
   useEffect(() => {
     // Check if the browser supports Geolocation
@@ -136,7 +160,7 @@ const ProfileSettings: React.FC = () => {
         {/* ...existing code... */}
         <div className="flex items-center gap-4 mb-6">
           <img
-            src={user?.avatar || defaultAvatar}
+            src={getAvatarUrl(user)}
             alt="Avatar"
             className="w-16 h-16 rounded-full object-cover"
           />
@@ -145,7 +169,8 @@ const ProfileSettings: React.FC = () => {
               variant="destructive"
               size="icon"
               className="bg-red-50 hover:bg-red-100 text-red-600"
-              disabled
+              onClick={handleDeleteAvatar}
+              disabled={uploadingAvatar}
             >
               <Trash2 className="h-4 w-4" />
             </Button>

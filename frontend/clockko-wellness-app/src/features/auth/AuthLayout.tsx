@@ -53,4 +53,6 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children, hideHeader = false })
   );
 };
 
+// Make sure the export is explicit
+export { AuthLayout };
 export default AuthLayout;

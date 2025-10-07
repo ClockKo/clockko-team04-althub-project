@@ -16,7 +16,6 @@ export function WorkSessionCard({
   session,
   onClockIn,
   onClockOut,
-  onTestShutdown,
   // isLoading = false,
 }: {
   session: WorkSession | null
@@ -144,26 +143,6 @@ export function WorkSessionCard({
               >
                 {isClockingOut ? 'Clocking Out...' : 'Clock Out'}
               </Button>
-              {onTestShutdown && (
-                <>
-                  {/* <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onTestShutdown}
-                    title="Test shutdown modal UI"
-                  >
-                    Test Shutdown
-                  </Button> */}
-                  {/* <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => debugAuth()}
-                    title="Debug authentication status"
-                  >
-                    Debug Auth
-                  </Button> */}
-                </>
-              )}
             </div>
           </>
         ) : (
@@ -213,16 +192,6 @@ export function WorkSessionCard({
               >
                 {isClockingIn ? 'Clocking In...' : 'Clock In'}
               </Button>
-              {onTestShutdown && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onTestShutdown}
-                  title="Test shutdown modal UI"
-                >
-                  Test Shutdown
-                </Button>
-              )}
             </div>
           </>
         )}

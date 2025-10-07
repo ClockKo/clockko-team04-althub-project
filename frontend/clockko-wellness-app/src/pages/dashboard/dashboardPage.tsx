@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useQueryClient } from '@tanstack/react-query'
 import { useHead } from '@unhead/react'
@@ -12,6 +12,7 @@ import { ShutdownModal } from './shutdownModals/modal'
 // import { AuthDebugPanel } from '../../components/AuthDebugPanel'
 import type { Task } from '../../types/typesGlobal'
 import { Skeleton } from '../../components/ui/skeleton'
+import { timeTrackerService } from '../../features/timeTracker/services/timetrackerservice'
 
 // ------------------ MAIN DASHBOARD PAGE ------------------
 
@@ -37,6 +38,11 @@ export default function DashboardPage() {
   const clockOutMutation = useClockOut()
   const queryClient = useQueryClient()
   const [showShutdown, setShowShutdown] = useState<boolean>(false)
+
+  // Set up query client for timeTrackerService to enable dashboard cache invalidation
+  useEffect(() => {
+    timeTrackerService.setQueryClient(queryClient)
+  }, [queryClient])
 
   // Handlers for clock in 
   function handleClockIn() {
@@ -75,8 +81,8 @@ export default function DashboardPage() {
   // Use real data if available, otherwise fallback to empty/zero values
   const progressData = dashboardData
     ? {
-        tasksCompleted: dashboardData.tasks?.filter((t: Task) => t.completed).length || 0,
-        tasksTotal: dashboardData.tasks?.length || 0,
+        tasksCompleted: dashboardData.todayTasks?.filter((t: Task) => t.completed).length || 0,
+        tasksTotal: dashboardData.todayTasks?.length || 0,
         focusTime: dashboardData.todaySummary?.duration || 0,
         focusGoal: 120, // This should come from user settings
         pendingTasks: dashboardData.tasks?.filter((t: Task) => !t.completed).length || 0,
@@ -90,6 +96,15 @@ export default function DashboardPage() {
         pendingTasks: 0,
         shutdownStreak: 0,
       }
+
+  console.log('📊 Dashboard data:', dashboardData)
+  console.log('📊 Progress data calculated:', progressData)
+  
+  // Also log the focus time specifically
+  if (dashboardData?.todaySummary?.duration !== undefined) {
+    console.log('🎯 Focus time from API:', dashboardData.todaySummary.duration, 'seconds')
+    console.log('🎯 Focus time formatted:', progressData.focusTime, 'seconds')
+  }
 
   return (
     <div className="w-full min-h-screen px-8 xs:px-4 py-2 bg-powderBlue">

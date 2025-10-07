@@ -32,19 +32,14 @@ export function OnboardingFlow() {
       // Show loading toast
       const loadingToast = toast.loading('Saving your preferences...');
       
-      // Save avatar to localStorage (until backend API is ready)
-      if (avatar) {
-        localStorage.setItem('userAvatar', avatar);
-        console.log('💾 Avatar saved to localStorage:', avatar);
-      }
-      
-      // Save onboarding data to backend
-      await saveOnboardingToBackend({
+      // Save onboarding data to backend using the new complete-onboarding endpoint
+      const response = await saveOnboardingToBackend({
         selectedDays,
         clockOut,
         ampm,
         focusTimer,
         reminders,
+        avatar: avatar || undefined, // Pass avatar data to backend
       });
       
       // Dismiss loading toast
@@ -53,13 +48,18 @@ export function OnboardingFlow() {
       // Show success toast
       toast.success('Welcome to ClockKo! Your preferences have been saved.');
       
-      // Mark onboarding as complete
+      // Mark onboarding as complete locally
       markOnboardingComplete();
+      
+      console.log('✅ Onboarding completed successfully. Backend response:', response);
       
       // Navigate to dashboard
       navigate('/dashboard');
     } catch (error: any) {
       console.error('Error completing onboarding:', error);
+      
+      // Dismiss loading toast
+      toast.dismiss();
       
       // Show error toast
       toast.error(error.message || 'Failed to save your preferences. Please try again.');

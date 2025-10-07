@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/button';
 import { useGoogleLogin } from '@react-oauth/google';
 import { loginUser } from './api';
 import { useAuth } from './authcontext';
+import { useOnboarding } from '../../contexts/OnboardingContext';
 import googleLogo from '../../assets/images/google.png';
 import toast from 'react-hot-toast';
 
@@ -39,6 +40,7 @@ const SignInPage: React.FC = () => {
 
   const navigate = useNavigate();
   const { setAuthToken } = useAuth(); // Get setAuthToken
+  const { checkBackendOnboardingStatus } = useOnboarding(); // Get onboarding check function
   const [apiError, setApiError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
 
@@ -67,7 +69,10 @@ const SignInPage: React.FC = () => {
 
       if (response.access_token) {
         setAuthToken(response.access_token);
-        navigate('/onboarding'); // Redirect to onboarding after login
+        
+        // Check onboarding status after login and redirect accordingly
+        await checkBackendOnboardingStatus();
+        navigate('/dashboard'); // Navigate to dashboard, ProtectedRoutes will handle onboarding redirect if needed
       }
     } catch (error: any) {
       console.error('Login failed:', error);
@@ -92,11 +97,10 @@ const SignInPage: React.FC = () => {
         const data = await response.json();
         if (data.access_token) {
           setAuthToken(data.access_token);
-          if (data.is_new_user) {
-            navigate('/onboarding');
-          } else {
-            navigate('/dashboard');
-          }
+          
+          // Check onboarding status after Google login and redirect accordingly
+          await checkBackendOnboardingStatus();
+          navigate('/dashboard'); // Navigate to dashboard, ProtectedRoutes will handle onboarding redirect if needed
         }
       } else {
         console.error('Google login failed on the backend');

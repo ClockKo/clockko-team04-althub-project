@@ -27,12 +27,26 @@ export function ClockOutModal({
   const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let time = e.target.value.replace(/\D/, '') // only digits
     if (time.length > 2) time = time.slice(0, 2)
+    
+    // Validate hour range (1-12 for 12-hour format)
+    const hourNum = parseInt(time)
+    if (time && (hourNum < 1 || hourNum > 12)) {
+      return // Don't update if hour is out of range
+    }
+    
     setClockOut({ ...clockOut, hour: time })
   }
 
   const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let time = e.target.value.replace(/\D/, '') // only digits
     if (time.length > 2) time = time.slice(0, 2)
+    
+    // Validate minute range (0-59)
+    const minuteNum = parseInt(time)
+    if (time && (minuteNum < 0 || minuteNum > 59)) {
+      return // Don't update if minute is out of range
+    }
+    
     setClockOut({ ...clockOut, minute: time })
   }
 

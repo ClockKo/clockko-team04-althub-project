@@ -6,11 +6,10 @@ import type { Task } from '../../../types'
 interface TaskCreateRequest {
   title: string
   description?: string | null
-  // TODO: Uncomment when backend implements these fields
-  // start_date?: string | null
-  // due_date?: string | null
-  // priority?: string
-  // tags?: string[]
+  start_date?: string | null
+  due_date?: string | null
+  priority?: string
+  tags?: Array<{name: string, color: string}>
   reminder_enabled?: boolean
   reminder_time?: string | null
 }
@@ -18,12 +17,11 @@ interface TaskCreateRequest {
 interface TaskUpdateRequest {
   title?: string
   description?: string | null
-  // TODO: Uncomment when backend implements these fields
-  // start_date?: string | null
-  // due_date?: string | null
-  // completed?: boolean
-  // priority?: string
-  // tags?: string[]
+  start_date?: string | null
+  due_date?: string | null
+  completed?: boolean
+  priority?: string
+  tags?: Array<{name: string, color: string}>
   reminder_enabled?: boolean
   reminder_time?: string | null
 }
@@ -34,12 +32,11 @@ interface TaskResponse {
   description?: string | null
   created_at: string
   updated_at: string
-  // TODO: Uncomment when backend implements these fields
-  // start_date?: string | null
-  // due_date?: string | null
-  // completed?: boolean
-  // priority?: string
-  // tags?: string[]
+  start_date?: string | null
+  due_date?: string | null
+  completed?: boolean
+  priority?: string
+  tags?: Array<{name: string, color: string} | string>  // Support both formats
   reminder_enabled?: boolean
   reminder_time?: string | null
 }
@@ -52,16 +49,27 @@ const transformTaskResponse = (task: TaskResponse): Task => {
     id: task.id,
     title: task.title,
     description: task.description || undefined,
-    // TODO: Uncomment when backend implements these fields
-    completed: false, // TODO: task.completed ?? false,
+    completed: task.completed ?? false,
     createdAt: new Date(task.created_at),
     updatedAt: new Date(task.updated_at),
-    // TODO: Uncomment when backend implements these fields
-    startDate: undefined, // TODO: task.start_date ? new Date(task.start_date) : undefined,
-    dueAt: undefined, // TODO: task.due_date ? new Date(task.due_date) : undefined,
-    tags: [], // TODO: task.tags ?? [],
-    // TODO: Uncomment when backend implements priority field
-    // priority: task.priority ?? 'medium',
+    startDate: task.start_date ? new Date(task.start_date) : undefined,
+    dueAt: task.due_date ? new Date(task.due_date) : undefined,
+    tags: task.tags ? task.tags.map((tag, index) => {
+      // Handle both old format (string) and new format (object)
+      if (typeof tag === 'string') {
+        return {
+          id: `tag-${index}`,
+          name: tag,
+          color: '#3b82f6' // Default blue color for legacy data
+        }
+      } else {
+        return {
+          id: `tag-${index}`,
+          name: tag.name,
+          color: tag.color
+        }
+      }
+    }) : [],
   }
 
   console.log('✅ Transformed task:', transformed)
@@ -75,11 +83,10 @@ const transformTaskRequest = (task: Task): TaskCreateRequest => {
   const requestData: TaskCreateRequest = {
     title: task.title,
     description: task.description || null,
-    // TODO: Uncomment when backend implements these fields
-    // start_date: task.startDate?.toISOString() || null,
-    // due_date: task.dueAt?.toISOString() || null,
-    // priority: task.priority || 'medium',
-    // tags: task.tags || [],
+    start_date: task.startDate?.toISOString() || null,
+    due_date: task.dueAt?.toISOString() || null,
+    priority: 'medium', // Default priority since Task interface doesn't have it
+    tags: task.tags?.map(tag => ({name: tag.name, color: tag.color})) || [],
     reminder_enabled: false, // Default for now
     reminder_time: null, // Default for now
   }
@@ -125,13 +132,10 @@ const updateTask = async (id: string, updates: Partial<Task>): Promise<Task> => 
 
     if (updates.title !== undefined) requestData.title = updates.title
     if (updates.description !== undefined) requestData.description = updates.description || null
-
-    // TODO: Uncomment when backend implements these fields
-    // if (updates.startDate !== undefined) requestData.start_date = updates.startDate?.toISOString() || null
-    // if (updates.dueAt !== undefined) requestData.due_date = updates.dueAt?.toISOString() || null
-    // if (updates.completed !== undefined) requestData.completed = updates.completed
-    // if (updates.priority !== undefined) requestData.priority = updates.priority
-    // if (updates.tags !== undefined) requestData.tags = updates.tags
+    if (updates.startDate !== undefined) requestData.start_date = updates.startDate?.toISOString() || null
+    if (updates.dueAt !== undefined) requestData.due_date = updates.dueAt?.toISOString() || null
+    if (updates.completed !== undefined) requestData.completed = updates.completed
+    if (updates.tags !== undefined) requestData.tags = updates.tags?.map(tag => ({name: tag.name, color: tag.color})) || []
 
     console.log('🔄 Updating task with:', requestData)
 
@@ -152,4 +156,26 @@ const deleteTask = async (id: string): Promise<void> => {
   }
 }
 
-export { fetchTasks, createTask, updateTask, deleteTask }
+const completeTask = async (id: string): Promise<Task> => {
+  try {
+    console.log('🔄 Completing task:', id)
+    const response = await api.put<TaskResponse>(`/tasks/${id}/complete`)
+    return transformTaskResponse(response.data)
+  } catch (error) {
+    console.error('Error completing task:', error)
+    throw new Error('Failed to complete task')
+  }
+}
+
+const uncompleteTask = async (id: string): Promise<Task> => {
+  try {
+    console.log('🔄 Uncompleting task:', id)
+    const response = await api.put<TaskResponse>(`/tasks/${id}/uncomplete`)
+    return transformTaskResponse(response.data)
+  } catch (error) {
+    console.error('Error uncompleting task:', error)
+    throw new Error('Failed to uncomplete task')
+  }
+}
+
+export { fetchTasks, createTask, updateTask, deleteTask, completeTask, uncompleteTask }

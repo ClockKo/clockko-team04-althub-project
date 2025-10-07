@@ -24,6 +24,24 @@ interface DailySummary {
 }
 
 class TimeTrackerService {
+  private queryClient: any = null // Will store React Query client reference
+  
+  // Method to set the query client for cache invalidation
+  setQueryClient(client: any) {
+    this.queryClient = client
+  }
+  
+  // Helper method to invalidate dashboard cache
+  private invalidateDashboardCache() {
+    if (this.queryClient) {
+      console.log('🔄 Invalidating dashboard cache after session completion')
+      this.queryClient.invalidateQueries({ queryKey: ["dashboardData"] })
+      console.log('🔄 Dashboard cache invalidation call completed')
+    } else {
+      console.warn('⚠️ Query client not available for dashboard cache invalidation')
+    }
+  }
+
   // private readonly STORAGE_KEYS = {
   //   DAILY_SUMMARY: 'timetracker_daily_summary',
   //   CURRENT_SESSION: 'timetracker_current_session',
@@ -255,6 +273,12 @@ class TimeTrackerService {
     // this.addSessionToDailySummary(completedSession)
     
     console.log('✅ Focus session completed via API:', completedSession)
+    
+    // Invalidate dashboard cache to update focus time display
+    console.log('🔄 About to invalidate dashboard cache...')
+    this.invalidateDashboardCache()
+    console.log('🔄 Dashboard cache invalidation completed')
+    
     return completedSession
   }
 

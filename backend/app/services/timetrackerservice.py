@@ -161,7 +161,12 @@ def end_session(db: Session, request: EndSessionRequest, type: str):
         Timelog.type == type
     ).order_by(Timelog.start_time.desc()).first()
     if not session:
+        print(f"❌ No active {type} session found with session_id: {request.session_id}")
         raise HTTPException(status_code=404, detail="No active session found to end")
+    
+    print(f"🎯 Ending {type} session for user {session.user_id}")
+    print(f"   Session ID: {session.session_id}")
+    print(f"   Type: {session.type}")
     
     now = datetime.now(timezone.utc)
     
@@ -222,6 +227,9 @@ def end_session(db: Session, request: EndSessionRequest, type: str):
     # Debug the final result
     print(f"  Final start_time: {session.start_time}")
     print(f"  Final end_time: {session.end_time}")
+    print(f"  Final status: {session.status}")
+    print(f"  Final type: {session.type}")
+    print(f"✅ Successfully saved {type} session to database")
     # Note: actual_duration is calculated in build_focus_session_response, not stored in DB
     
     return build_focus_session_response(session)
@@ -320,12 +328,15 @@ def get_daily_summary(db: Session, user_id):
         )
     ).all()
 
+    print(f"📊 Daily summary for user {user_id}: Found {len(logs)} completed sessions today")
+    print(f"🕐 Date range: {today_start} to {today_end}")
+    for log in logs:
+        print(f"  📝 Session type: '{log.type}', Duration: {(log.end_time - log.start_time).total_seconds()}s, Start: {log.start_time}, End: {log.end_time}")
+
     total_focus_sessions = 0
     total_focus_time = 0
     total_break_time = 0
     focus_sessions = []
-
-    print(f"📊 Daily summary for user {user_id}: Found {len(logs)} completed sessions today")
 
     for log in logs:
         # Calculate duration in seconds using the same logic as build_focus_session_response

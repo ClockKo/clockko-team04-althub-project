@@ -1,7 +1,7 @@
 from pydantic import BaseModel, computed_field, field_validator
 from uuid import UUID
 from datetime import datetime, timezone
-from typing import Optional, List
+from typing import Optional, List, Union, Dict, Any
 from enum import Enum
 
 
@@ -9,6 +9,11 @@ class PriorityEnum(str, Enum):
     low = "low"
     medium = "medium" 
     high = "high"
+
+
+class TagCreate(BaseModel):
+    name: str
+    color: str
 
 
 class TaskCreate(BaseModel):
@@ -20,7 +25,7 @@ class TaskCreate(BaseModel):
     due_date: Optional[datetime] = None
     completed: Optional[bool] = False
     priority: Optional[PriorityEnum] = PriorityEnum.medium
-    tags: Optional[List[str]] = None
+    tags: Optional[List[Union[str, Dict[str, Any]]]] = None
 
     @field_validator("reminder_time")
     def ensure_future_reminder(cls, v):
@@ -46,13 +51,18 @@ class TaskUpdate(BaseModel):
     due_date: Optional[datetime] = None
     completed: Optional[bool] = None
     priority: Optional[PriorityEnum] = None
-    tags: Optional[List[str]] = None
+    tags: Optional[List[Union[str, Dict[str, Any]]]] = None
 
     @field_validator("reminder_time")
     def ensure_future_reminder(cls, v):
         if v and v < datetime.now(timezone.utc):
             raise ValueError("Reminder time must be in the future")
         return v
+
+
+class TagResponse(BaseModel):
+    name: str
+    color: str
 
 
 class TaskResponse(BaseModel):
@@ -67,7 +77,29 @@ class TaskResponse(BaseModel):
     due_date: Optional[datetime] = None
     completed: bool
     priority: str
-    tags: Optional[List[str]] = None
+    tags: Optional[List[Union[str, TagResponse]]] = None
+
+    @field_validator('tags', mode='before')
+    @classmethod
+    def validate_tags(cls, v):
+        if v is None:
+            return v
+        if not isinstance(v, list):
+            return v
+        
+        # Handle mixed formats - convert dict objects to TagResponse objects
+        result = []
+        for tag in v:
+            if isinstance(tag, dict):
+                if 'name' in tag and 'color' in tag:
+                    result.append(TagResponse(name=tag['name'], color=tag['color']))
+                else:
+                    # If it's a dict but doesn't have name/color, convert to string
+                    result.append(str(tag))
+            else:
+                # It's already a string or other format
+                result.append(tag)
+        return result
 
     class Config:
         from_attributes = True

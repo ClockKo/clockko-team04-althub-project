@@ -7,7 +7,7 @@ import { useClickOutside } from '@/hooks/useClickOutside'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import EditTaskModal from './EditTaskModal'
-import { useDeleteTask, useUpdateTask } from '../hooks/useTasks'
+import { useDeleteTask, useCompleteTask, useUncompleteTask, useUpdateTask } from '../hooks/useTasks'
 
 export interface TaskItemProps {
   task: Task
@@ -18,9 +18,10 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
   const [isEditOpen, setIsEditOpen] = React.useState(false)
   const [showOptions, setShowOptions] = React.useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
-  const { mutate: updateTask } = useUpdateTask() // TODO: Re-enable isUpdating when backend supports completion
-  // const { mutate: updateTask, isPending: isUpdating } = useUpdateTask() // IGNORE --- use when backend supports 'completed' field
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask()
+  const { mutate: completeTask, isPending: isCompleting } = useCompleteTask()
+  const { mutate: uncompleteTask, isPending: isUncompleting } = useUncompleteTask()
+  const { mutate: updateTask } = useUpdateTask()
 
   useClickOutside(menuRef, () => setShowOptions(false))
 
@@ -38,19 +39,15 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, listType }) => {
         <div className="flex items-start gap-3 flex-1">
           <Checkbox
             checked={task.completed}
-            disabled={true} // TODO: Enable when backend implements 'completed' field
-            onCheckedChange={(_checked) => {
-              // TODO: Uncomment when backend implements 'completed' field
-              // updateTask({
-              //   id: task.id,
-              //   updates: { completed: Boolean(_checked) },
-              // })
-              console.log(
-                '⚠️ Task completion feature coming soon! Backend needs to implement "completed" field.'
-              )
+            disabled={isCompleting || isUncompleting}
+            onCheckedChange={(checked) => {
+              if (checked) {
+                completeTask(task.id)
+              } else {
+                uncompleteTask(task.id)
+              }
             }}
-            className="mt-0.5 h-6 w-6 rounded-md border-2 border-gray-400 data-[state=checked]:bg-gray-400 data-[state=checked]:border-gray-400 opacity-50 cursor-not-allowed"
-            title="Task completion feature coming soon - pending backend implementation"
+            className="mt-0.5 h-6 w-6 rounded-md border-2 border-gray-400 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
           />
           <div className="flex-1">
             {listType === 'list' ? (

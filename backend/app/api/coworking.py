@@ -19,6 +19,9 @@ from app.schemas.room import (
 from app.core.auth import get_current_user
 from app.core.database import get_db
 from app.models.user import User
+from app.models.room import CoworkingRoom
+from app.models.room_participant import RoomParticipant  
+from app.models.room_message import RoomMessage
 from app.services import coworkingservice
 
 
@@ -204,4 +207,27 @@ def send_emoji(
 
 
 # Room Management Endpoints
+
+@router.delete("/rooms/{room_id}")
+def delete_room(
+    room_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a coworking room (for testing/cleanup purposes)"""
+    room = db.query(CoworkingRoom).filter(CoworkingRoom.id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    
+    # Remove all participants first
+    db.query(RoomParticipant).filter(RoomParticipant.room_id == room_id).delete()
+    
+    # Remove all messages
+    db.query(RoomMessage).filter(RoomMessage.room_id == room_id).delete()
+    
+    # Delete the room
+    db.delete(room)
+    db.commit()
+    
+    return {"success": True, "message": "Room deleted successfully"}
 

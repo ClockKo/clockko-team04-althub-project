@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchTasks, updateTask, deleteTask, createTask } from '../services/taskTrackerService'
+import { fetchTasks, updateTask, deleteTask, createTask, completeTask, uncompleteTask } from '../services/taskTrackerService'
 import type { Task } from '@/types'
 import { isToday, isFuture, parseISO } from 'date-fns'
 
@@ -84,6 +84,7 @@ export function useCreateTask() {
     mutationFn: createTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TASKS_KEY })
+      queryClient.invalidateQueries({ queryKey: ["dashboardData"] })
     },
   })
 }
@@ -96,6 +97,7 @@ export function useUpdateTask() {
       updateTask(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TASKS_KEY })
+      queryClient.invalidateQueries({ queryKey: ["dashboardData"] })
     },
   })
 }
@@ -107,6 +109,33 @@ export function useDeleteTask() {
     mutationFn: (id: string) => deleteTask(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TASKS_KEY })
+      queryClient.invalidateQueries({ queryKey: ["dashboardData"] })
+    },
+  })
+}
+
+export function useCompleteTask() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => completeTask(id),
+    onSuccess: () => {
+      console.log('🔄 Task completed - invalidating cache')
+      queryClient.invalidateQueries({ queryKey: TASKS_KEY })
+      queryClient.invalidateQueries({ queryKey: ["dashboardData"] })
+    },
+  })
+}
+
+export function useUncompleteTask() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => uncompleteTask(id),
+    onSuccess: () => {
+      console.log('🔄 Task uncompleted - invalidating cache')
+      queryClient.invalidateQueries({ queryKey: TASKS_KEY })
+      queryClient.invalidateQueries({ queryKey: ["dashboardData"] })
     },
   })
 }

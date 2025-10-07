@@ -2,8 +2,9 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/authcontext';
 import toast from 'react-hot-toast';
-import { updateUserProfile } from '../../../pages/dashboard/profileApi';
+import { updateUserProfile, UserProfileResponse as UserData } from '../../../pages/dashboard/profileApi';
 import { useQueryClient } from '@tanstack/react-query';
+import { userDataQuery } from '../../../pages/dashboard/dashboardHooks';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Switch } from '../../../components/ui/switch';
@@ -31,11 +32,23 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogAction
+  AlertDialogAction,
+  AlertDialogCancel
 } from '../../../components/ui/alert-dialog';
 
-const defaultAvatar =
-  'https://ui-avatars.com/api/?name=User&background=E0E7FF&color=1E40AF&size=128';
+  // Helper to get initials from name
+  function getInitials(name: string | undefined) {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  // Default avatar fallback: initials
+  function getAvatarUrl(user: any) {
+    if (user?.avatar_url) return user.avatar_url;
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(getInitials(user?.name))}&background=E0E7FF&color=1E40AF&size=128`;
+  }
 
 const ProfileSettings: React.FC = () => {
   const navigate = useNavigate();
@@ -43,7 +56,8 @@ const ProfileSettings: React.FC = () => {
   const [selectedCountry, setSelectedCountry] = useState<string>('NG');
   // No longer need showDeleteDialog, handled by AlertDialog
   const countries = getData();
-  const { data: user, isLoading } = useUserData();
+
+  const { data: user, isLoading } = useUserData() as { data: UserData | undefined, isLoading: boolean };
 
   // Get the browser's timezone identifier
   const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -63,6 +77,40 @@ const ProfileSettings: React.FC = () => {
       setEditName(user.name || '');
     }
   }, [isEditingName, user]);
+
+  // Avatar delete handler
+  const handleDeleteAvatar = async () => {
+    if (!user) return;
+    try {
+      setUploadingAvatar(true);
+      
+      // Invalidate cache before update
+      await queryClient.invalidateQueries({ queryKey: ['userData'] });
+      
+      // Explicitly set avatar to null to indicate deletion
+      const response = await updateUserProfile({ avatar: null });
+      console.log('Delete avatar response:', response);
+      
+      if (response && response.avatar_url !== null) {
+        throw new Error('Server did not properly delete avatar');
+      }
+      
+      // Force immediate refetch using shared query config
+      const updatedData = await queryClient.fetchQuery(userDataQuery);
+      
+      console.log('Updated user data after deletion:', updatedData);
+      
+      // Force UI update with new data
+      queryClient.setQueryData(['userData'], updatedData);
+      
+      toast.success('Avatar deleted successfully');
+    } catch (err: any) {
+      console.error('Error deleting avatar:', err);
+      toast.error(err.message || 'Failed to delete avatar');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   useEffect(() => {
     // Check if the browser supports Geolocation
@@ -87,43 +135,89 @@ const ProfileSettings: React.FC = () => {
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        if (ev.target?.result) {
-          const newAvatar = ev.target.result as string;
-          setUploadingAvatar(true);
-          try {
-            await updateUserProfile({ avatar: newAvatar });
-            await queryClient.invalidateQueries({ queryKey: ['userData'] });
-          } catch (err) {
-            console.error('Error updating avatar:', err);
-            // Optionally show error toast
-          } finally {
-            setUploadingAvatar(false);
-          }
-        }
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
     }
+
+    // Validate file size (max 5MB)
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > MAX_SIZE) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    console.log('Starting avatar upload:', { fileName: file.name, fileSize: file.size, fileType: file.type });
+    setUploadingAvatar(true);
+
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      if (ev.target?.result) {
+        const newAvatar = ev.target.result as string;
+        console.log('File read complete, preparing to send to server');
+        
+        try {
+          // Invalidate cache before update
+          await queryClient.invalidateQueries({ queryKey: ['userData'] });
+          
+          const response = await updateUserProfile({ avatar: newAvatar });
+          console.log('Profile update response:', response);
+          
+          if (!response || !response.avatar_url) {
+            throw new Error('Server did not return updated avatar URL');
+          }
+          
+          // Force immediate refetch using shared query config
+          const updatedData = await queryClient.fetchQuery(userDataQuery);
+          
+          console.log('Updated user data:', updatedData);
+          
+          if (updatedData && updatedData.avatar_url !== newAvatar) {
+            console.log('Avatar URL mismatch, forcing UI update');
+            queryClient.setQueryData(['userData'], updatedData);
+          }
+          
+          toast.success('Avatar updated successfully!');
+        } catch (err: any) {
+          console.error('Error updating avatar:', err);
+          toast.error(err.message || 'Failed to update avatar');
+        } finally {
+          setUploadingAvatar(false);
+        }
+      }
+    };
+
+    reader.onerror = (error) => {
+      console.error('Error reading file:', error);
+      toast.error('Failed to read image file');
+      setUploadingAvatar(false);
+    };
+
+    reader.readAsDataURL(file);
   };
+
+  const [nameLoading, setNameLoading] = useState(false);
 
   const handleNameSave = async () => {
     if (!editName || editName === user?.name) {
       setIsEditingName(false);
       return;
     }
-    setUploadingAvatar(true);
+
+    setNameLoading(true);
     try {
       await updateUserProfile({ name: editName });
       await queryClient.invalidateQueries({ queryKey: ['userData'] });
       toast.success('Name updated successfully!');
       setIsEditingName(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating name:', err);
-      toast.error('Failed to update name.');
+      toast.error(err.message || 'Failed to update name');
     } finally {
-      setUploadingAvatar(false);
+      setNameLoading(false);
     }
   };
 
@@ -136,19 +230,37 @@ const ProfileSettings: React.FC = () => {
         {/* ...existing code... */}
         <div className="flex items-center gap-4 mb-6">
           <img
-            src={user?.avatar || defaultAvatar}
+            src={getAvatarUrl(user)}
             alt="Avatar"
             className="w-16 h-16 rounded-full object-cover"
           />
           <div className="flex items-center gap-2">
-            <Button
-              variant="destructive"
-              size="icon"
-              className="bg-red-50 hover:bg-red-100 text-red-600"
-              disabled
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="bg-red-50 hover:bg-red-100 text-red-600"
+                  disabled={uploadingAvatar}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Avatar</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete your avatar? This will replace it with your initials.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogAction onClick={handleDeleteAvatar}>
+                    Delete
+                  </AlertDialogAction>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button
               variant="outline"
               onClick={() => fileInputRef.current?.click()}

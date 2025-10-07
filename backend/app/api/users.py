@@ -30,7 +30,9 @@ def delete_current_user(
 
 # --- PATCH: Add schema for profile update ---
 class UserProfileUpdateRequest(BaseModel):
-    name: str
+    name: str | None = None
+    phone_number: str | None = None
+    avatar_url: str | None = None
 
 # --- PATCH: Add endpoint to update user profile (name) ---
 @router.put("/profile", status_code=200)
@@ -40,13 +42,23 @@ def update_user_profile(
     db: Session = Depends(get_db)
 ):
     """
-    Update user's profile information (currently only name).
+    Update user's profile information (name, phone_number, avatar_url).
     """
     try:
-        current_user.full_name = payload.name
+        if payload.name is not None:
+            current_user.full_name = payload.name
+        if payload.phone_number is not None:
+            current_user.phone_number = payload.phone_number
+        if payload.avatar_url is not None:
+            current_user.avatar_url = payload.avatar_url
         db.commit()
         db.refresh(current_user)
-        return {"message": "Profile updated successfully", "name": current_user.full_name}
+        return {
+            "message": "Profile updated successfully",
+            "name": current_user.full_name,
+            "phone_number": current_user.phone_number,
+            "avatar_url": current_user.avatar_url
+        }
     except Exception as e:
         logger.error(f"Failed to update profile for user {current_user.id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to update profile")

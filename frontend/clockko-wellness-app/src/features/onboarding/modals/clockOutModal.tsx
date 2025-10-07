@@ -23,32 +23,79 @@ export function ClockOutModal({
   step = 2,
   totalSteps = 5,
 }: ClockOutModalProps) {
-  // Input handlers
   const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let time = e.target.value.replace(/\D/, '') // only digits
-    if (time.length > 2) time = time.slice(0, 2)
+    let value = e.target.value;
     
-    // Validate hour range (1-12 for 12-hour format)
-    const hourNum = parseInt(time)
-    if (time && (hourNum < 1 || hourNum > 12)) {
-      return // Don't update if hour is out of range
+    // Allow empty input and single digit
+    if (value === '') {
+      setClockOut({ ...clockOut, hour: '' });
+      return;
     }
-    
-    setClockOut({ ...clockOut, hour: time })
-  }
+
+    // Remove non-digits
+    value = value.replace(/\D/g, '');
+
+    // Handle single digit
+    if (value.length === 1) {
+      const digit = parseInt(value);
+      if (digit >= 0) {
+        setClockOut({ ...clockOut, hour: value });
+        return;
+      }
+    }
+
+    // Handle two digits
+    if (value.length >= 2) {
+      const num = parseInt(value.slice(0, 2));
+      if (num >= 1 && num <= 12) {
+        setClockOut({ ...clockOut, hour: num.toString().padStart(2, '0') });
+      } else if (num === 0) {
+        setClockOut({ ...clockOut, hour: '12' });
+      } else {
+        // If number is > 12, take the last digit only
+        setClockOut({ ...clockOut, hour: value.slice(-1) });
+      }
+    }
+  };
 
   const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let time = e.target.value.replace(/\D/, '') // only digits
-    if (time.length > 2) time = time.slice(0, 2)
+    let value = e.target.value;
     
-    // Validate minute range (0-59)
-    const minuteNum = parseInt(time)
-    if (time && (minuteNum < 0 || minuteNum > 59)) {
-      return // Don't update if minute is out of range
+    // Allow empty input
+    if (value === '') {
+      setClockOut({ ...clockOut, minute: '' });
+      return;
     }
-    
-    setClockOut({ ...clockOut, minute: time })
-  }
+
+    // Remove non-digits
+    value = value.replace(/\D/g, '');
+
+    // Handle single digit
+    if (value.length === 1) {
+      const digit = parseInt(value);
+      if (digit >= 0) {
+        setClockOut({ ...clockOut, minute: value });
+        return;
+      }
+    }
+
+    // Handle two digits
+    if (value.length >= 2) {
+      const num = parseInt(value.slice(0, 2));
+      if (num >= 0 && num <= 59) {
+        setClockOut({ ...clockOut, minute: num.toString().padStart(2, '0') });
+      } else {
+        // If number is > 59, take the first valid number from the last two digits
+        const lastTwo = value.slice(-2);
+        const lastTwoNum = parseInt(lastTwo);
+        if (lastTwoNum <= 59) {
+          setClockOut({ ...clockOut, minute: lastTwo });
+        } else {
+          setClockOut({ ...clockOut, minute: '59' });
+        }
+      }
+    }
+  };
 
   // Modal content
   return (
@@ -86,11 +133,10 @@ export function ClockOutModal({
             <input
               type="text"
               inputMode="numeric"
-              pattern="\d{1,2}"
               maxLength={2}
               value={clockOut.hour}
               onChange={handleHourChange}
-              placeholder="00"
+              placeholder="HH"
               aria-label="Hour"
               className="w-15 xs:w-12 text-center text-3xl xs:text-4xl font-bold bg-transparent outline-none border-none"
             />
@@ -98,11 +144,10 @@ export function ClockOutModal({
             <input
               type="text"
               inputMode="numeric"
-              pattern="\d{1,2}"
               maxLength={2}
               value={clockOut.minute}
               onChange={handleMinuteChange}
-              placeholder="00"
+              placeholder="MM"
               aria-label="Minute"
               className="w-15 xs:w-12 text-center text-3xl xs:text-4xl font-bold bg-transparent outline-none border-none"
             />
@@ -113,7 +158,7 @@ export function ClockOutModal({
             <Button
               variant={ampm === 'AM' ? 'default' : 'outline'}
               onClick={() => setAmpm('AM')}
-              className={`relative right-8 z-10 rounded-full px-8 py-1 md:px-10 transition-colors duration-200 ease-in-out font-thin cursor-pointer hover:bg-blue1 ${ampm === 'AM' ? 'bg-lilac text-dark font-bold shadow font-thin' : ''}`}
+              className={`relative right-8 z-10 rounded-full px-8 py-1 md:px-10 transition-colors duration-200 ease-in-out font-thin cursor-pointer hover:bg-blue1 ${ampm === 'AM' ? 'bg-lilac text-dark font-bold shadow' : ''}`}
               type="button"
             >
               AM
@@ -121,7 +166,7 @@ export function ClockOutModal({
             <Button
               variant={ampm === 'PM' ? 'default' : 'outline'}
               onClick={() => setAmpm('PM')}
-              className={`absolute right-[5.5rem] md:right-[19.5rem] rounded-full px-8 py-1 md:px-10 transition-colors duration-200 ease-in-out font-thin cursor-pointer hover:bg-blue1 ${ampm === 'PM' ? 'bg-lilac text-dark font-bold shadow font-thin' : ''}`}
+              className={`absolute right-[5.5rem] md:right-[19.5rem] rounded-full px-8 py-1 md:px-10 transition-colors duration-200 ease-in-out font-thin cursor-pointer hover:bg-blue1 ${ampm === 'PM' ? 'bg-lilac text-dark font-bold shadow' : ''}`}
               type="button"
             >
               PM
@@ -130,7 +175,7 @@ export function ClockOutModal({
         </div>
 
         {/* Navigation Button */}
-        <div className="flex justify-between gap-2 flex-col flex-col-reverse lg:flex-row">
+        <div className="flex justify-between gap-2 flex-col-reverse lg:flex-row">
           <Button
             variant="ghost"
             onClick={onPrev}
@@ -141,7 +186,7 @@ export function ClockOutModal({
           <Button
             variant="ghost"
             onClick={onNext}
-            disabled={!clockOut.hour || !clockOut.minute}
+            disabled={!(clockOut.hour && clockOut.minute.length === 2)}
             className="w-full md:w-[20%] bg-blue1 text-white xs:px-6 xs:py-2 text-base rounded-lg hover:bg-blue-900/80 transition duration-200 scale-100 ease-in-out shadow-md cursor-pointer"
           >
             Next

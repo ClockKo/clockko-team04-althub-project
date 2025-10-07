@@ -51,7 +51,24 @@ export default function MainLayout() {
   const isMobile = useIsMobile()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState<string>(defaultAvatar)
+  // Helper to get initials from name
+  function getInitials(name: string | undefined) {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  // Default avatar fallback: initials
+  function getAvatarUrl(user: any) {
+    console.log('🖼️ Getting avatar URL for user:', user);
+    if (user?.avatar_url) {
+      console.log('✅ Using avatar_url:', user.avatar_url);
+      return user.avatar_url;
+    }
+    const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(getInitials(user?.name))}&background=E0E7FF&color=1E40AF&size=128`;
+    console.log('⚠️ Using fallback avatar:', fallbackUrl);
+    return fallbackUrl;
+  }
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [isProcessingAvatar, setIsProcessingAvatar] = useState(false)
   // Sidebar mode: 'main' or 'settings'
@@ -60,14 +77,7 @@ export default function MainLayout() {
   // Use the same user data hook as headerWidget
   const { data: user, isLoading: userLoading, error: userError } = useUserData()
 
-  // Load saved avatar from localStorage on component mount
-  useEffect(() => {
-    const savedAvatar = localStorage.getItem('userAvatar');
-    if (savedAvatar) {
-      setAvatarUrl(savedAvatar);
-      console.log('🖼️ Loaded avatar from localStorage:', savedAvatar.substring(0, 50) + '...');
-    }
-  }, []);
+  // No need to use localStorage for avatar, always use backend user data
 
   // Switch to settings mode if on /settings route
   useEffect(() => {
@@ -82,43 +92,7 @@ export default function MainLayout() {
   console.log("🔍 MainLayout - User data:", { user, userLoading, userError, userName: user?.name });
   console.log("🔍 MainLayout - Auth token exists:", !!localStorage.getItem('authToken'));
 
-  // Avatar upload handler with image processing
-  const handleAvatarUpload = async (file: File) => {
-    if (isProcessingAvatar) return;
-
-    setIsProcessingAvatar(true);
-
-    try {
-      // Validate the file
-      const validation = validateImageFile(file);
-      if (!validation.isValid) {
-        toast.error(validation.error || 'Invalid file');
-        return;
-      }
-
-      // Process the image (resize, crop, optimize)
-      const processedDataURL = await processAvatarImage(file, {
-        maxWidth: 256,
-        maxHeight: 256,
-        quality: 0.9,
-        format: 'image/jpeg',
-        cropToSquare: true
-      });
-
-      // Update avatar URL and save to localStorage
-      setAvatarUrl(processedDataURL);
-      localStorage.setItem('userAvatar', processedDataURL);
-      
-      toast.success('Avatar updated successfully!');
-      console.log('💾 Processed avatar saved to localStorage');
-
-    } catch (error) {
-      console.error('❌ Avatar processing failed:', error);
-      toast.error('Failed to process image. Please try a different file.');
-    } finally {
-      setIsProcessingAvatar(false);
-    }
-  };
+  // Avatar upload handler with image processing (delegated to ProfileSettings)
 
 
   const navigationItems = [
@@ -383,7 +357,7 @@ export default function MainLayout() {
               <label className={`cursor-pointer ${isProcessingAvatar ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="relative">
                   <img
-                    src={avatarUrl}
+                    src={getAvatarUrl(user)}
                     alt="User Avatar"
                     className="w-8 h-8 rounded-full border-2 border-gray-300 hover:border-blue-400 transition duration-200"
                   />
@@ -401,7 +375,7 @@ export default function MainLayout() {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      handleAvatarUpload(file);
+                      // Avatar upload is now handled in ProfileSettings
                     }
                   }}
                 />
@@ -455,7 +429,7 @@ export default function MainLayout() {
                 <label className={`cursor-pointer ${isProcessingAvatar ? 'opacity-50 pointer-events-none' : ''}`}>
                   <div className="relative">
                     <img
-                      src={avatarUrl}
+                      src={getAvatarUrl(user)}
                       alt="User Avatar"
                       className="w-10 h-10 rounded-full border-2 border-gray-300 hover:border-blue-400 transition duration-200"
                     />
@@ -473,7 +447,7 @@ export default function MainLayout() {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        handleAvatarUpload(file);
+                        // Avatar upload is now handled in ProfileSettings
                       }
                     }}
                   />

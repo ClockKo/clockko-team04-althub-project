@@ -257,3 +257,100 @@ export const changePassword = async (currentPassword: string, newPassword: strin
     throw error;
   }
 };
+
+// Two-Factor Authentication API functions
+export interface TwoFactorSetupResponse {
+  secret: string;
+  qr_code: string;
+  backup_codes: string[];
+}
+
+export interface TwoFactorStatusResponse {
+  enabled: boolean;
+  backup_codes_remaining: number | null;
+}
+
+export const setupTwoFactorAuth = async (password: string): Promise<TwoFactorSetupResponse> => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await axios.post(`${API_URL}/auth/2fa/setup`, {
+      password
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('2FA setup failed:', error);
+    throw error;
+  }
+};
+
+export const verifyTwoFactorAuth = async (totpCode: string): Promise<void> => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await axios.post(`${API_URL}/auth/2fa/verify`, {
+      totp_code: totpCode
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('2FA verification failed:', error);
+    throw error;
+  }
+};
+
+export const disableTwoFactorAuth = async (password: string, totpCode: string): Promise<void> => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await axios.post(`${API_URL}/auth/2fa/disable`, {
+      password,
+      totp_code: totpCode
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('2FA disable failed:', error);
+    throw error;
+  }
+};
+
+export const getTwoFactorStatus = async (): Promise<TwoFactorStatusResponse> => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await axios.get(`${API_URL}/auth/2fa/status`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Get 2FA status failed:', error);
+    throw error;
+  }
+};
+
+export const regenerateBackupCodes = async (password: string, totpCode: string): Promise<{ backup_codes: string[] }> => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await axios.post(`${API_URL}/auth/2fa/backup-codes/regenerate`, {
+      password,
+      totp_code: totpCode
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Regenerate backup codes failed:', error);
+    throw error;
+  }
+};

@@ -14,12 +14,21 @@ export function useCurrentSession() {
   });
 }
 
+import { UserProfileResponse } from "./profileApi";
+
+// Create a reusable query configuration
+export const userDataQuery = {
+  queryKey: ['userData'] as const,
+  queryFn: fetchUserData,
+  retry: false,
+  refetchOnWindowFocus: true,
+  refetchOnMount: true,
+  refetchOnReconnect: true,
+  staleTime: 0
+};
+
 export function useUserData() {
-  return useQuery({
-    queryKey: ["userData"],
-    queryFn: fetchUserData,
-    retry: false,
-  });
+  return useQuery<UserProfileResponse>(userDataQuery);
 }
 
 export function useDashboardData() {

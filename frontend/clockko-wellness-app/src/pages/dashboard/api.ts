@@ -88,6 +88,7 @@ export async function fetchUserData() {
   if (!token) return null;
 
   try {
+    console.log('🔄 Fetching user data...');
     const res = await axios.get(`${API_BASE_URL}/api/auth/user`, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
@@ -96,7 +97,13 @@ export async function fetchUserData() {
     // Extract user data from the nested response
     console.log('📡 Raw API response:', res.data);
     const userData = res.data.user || res.data; // Support both nested and flat response formats
-    console.log('👤 Extracted user data:', userData);
+    
+    // Ensure we're returning the correct avatar_url field
+    if (userData && !userData.avatar_url && userData.avatar) {
+      userData.avatar_url = userData.avatar; // Handle legacy avatar field if present
+    }
+    
+    console.log('👤 Processed user data:', userData);
     
     return userData
   } catch (e) {

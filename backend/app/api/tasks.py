@@ -34,19 +34,26 @@ def create(
 @router.get("/", response_model=list[TaskResponse])
 def read_all(
     completed: bool = None,
-    priority: str = None, 
+    priority: str = None,
     tags: str = None,  # Comma-separated tags
     due_today: bool = None,
     upcoming: bool = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    """
+    Get all tasks for the current user with optional filtering.
+    
+    - **completed**: Filter by completion status (true/false)
+    - **priority**: Filter by priority level (low/medium/high)
+    """
     user_id = current_user.id
     if not isinstance(user_id, UUID):
         try:
             user_id = UUID(str(user_id))
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid user ID")
+    return taskservice.get_tasks(db, user_id, completed=completed, priority=priority)
     
     # Parse tags from comma-separated string
     tags_list = None

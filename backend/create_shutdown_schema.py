@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional, List
-from uuid import UUID
 from enum import Enum
 
 
@@ -31,9 +30,9 @@ class ShutdownReflectionCreate(BaseModel):
 
 
 class ShutdownReflectionResponse(BaseModel):
-    id: UUID
-    user_id: UUID
-    productivity_rating: ProductivityRating
+    id: str
+    user_id: str
+    productivity_rating: str
     reflection_note: Optional[str]
     mindful_disconnect_completed: Optional[List[bool]]
     created_at: datetime

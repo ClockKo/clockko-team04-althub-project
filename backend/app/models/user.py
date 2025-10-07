@@ -49,7 +49,7 @@ class User(Base):
     email = Column(String, unique=True, nullable=False, index=True)
     full_name = Column(String, nullable=True)
     phone_number = Column(String, nullable=True)
-    # avatar_url = Column(String, nullable=True)  # Temporarily commented out due to missing DB column
+    avatar_url = Column(String, nullable=True)  
     hashed_password = Column(String, nullable=False)
     otp = Column(String, nullable=True)
     otp_verified = Column(Boolean, default=False)
@@ -57,10 +57,11 @@ class User(Base):
     reset_token = Column(String, nullable=True)
     reset_token_expires_at = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=True)
+    # is_admin = Column(Boolean, default=False, nullable=False)  # Admin role flag
     created_at = Column(DateTime, default=datetime.utcnow)
     is_verified = Column(Boolean, default=False)
     verification_token = Column(String, unique=True, nullable=True)
-    # onboarding_completed = Column(Boolean, default=False, nullable=False)  # Temporarily commented out due to missing DB column
+    onboarding_completed = Column(Boolean, default=False, nullable=False)  
 
     # Relationships
     settings = relationship("UserSettings", back_populates="user", uselist=False)

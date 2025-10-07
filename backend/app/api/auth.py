@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, logger
 from sqlalchemy.orm import Session
 from app.schemas import user as schema
 from app.services import userservice
@@ -50,8 +50,8 @@ def register(user_data: schema.UserCreate, db: Session = Depends(get_db)):
             verification_token=verification_token,
             is_active=True,
             is_verified=False,
-            otp_verified=False
-            # onboarding_completed=False  # Field is commented out in User model
+            otp_verified=False,
+            onboarding_completed=False  
         )
         
         # Save user to database
@@ -86,7 +86,7 @@ def register(user_data: schema.UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 async def login(user_credentials: schema.UserLogin, db: Session = Depends(get_db)):
-    """Login endpoint - accepts JSON """
+    """Login endpoint - accepts JSON"""
     try:
         # Authenticate user
         user = db.query(User).filter(User.email == user_credentials.email).first()

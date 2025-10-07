@@ -1,6 +1,5 @@
 export * from './api'
 export * from './authcontext'
-export * from './authform'
 export * from './protectedroutes'
 export { loginSchema, registrationSchema } from './validation'
 export * from './test/api.test'

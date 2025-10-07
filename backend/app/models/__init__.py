@@ -5,6 +5,7 @@ from app.models.user_settings import UserSettings
 from app.models.room import CoworkingRoom, RoomStatus
 from app.models.room_participant import RoomParticipant
 from app.models.room_message import RoomMessage, RoomMessageType
+from app.models.shutdown_reflection import ShutdownReflection
 
 __all__ = [
     "User",
@@ -15,10 +16,5 @@ __all__ = [
     "RoomParticipant",
     "RoomMessage",
     "RoomMessageType",
+    "ShutdownReflection",
 ]
-from .user import User
-from .user_settings import UserSettings
-from .timelog import Timelog
-from .task import Task
-
-__all__ = ["User", "UserSettings", "Timelog", "Task"]

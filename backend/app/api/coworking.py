@@ -6,6 +6,8 @@ from uuid import UUID
 from app.schemas.room import (
     CoworkingRoomSummary,
     CoworkingRoomDetail,
+    CoworkingRoomCreate,
+    CoworkingRoomUpdate,
     JoinRoomResponse,
     LeaveRoomResponse,
     SendMessageRequest,
@@ -21,6 +23,43 @@ from app.services import coworkingservice
 
 
 router = APIRouter(prefix="/coworking", tags=["Coworking"])
+
+
+@router.post("/rooms", response_model=CoworkingRoomSummary, status_code=201)
+def create_room(
+    room_data: CoworkingRoomCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Create a new coworking room.
+    Any authenticated user can create a room.
+    """
+    from app.models.room import CoworkingRoom, RoomStatus
+    import uuid
+
+    new_room = CoworkingRoom(
+        id=uuid.uuid4(),
+        name=room_data.name,
+        description=room_data.description,
+        status=RoomStatus.active,
+        max_participants=room_data.max_participants or 15,
+        color=room_data.color or "bg-grayBlue"
+    )
+
+    db.add(new_room)
+    db.commit()
+    db.refresh(new_room)
+
+    return CoworkingRoomSummary(
+        id=new_room.id,
+        name=new_room.name,
+        description=new_room.description,
+        status=new_room.status.value if hasattr(new_room.status, "value") else str(new_room.status),
+        participant_count=0,
+        max_participants=new_room.max_participants,
+        color=new_room.color
+    )
 
 
 @router.get("/rooms", response_model=List[CoworkingRoomSummary])
@@ -162,3 +201,7 @@ def send_emoji(
             raise HTTPException(status_code=400, detail="Invalid user ID")
 
     return coworkingservice.send_emoji_reaction(db, room_id, user_id, request.emoji)
+
+
+# Room Management Endpoints
+

@@ -1,9 +1,0 @@
-{
-	"dependencies": {
-		"@types/country-list": "^2.1.4",
-		"@unhead/react": "^2.0.17",
-		"country-list": "^2.4.1",
-		"react-hot-toast": "^2.6.0",
-		"timezones-list": "^3.1.0"
-	}
-}

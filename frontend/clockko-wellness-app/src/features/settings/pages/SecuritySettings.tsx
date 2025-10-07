@@ -56,6 +56,14 @@ const SecuritySettings: React.FC = () => {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [twoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
   const [twoFactorStep, setTwoFactorStep] = useState<'setup' | 'verify' | 'disable'>('setup');
+    const [twoFactorLoading, setTwoFactorLoading] = useState(false);
+    const [twoFactorError, setTwoFactorError] = useState('');
+    const [twoFactorPassword, setTwoFactorPassword] = useState('');
+    const [twoFactorSecret, setTwoFactorSecret] = useState('');
+    const [twoFactorQrCode, setTwoFactorQrCode] = useState('');
+    const [twoFactorTotp, setTwoFactorTotp] = useState('');
+    const [backupCodes, setBackupCodes] = useState<string[]>([]);
+    const [backupCodesRemaining, setBackupCodesRemaining] = useState<number | null>(null);
   
   // Reset dialog state when opened
   const handleDialogOpen = () => {
@@ -94,16 +102,89 @@ const SecuritySettings: React.FC = () => {
     setPasswordDialogOpen(false);
   };
   
-  // Handle 2FA toggle
-  const handleTwoFactorToggle = () => {
+  // 2FA toggle handler
+  const handleTwoFactorToggle = async () => {
+    setTwoFactorError('');
+    setTwoFactorLoading(true);
     if (twoFactorEnabled) {
       setTwoFactorStep('disable');
+      setTwoFactorDialogOpen(true);
+      setTwoFactorLoading(false);
     } else {
       setTwoFactorStep('setup');
+      setTwoFactorDialogOpen(true);
+      setTwoFactorLoading(false);
     }
-    setTwoFactorDialogOpen(true);
   };
-  
+
+  // Fetch 2FA status on mount
+  React.useEffect(() => {
+    async function fetchStatus() {
+      try {
+        setTwoFactorLoading(true);
+        const status = await import('../../auth/api').then(m => m.getTwoFactorStatus());
+        setTwoFactorEnabled(status.enabled);
+        setBackupCodesRemaining(status.backup_codes_remaining);
+      } catch (e) {
+        setTwoFactorEnabled(false);
+      } finally {
+        setTwoFactorLoading(false);
+      }
+    }
+    fetchStatus();
+  }, []);
+
+  // 2FA Setup handler
+  const handleTwoFactorSetup = async () => {
+    setTwoFactorLoading(true);
+    setTwoFactorError('');
+    try {
+      const { setupTwoFactorAuth } = await import('../../auth/api');
+      const resp = await setupTwoFactorAuth(twoFactorPassword);
+      setTwoFactorSecret(resp.secret);
+      setTwoFactorQrCode(resp.qr_code);
+      setBackupCodes(resp.backup_codes);
+      setTwoFactorStep('verify');
+    } catch (e: any) {
+      setTwoFactorError(e?.response?.data?.detail || 'Failed to setup 2FA');
+    } finally {
+      setTwoFactorLoading(false);
+    }
+  };
+
+  // 2FA Verify handler
+  const handleTwoFactorVerify = async () => {
+    setTwoFactorLoading(true);
+    setTwoFactorError('');
+    try {
+      const { verifyTwoFactorAuth } = await import('../../auth/api');
+      await verifyTwoFactorAuth(twoFactorTotp);
+      setTwoFactorEnabled(true);
+      toast.success('2-step verification enabled!');
+      setTwoFactorDialogOpen(false);
+    } catch (e: any) {
+      setTwoFactorError(e?.response?.data?.detail || 'Invalid verification code');
+    } finally {
+      setTwoFactorLoading(false);
+    }
+  };
+
+  // 2FA Disable handler
+  const handleTwoFactorDisable = async () => {
+    setTwoFactorLoading(true);
+    setTwoFactorError('');
+    try {
+      const { disableTwoFactorAuth } = await import('../../auth/api');
+      await disableTwoFactorAuth(twoFactorPassword, twoFactorTotp);
+      setTwoFactorEnabled(false);
+      toast.success('2-step verification disabled');
+      setTwoFactorDialogOpen(false);
+    } catch (e: any) {
+      setTwoFactorError(e?.response?.data?.detail || 'Failed to disable 2FA');
+    } finally {
+      setTwoFactorLoading(false);
+    }
+  };
   // Password strength validation
   const getPasswordStrength = (password: string) => {
     let score = 0;
@@ -128,6 +209,7 @@ const SecuritySettings: React.FC = () => {
     let color = 'text-red-500';
     if (score >= 4) { strength = 'Strong'; color = 'text-green-500'; }
     else if (score >= 3) { strength = 'Medium'; color = 'text-yellow-500'; }
+              {twoFactorError && <p className="text-sm text-red-500 mb-2">{twoFactorError}</p>}
     
     return { score, strength, color, feedback };
   };

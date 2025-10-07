@@ -19,7 +19,7 @@ class UserResponse(BaseModel):
     name: str  
     email: EmailStr
     phone_number: str | None = None
-    # avatar_url: str | None = None  # Temporarily commented out due to missing DB column
+    avatar_url: str | None = None
     created_at: datetime
     is_verified: bool = False
     is_active: bool = True
@@ -43,7 +43,7 @@ class UserResponse(BaseModel):
             name=display_name,
             email=user_obj.email,
             phone_number=getattr(user_obj, "phone_number", None),
-            # avatar_url=getattr(user_obj, "avatar_url", None),  # Temporarily commented out
+            avatar_url=getattr(user_obj, "avatar_url", None),
             created_at=user_obj.created_at,
             is_verified=getattr(user_obj, "is_verified", False),
             is_active=getattr(user_obj, "is_active", True),
@@ -76,14 +76,14 @@ class UserProfileUpdate(BaseModel):
     """Schema for updating user profile information."""
     name: str | None = None
     phone_number: str | None = None
-    # avatar_url: str | None = None  # Temporarily commented out due to missing DB column
+    avatar_url: str | None = None
 
     class Config:
         json_schema_extra = {
             "example": {
                 "name": "John Doe",
                 "phone_number": "+1234567890",
-                # "avatar_url": "/avatars/avatar-1.png"  # Temporarily commented out
+                "avatar_url": "/avatars/avatar-1.png"
             }
         }
 

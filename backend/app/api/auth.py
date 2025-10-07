@@ -210,11 +210,21 @@ def update_user_profile(
         if profile_update.phone_number is not None:
             current_user.phone_number = profile_update.phone_number
         
-        if profile_update.avatar_url is not None:
+        # Handle avatar update/deletion
+        if profile_update.avatar_url is not None or hasattr(profile_update, 'avatar_url'):
+            logger.info(f"Updating avatar_url. Current: {current_user.avatar_url}, New: {profile_update.avatar_url}")
+            # Set the new avatar_url value
             current_user.avatar_url = profile_update.avatar_url
-        
-        db.commit()
-        db.refresh(current_user)
+            logger.info(f"Avatar_url after update: {current_user.avatar_url}")
+
+        try:
+            db.commit()
+            db.refresh(current_user)
+            logger.info(f"User profile updated successfully. Avatar_url: {current_user.avatar_url}")
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Failed to update user profile: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to update profile: {str(e)}")
         
         return schema.UserResponse.from_user_model(current_user)
     

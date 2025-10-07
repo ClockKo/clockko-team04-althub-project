@@ -60,8 +60,14 @@ export default function MainLayout() {
   }
   // Default avatar fallback: initials
   function getAvatarUrl(user: any) {
-    if (user?.avatar) return user.avatar;
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(getInitials(user?.name))}&background=E0E7FF&color=1E40AF&size=128`;
+    console.log('🖼️ Getting avatar URL for user:', user);
+    if (user?.avatar_url) {
+      console.log('✅ Using avatar_url:', user.avatar_url);
+      return user.avatar_url;
+    }
+    const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(getInitials(user?.name))}&background=E0E7FF&color=1E40AF&size=128`;
+    console.log('⚠️ Using fallback avatar:', fallbackUrl);
+    return fallbackUrl;
   }
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [isProcessingAvatar, setIsProcessingAvatar] = useState(false)

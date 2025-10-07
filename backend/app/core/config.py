@@ -71,5 +71,10 @@ class Settings:
         # ====================
         self.GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 
+        # ====================
+        # Two-Factor Authentication
+        # ====================
+        self.TWO_FACTOR_ENCRYPTION_KEY = os.getenv("TWO_FACTOR_ENCRYPTION_KEY", "")
+
 
 settings = Settings()

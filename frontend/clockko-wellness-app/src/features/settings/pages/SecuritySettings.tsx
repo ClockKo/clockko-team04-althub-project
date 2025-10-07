@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../../../components/ui/button';
 import { Switch } from '../../../components/ui/switch';
 import { Input } from '../../../components/ui/input';
-import { Smartphone, Monitor, Eye, EyeOff } from 'lucide-react';
+import { Smartphone, Monitor, Eye, EyeOff, QrCode, Shield, Copy } from 'lucide-react';
 import { useUserData } from '../../../pages/dashboard/dashboardHooks';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -52,6 +52,11 @@ const SecuritySettings: React.FC = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
+  // 2FA state
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [twoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
+  const [twoFactorStep, setTwoFactorStep] = useState<'setup' | 'verify' | 'disable'>('setup');
+  
   // Reset dialog state when opened
   const handleDialogOpen = () => {
     setStep('password');
@@ -87,6 +92,16 @@ const SecuritySettings: React.FC = () => {
   
   const handlePasswordDialogClose = () => {
     setPasswordDialogOpen(false);
+  };
+  
+  // Handle 2FA toggle
+  const handleTwoFactorToggle = () => {
+    if (twoFactorEnabled) {
+      setTwoFactorStep('disable');
+    } else {
+      setTwoFactorStep('setup');
+    }
+    setTwoFactorDialogOpen(true);
   };
   
   // Password strength validation
@@ -594,13 +609,131 @@ const SecuritySettings: React.FC = () => {
             </AlertDialog>
           </div>
           
+          {/* 2FA Setup/Disable Dialog */}
+          <AlertDialog open={twoFactorDialogOpen} onOpenChange={setTwoFactorDialogOpen}>
+            <AlertDialogContent className="max-w-md">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  {twoFactorStep === 'disable' ? 'Disable 2-Step Verification' : 'Enable 2-Step Verification'}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {twoFactorStep === 'disable' 
+                    ? 'Are you sure you want to disable 2-step verification? This will make your account less secure.'
+                    : 'Set up 2-step verification using an authenticator app like Google Authenticator or Authy.'
+                  }
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              
+              {twoFactorStep === 'setup' && (
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="w-48 h-48 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center mx-auto mb-4">
+                      <div className="text-center">
+                        <QrCode className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                        <p className="text-sm text-gray-500">QR Code would appear here</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Scan this QR code with your authenticator app, or enter this setup key:
+                    </p>
+                    <div className="bg-gray-50 p-3 rounded border flex items-center justify-between">
+                      <code className="text-sm font-mono">JBSWY3DPEHPK3PXP</code>
+                      <Button variant="outline" size="sm">
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Enter verification code from your app:
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="000000"
+                      maxLength={6}
+                      className="text-center text-lg tracking-widest"
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {twoFactorStep === 'verify' && (
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <Shield className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      2-Step Verification Enabled!
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Your account is now protected with 2-step verification.
+                    </p>
+                    <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                      <h4 className="font-medium text-yellow-800 mb-2">Backup Codes</h4>
+                      <p className="text-sm text-yellow-700 mb-3">
+                        Save these backup codes in a safe place. You can use them to access your account if you lose your authenticator device.
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 font-mono text-sm">
+                        <code className="bg-white px-2 py-1 rounded">123456</code>
+                        <code className="bg-white px-2 py-1 rounded">789012</code>
+                        <code className="bg-white px-2 py-1 rounded">345678</code>
+                        <code className="bg-white px-2 py-1 rounded">901234</code>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <AlertDialogFooter>
+                <Button variant="outline" onClick={() => setTwoFactorDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => {
+                    if (twoFactorStep === 'disable') {
+                      setTwoFactorEnabled(false);
+                      setTwoFactorDialogOpen(false);
+                      toast.success('2-step verification disabled');
+                    } else if (twoFactorStep === 'setup') {
+                      setTwoFactorStep('verify');
+                      setTwoFactorEnabled(true);
+                    } else {
+                      setTwoFactorDialogOpen(false);
+                    }
+                  }}
+                  className={twoFactorStep === 'disable' ? 'bg-red-600 hover:bg-red-700' : ''}
+                >
+                  {twoFactorStep === 'disable' ? 'Disable' : 
+                   twoFactorStep === 'setup' ? 'Verify & Enable' : 'Done'}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          
           {/* 2-Step Verification */}
           <div className="flex justify-between items-center">
             <div>
-              <h4 className="font-medium text-gray-800">2-step verification</h4>
-              <p className="text-sm text-gray-500">Add an additional layer of security to your account during login.</p>
+              <div className="flex items-center gap-2">
+                <h4 className="font-medium text-gray-800">2-step verification</h4>
+                {twoFactorEnabled && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <Shield className="h-3 w-3 mr-1" />
+                    Enabled
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-500">
+                {twoFactorEnabled 
+                  ? 'Your account is protected with 2-step verification.'
+                  : 'Add an additional layer of security to your account during login.'
+                }
+              </p>
             </div>
-            <Switch />
+            <Switch 
+              checked={twoFactorEnabled}
+              onCheckedChange={handleTwoFactorToggle}
+            />
           </div>
         </div>
       </section>

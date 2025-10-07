@@ -154,9 +154,9 @@ export function WorkSessionCard({
             {(session?.end_time || (session?.start_time && forceStopTimer)) && duration && (
               <div className="text-sm text-gray-600 mb-2">
                 <div className="font-medium text-green-600">✅ Session Completed</div>
-                <div className="text-blue-600 font-semibold text-lg">{duration}</div>
+                <div className="text-blue1 font-semibold text-lg text-center">{duration}</div>
                 {session?.end_time && (
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 text-center">
                     Ended: {new Date(session.end_time).toLocaleTimeString()}
                   </div>
                 )}

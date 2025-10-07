@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { smartNotificationService } from '../services/smartNotificationService';
 import { crossDeviceSyncService } from '../services/crossDeviceSyncService';
+import { soundService } from '../features/timeTracker/services/soundService';
 import type { WorkPattern, NotificationPreferences } from '../services/smartNotificationService';
 import type { DeviceInfo } from '../services/crossDeviceSyncService';
 
@@ -18,8 +19,19 @@ export function useSmartNotifications() {
   }>(smartNotificationService.getWorkPatternInsights());
 
   const updatePreferences = useCallback((newPrefs: Partial<NotificationPreferences>) => {
+    // Update the service first
     smartNotificationService.updatePreferences(newPrefs);
-    setPreferences(smartNotificationService.getPreferences());
+    
+    // If sound preference is being updated, sync it with soundService
+    if ('sound' in newPrefs) {
+      soundService.setEnabled(newPrefs.sound!);
+      console.log('🔊 Sound notifications', newPrefs.sound ? 'enabled' : 'disabled');
+    }
+    
+    // Update the state to trigger re-render
+    const updatedPreferences = smartNotificationService.getPreferences();
+    setPreferences(updatedPreferences);
+    console.log('✅ Preferences updated:', updatedPreferences);
   }, []);
 
   const startFocusSession = useCallback((plannedDuration: number) => {
@@ -28,8 +40,66 @@ export function useSmartNotifications() {
 
   const endFocusSession = useCallback((actualDuration: number, plannedDuration: number) => {
     smartNotificationService.endFocusSession(actualDuration, plannedDuration);
-    setWorkPattern(smartNotificationService.getWorkPatternInsights());
+    
+    // Update work pattern with real data from the dashboard
+    updateWorkPatternFromAPI();
   }, []);
+
+  // Function to fetch real session data and update work pattern
+  const updateWorkPatternFromAPI = useCallback(async () => {
+    try {
+      // Import the dashboard API function
+      const { fetchDashboardData } = await import('../pages/dashboard/api');
+      const dashboardData = await fetchDashboardData();
+      
+      if (dashboardData && dashboardData.todaySummary) {
+        const realFocusTime = dashboardData.todaySummary.duration || 0; // in seconds
+        const realFocusTimeMinutes = Math.round(realFocusTime / 60); // convert to minutes
+        
+        // Get real session count from timetracker API
+        const { timeTrackerService } = await import('../features/timeTracker/services/timetrackerservice');
+        const dailySummary = await timeTrackerService.getDailySummary();
+        
+        const realSessionCount = dailySummary?.totalFocusSessions || 0;
+        const avgSessionLength = realSessionCount > 0 ? Math.round(realFocusTimeMinutes / realSessionCount) : 25;
+        
+        // Get current work pattern to preserve missing fields
+        const currentPattern = smartNotificationService.getWorkPatternInsights();
+        
+        // Update work pattern with real data
+        const updatedPattern = {
+          ...currentPattern,
+          focusSessionCount: realSessionCount,
+          averageSessionLength: avgSessionLength,
+          totalWorkTime: realFocusTime,
+          productivityScore: realSessionCount > 0 ? Math.min(100, Math.max(0, (realSessionCount * 15) + (avgSessionLength * 2))) : 0,
+          averageSessionText: `${avgSessionLength} minutes`,
+          productivityLevel: realSessionCount >= 3 ? 'High' : realSessionCount >= 1 ? 'Good' : 'Getting Started',
+          recommendedBreakFrequency: Math.max(1, Math.round(avgSessionLength / 25))
+        };
+        
+        console.log('📊 Updated work pattern with real data:', updatedPattern);
+        setWorkPattern(updatedPattern);
+      }
+    } catch (error) {
+      console.warn('Failed to update work pattern with real data:', error);
+      // Fall back to smart notification service data
+      setWorkPattern(smartNotificationService.getWorkPatternInsights());
+    }
+  }, []);
+
+  // Load real data on initialization
+  useEffect(() => {
+    updateWorkPatternFromAPI();
+    
+    // Sync sound preference with soundService on initialization
+    const currentSoundEnabled = soundService.getEnabled();
+    
+    // If preferences don't match, update the preferences to match soundService
+    if (preferences.sound !== currentSoundEnabled) {
+      updatePreferences({ sound: currentSoundEnabled });
+    }
+  }, [updateWorkPatternFromAPI, preferences.sound, updatePreferences]);
 
   const startBreak = useCallback(() => {
     smartNotificationService.startBreak();
@@ -53,7 +123,8 @@ export function useSmartNotifications() {
     startFocusSession,
     endFocusSession,
     startBreak,
-    monitorTaskDeadlines
+    monitorTaskDeadlines,
+    updateWorkPatternFromAPI
   };
 }
 
@@ -243,46 +314,99 @@ export function useRealTimeFeatures(userId?: string) {
 
 // === PRODUCTIVITY INSIGHTS HOOK ===
 
-export function useProductivityInsights(userId?: string) {
-  const { metrics, updateMetrics } = useCrossDeviceSync(userId);
+export function useProductivityInsights(_userId?: string) {
   const { workPattern } = useSmartNotifications();
-  
   const [insights, setInsights] = useState<any>(null);
 
-  useEffect(() => {
-    if (metrics && workPattern) {
-      const combinedInsights = {
-        // Today's metrics
-        today: metrics.today,
-        
-        // Weekly trends
-        weeklyTrend: metrics.thisWeek,
-        
-        // Work patterns
-        patterns: {
-          averageSessionLength: workPattern.averageSessionLength,
-          productivityLevel: workPattern.productivityLevel,
-          recommendedBreakFrequency: workPattern.recommendedBreakFrequency,
-          focusSessionCount: workPattern.focusSessionCount
-        },
-        
-        // Device usage
-        devices: metrics.devices,
-        
-        // Sync status
-        lastSync: metrics.lastSync,
-        
-        // Recommendations
-        recommendations: generateRecommendations(workPattern, metrics)
-      };
+  const refreshInsights = useCallback(async () => {
+    try {
+      console.log('🔄 Refreshing productivity insights with real data...');
       
-      setInsights(combinedInsights);
+      // Get real data from dashboard and timetracker APIs
+      const { fetchDashboardData } = await import('../pages/dashboard/api');
+      const { timeTrackerService } = await import('../features/timeTracker/services/timetrackerservice');
+      
+      const [dashboardData, dailySummary] = await Promise.all([
+        fetchDashboardData(),
+        timeTrackerService.getDailySummary()
+      ]);
+      
+      if (dashboardData && dailySummary) {
+        const realFocusTime = dashboardData.todaySummary?.duration || 0; // in seconds
+        const realFocusTimeMinutes = Math.round(realFocusTime / 60); // convert to minutes
+        const realSessionCount = dailySummary.totalFocusSessions || 0;
+        const avgSessionLength = realSessionCount > 0 ? Math.round(realFocusTimeMinutes / realSessionCount) : 0;
+        
+        const combinedInsights = {
+          // Today's real metrics
+          today: {
+            sessionsCompleted: realSessionCount,
+            totalFocusTime: realFocusTimeMinutes,
+            averageSessionLength: avgSessionLength
+          },
+          
+          // Weekly trends (simplified for now - could be enhanced with more API calls)
+          weeklyTrend: {
+            totalSessions: realSessionCount, // Today's sessions as placeholder
+            totalHours: realFocusTimeMinutes / 60, // Keep as number so component can call toFixed
+            mostProductiveDay: 'Today'
+          },
+          
+          // Work patterns from real data
+          patterns: {
+            averageSessionLength: avgSessionLength,
+            productivityLevel: realSessionCount >= 3 ? 'High' : realSessionCount >= 1 ? 'Good' : 'Getting Started',
+            recommendedBreakFrequency: Math.max(1, Math.round(avgSessionLength / 25)),
+            focusSessionCount: realSessionCount
+          },
+          
+          // Recommendations based on real data
+          recommendations: generateRecommendations({
+            averageSessionLength: avgSessionLength,
+            focusSessionCount: realSessionCount,
+            productivityScore: realSessionCount > 0 ? Math.min(100, (realSessionCount * 20) + (avgSessionLength * 2)) : 0
+          }, {
+            today: { sessionsCompleted: realSessionCount }
+          })
+        };
+        
+        console.log('📊 Real productivity insights:', combinedInsights);
+        setInsights(combinedInsights);
+      }
+    } catch (error) {
+      console.warn('Failed to refresh real productivity insights:', error);
+      
+      // Fallback to mock data
+      setInsights({
+        today: {
+          sessionsCompleted: 0,
+          totalFocusTime: 0,
+          averageSessionLength: 0
+        },
+        weeklyTrend: {
+          totalSessions: 0,
+          totalHours: 0.0, // Keep as number, not string
+          mostProductiveDay: 'None yet'
+        },
+        patterns: {
+          averageSessionLength: 0,
+          productivityLevel: 'Getting Started',
+          recommendedBreakFrequency: 1,
+          focusSessionCount: 0
+        },
+        recommendations: ['🚀 Start your first focus session to see insights!']
+      });
     }
-  }, [metrics, workPattern]);
+  }, []);
+
+  // Load real insights on initialization and when workPattern changes
+  useEffect(() => {
+    refreshInsights();
+  }, [refreshInsights, workPattern]);
 
   return {
     insights,
-    refreshInsights: updateMetrics
+    refreshInsights
   };
 }
 

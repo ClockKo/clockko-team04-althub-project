@@ -19,6 +19,7 @@ export default function RealTimeFeaturesPanel({ onClose }: RealTimeFeaturesProps
   const [activeTab, setActiveTab] = useState<'notifications' | 'sync' | 'insights'>('notifications');
 
   const handlePreferenceChange = (key: string, value: boolean) => {
+    console.log('🔧 Toggle changed:', key, 'to', value);
     realTimeFeatures.updatePreferences({ [key]: value });
   };
 
@@ -133,7 +134,7 @@ export default function RealTimeFeaturesPanel({ onClose }: RealTimeFeaturesProps
               <CardTitle>Your Work Patterns</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="text-center p-3 bg-blue-50 rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">
                     {realTimeFeatures.workPattern.focusSessionCount}
@@ -151,12 +152,6 @@ export default function RealTimeFeaturesPanel({ onClose }: RealTimeFeaturesProps
                     {realTimeFeatures.workPattern.productivityLevel}
                   </div>
                   <div className="text-sm text-gray-600">Productivity</div>
-                </div>
-                <div className="text-center p-3 bg-orange-50 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600">
-                    {realTimeFeatures.workPattern.recommendedBreakFrequency}
-                  </div>
-                  <div className="text-sm text-gray-600">Break/Session</div>
                 </div>
               </div>
             </CardContent>
@@ -308,7 +303,18 @@ export default function RealTimeFeaturesPanel({ onClose }: RealTimeFeaturesProps
               {/* Today's Stats */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Today's Performance</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Today's Performance</CardTitle>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={refreshInsights}
+                      className="flex items-center gap-2"
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                      Refresh
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

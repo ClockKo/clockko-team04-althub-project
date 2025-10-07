@@ -10,6 +10,9 @@ from typing import Union
 import uuid
 import json
 from sqlalchemy.exc import IntegrityError
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["auth"])
 
@@ -221,3 +224,182 @@ def update_user_profile(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Profile update failed: {str(e)}")
+
+
+@router.post("/verify-password")
+def verify_current_password(
+    payload: schema.PasswordVerifyRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Verify current user's password for security operations."""
+    try:
+        if not verify_password(payload.password, current_user.hashed_password):
+            raise HTTPException(status_code=400, detail="Incorrect password")
+        
+        return {"detail": "Password verified successfully"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Password verification failed: {str(e)}")
+
+
+@router.get("/check-email")
+def check_email_availability(email: str, db: Session = Depends(get_db)):
+    """Check if email is available for use."""
+    try:
+        existing_user = db.query(User).filter(User.email == email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email address is already in use")
+        
+        return {"detail": "Email is available"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Email check failed: {str(e)}")
+
+
+@router.post("/send-email-verification")
+def send_email_change_verification(
+    payload: schema.EmailChangeRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Send verification code to new email address for email change."""
+    try:
+        # Check if new email is different from current
+        if payload.new_email == current_user.email:
+            raise HTTPException(status_code=400, detail="New email must be different from current email")
+        
+        # Check if new email is already in use
+        existing_user = db.query(User).filter(User.email == payload.new_email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email address is already in use")
+        
+        # Use the same OTP system as account creation
+        from datetime import datetime, timedelta, timezone
+        import random
+        
+        # Generate 6-digit OTP (same as account creation)
+        otp = f"{random.randint(100000, 999999)}"
+        otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)  # 5 minutes like account creation
+        
+        # Store OTP and new email in user record
+        current_user.otp = otp
+        current_user.otp_expires_at = otp_expires_at
+        # Store the new email temporarily in verification_token
+        current_user.verification_token = f"email_change:{payload.new_email}"
+        db.commit()
+        
+        # Send OTP via email (using the same email service as account creation)
+        try:
+            from app.services.emailservice import email_service
+            email_service.send_otp_email_with_link(
+                to_email=payload.new_email,
+                otp=otp,
+                username=current_user.username or current_user.full_name or "User",
+                verification_link=f"Email change verification code: {otp}"  # Simple message for now
+            )
+            logger.info(f"Email change OTP sent to {payload.new_email}")
+        except Exception as e:
+            logger.warning(f"Failed to send email change OTP to {payload.new_email}: {e}")
+            # Print to console for development
+            print(f"Email change verification code for {payload.new_email}: {otp} (expires in 5 minutes)")
+        
+        return {
+            "detail": "Verification code sent successfully", 
+            "message": f"A 6-digit verification code has been sent to {payload.new_email}. It will expire in 5 minutes."
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to send verification code: {str(e)}")
+
+
+@router.post("/change-email")
+def change_email_address(
+    payload: schema.EmailChangeVerifyRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Change email address after verifying the verification code."""
+    try:
+        # Check if email change request exists
+        if not current_user.verification_token or not current_user.verification_token.startswith('email_change:'):
+            raise HTTPException(status_code=400, detail="No email change request found")
+        
+        # Extract new email from verification token
+        try:
+            stored_new_email = current_user.verification_token.split(':', 1)[1]
+        except (ValueError, IndexError):
+            raise HTTPException(status_code=400, detail="Invalid email change request")
+        
+        # Verify the email matches
+        if stored_new_email != payload.new_email:
+            raise HTTPException(status_code=400, detail="Email address mismatch")
+        
+        # Use the same OTP verification logic as account creation
+        if not current_user.otp or current_user.otp != payload.verification_code:
+            raise HTTPException(status_code=400, detail="Invalid verification code")
+        
+        # Check if OTP has expired (same logic as userservice.verify_otp)
+        if current_user.otp_expires_at is not None:
+            from datetime import datetime, timezone
+            try:
+                current_time = datetime.now(timezone.utc)
+                
+                # Handle timezone-aware/naive datetime comparison
+                if current_user.otp_expires_at.tzinfo is None:
+                    expires_at = current_user.otp_expires_at.replace(tzinfo=timezone.utc)
+                else:
+                    expires_at = current_user.otp_expires_at
+                    
+                if current_time > expires_at:
+                    # Clean up expired OTP
+                    current_user.otp = None
+                    current_user.otp_expires_at = None
+                    current_user.verification_token = None
+                    db.commit()
+                    raise HTTPException(status_code=400, detail="Verification code has expired")
+                    
+            except Exception as e:
+                logger.error(f"Datetime comparison error for {current_user.email}: {e}")
+                # Clean up on error
+                current_user.otp = None
+                current_user.otp_expires_at = None
+                current_user.verification_token = None
+                db.commit()
+                raise HTTPException(status_code=400, detail="Verification code has expired")
+        
+        # Check if new email is still available
+        existing_user = db.query(User).filter(User.email == payload.new_email).first()
+        if existing_user and existing_user.id != current_user.id:
+            raise HTTPException(status_code=400, detail="Email address is already in use")
+        
+        # Update email address and clean up verification data
+        current_user.email = payload.new_email
+        current_user.verification_token = None
+        current_user.otp = None
+        current_user.otp_expires_at = None
+        current_user.is_verified = True  # Mark email as verified
+        
+        db.commit()
+        db.refresh(current_user)
+        
+        logger.info(f"Email successfully changed to {payload.new_email} for user {current_user.id}")
+        
+        return {
+            "detail": "Email address changed successfully",
+            "message": f"Your email has been successfully changed to {payload.new_email}"
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Email change failed for user {current_user.id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Email change failed: {str(e)}")

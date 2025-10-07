@@ -154,3 +154,82 @@ export const resetPassword = async (email: string, otp: string, newPassword: str
     throw error;
   }
 }
+
+/**
+ * Verify current user's password
+ */
+export const verifyCurrentPassword = async (password: string) => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await axios.post(`${API_URL}/auth/verify-password`, 
+      { password },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Password verification failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Check if email address is available
+ */
+export const checkEmailAvailability = async (email: string) => {
+  try {
+    const response = await axios.get(`${API_URL}/auth/check-email?email=${encodeURIComponent(email)}`);
+    return response.data;
+  } catch (error) {
+    console.error('Email check failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Send email change verification code
+ */
+export const sendEmailChangeVerification = async (newEmail: string) => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await axios.post(`${API_URL}/auth/send-email-verification`,
+      { new_email: newEmail },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Send email verification failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Change email address with verification code
+ */
+export const changeEmailAddress = async (newEmail: string, verificationCode: string) => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await axios.post(`${API_URL}/auth/change-email`,
+      { 
+        new_email: newEmail,
+        verification_code: verificationCode 
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Email change failed:', error);
+    throw error;
+  }
+};

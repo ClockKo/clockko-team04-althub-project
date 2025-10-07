@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, logger
 from sqlalchemy.orm import Session
 from app.schemas import user as schema
 from app.services import userservice
@@ -47,8 +47,8 @@ def register(user_data: schema.UserCreate, db: Session = Depends(get_db)):
             verification_token=verification_token,
             is_active=True,
             is_verified=False,
-            otp_verified=False
-            # onboarding_completed=False  # Field is commented out in User model
+            otp_verified=False,
+            onboarding_completed=False  
         )
         
         # Save user to database

@@ -107,3 +107,9 @@ class EmailChangeVerifyRequest(BaseModel):
     """Schema for verifying email change with OTP."""
     new_email: EmailStr
     verification_code: str
+
+
+class PasswordChangeRequest(BaseModel):
+    """Schema for changing password."""
+    current_password: str
+    new_password: str

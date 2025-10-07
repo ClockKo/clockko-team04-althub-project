@@ -403,3 +403,45 @@ def change_email_address(
         db.rollback()
         logger.error(f"Email change failed for user {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Email change failed: {str(e)}")
+
+
+@router.post("/change-password")
+def change_password(
+    payload: schema.PasswordChangeRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Change user's password after verifying current password."""
+    try:
+        # Verify current password
+        if not verify_password(payload.current_password, current_user.hashed_password):
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+        
+        # Check if new password is different from current password
+        if verify_password(payload.new_password, current_user.hashed_password):
+            raise HTTPException(status_code=400, detail="New password must be different from current password")
+        
+        # Basic password strength validation (you can enhance this)
+        if len(payload.new_password) < 8:
+            raise HTTPException(status_code=400, detail="New password must be at least 8 characters long")
+        
+        # Hash and update the new password
+        new_hashed_password = hash_password(payload.new_password)
+        current_user.hashed_password = new_hashed_password
+        
+        db.commit()
+        db.refresh(current_user)
+        
+        logger.info(f"Password successfully changed for user {current_user.id}")
+        
+        return {
+            "detail": "Password changed successfully",
+            "message": "Your password has been updated successfully. Please use your new password for future logins."
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Password change failed for user {current_user.id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Password change failed: {str(e)}")

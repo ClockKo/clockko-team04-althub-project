@@ -233,3 +233,27 @@ export const changeEmailAddress = async (newEmail: string, verificationCode: str
     throw error;
   }
 };
+
+/**
+ * Change user password
+ */
+export const changePassword = async (currentPassword: string, newPassword: string) => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await axios.post(`${API_URL}/auth/change-password`,
+      { 
+        current_password: currentPassword,
+        new_password: newPassword 
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Password change failed:', error);
+    throw error;
+  }
+};

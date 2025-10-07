@@ -12,6 +12,22 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["User Management"])
 
+@router.delete("/delete", status_code=204)
+def delete_current_user(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete the current authenticated user's account and all related data.
+    """
+    try:
+        db.delete(current_user)
+        db.commit()
+        return {"message": "Account deleted successfully."}
+    except Exception as e:
+        logger.error(f"Failed to delete user {current_user.id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete account")
+
 # --- PATCH: Add schema for profile update ---
 class UserProfileUpdateRequest(BaseModel):
     name: str

@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { useHead } from '@unhead/react'
+import { Eye, EyeOff } from 'lucide-react'
 import AuthLayout from './AuthLayout'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
@@ -18,7 +19,12 @@ import toast from 'react-hot-toast'
 const createAccountSchema = z.object({
   name: z.string().min(2, { message: 'Please enter your name' }),
   email: z.string().email({ message: 'Please enter a valid email' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
+  password: z.string()
+    .min(8, { message: 'Password must be at least 8 characters' })
+    .regex(/[a-z]/, { message: 'Password must contain at least one lowercase letter' })
+    .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter' })
+    .regex(/[0-9]/, { message: 'Password must contain at least one number' })
+    .regex(/[^A-Za-z0-9]/, { message: 'Password must contain at least one special character' }),
   agree: z.boolean().refine((val) => val === true, {
     message: 'You must agree to the terms and privacy policy',
   }),
@@ -45,15 +51,48 @@ const CreateAccountPage: React.FC = () => {
   const navigate = useNavigate()
   const { setAuthToken } = useAuth() // Get the setAuthToken function
   const [apiError, setApiError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
+
+  // Password strength validation function
+  const getPasswordStrength = (password: string) => {
+    let score = 0;
+    const feedback = [];
+    
+    if (password.length >= 8) score++;
+    else feedback.push('At least 8 characters');
+    
+    if (/[a-z]/.test(password)) score++;
+    else feedback.push('Lowercase letter');
+    
+    if (/[A-Z]/.test(password)) score++;
+    else feedback.push('Uppercase letter');
+    
+    if (/[0-9]/.test(password)) score++;
+    else feedback.push('Number');
+    
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    else feedback.push('Special character');
+    
+    let strength = 'Weak';
+    let color = 'text-red-500';
+    if (score >= 4) { strength = 'Strong'; color = 'text-green-500'; }
+    else if (score >= 3) { strength = 'Medium'; color = 'text-yellow-500'; }
+    
+    return { score, strength, color, feedback };
+  };
 
   // Set up react-hook-form
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<CreateAccountFormData>({
     resolver: zodResolver(createAccountSchema),
   })
+
+  // Watch password field for real-time strength checking
+  const passwordValue = watch('password', '')
 
  
  const onSubmit = async (data: CreateAccountFormData) => {
@@ -144,15 +183,65 @@ const CreateAccountPage: React.FC = () => {
             {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>}
           </div>
           <div>
-            <label className="text-sm font-bold text-gray-700 mb-1 block">Password</label>
-            <Input
-              {...register('password')}
-              type="password"
-              placeholder="********"
-              className="py-6 rounded-[16px]"
-            />
-            {errors.password && (
-              <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
+            <label className="text-sm font-bold text-gray-700 mb-1 block">
+              Password
+              <span className="text-xs text-gray-500 font-normal mt-1 mb-2 block text-left">
+                (8+ characters with uppercase, lowercase, number, and special character)
+              </span>
+            </label>
+            <div className="relative">
+              <Input
+                {...register('password')}
+                type={showPassword ? "text" : "password"}
+                placeholder="********"
+                className="py-6 rounded-[16px] pr-12"
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-4 flex items-center"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-400" />
+                )}
+              </button>
+            </div>
+            
+            {/* Password Strength Indicator */}
+            {passwordValue && (
+              <div className="mt-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Password Strength:</span>
+                  <span className={`text-sm font-semibold ${getPasswordStrength(passwordValue).color}`}>
+                    {getPasswordStrength(passwordValue).strength}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      getPasswordStrength(passwordValue).score >= 4 ? 'bg-green-500' :
+                      getPasswordStrength(passwordValue).score >= 3 ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}
+                    style={{ width: `${(getPasswordStrength(passwordValue).score / 5) * 100}%` }}
+                  />
+                </div>
+                {getPasswordStrength(passwordValue).feedback.length > 0 && (
+                  <div className="text-xs text-gray-600">
+                    <span className="font-medium">Add:</span> {getPasswordStrength(passwordValue).feedback.join(', ')}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {errors.password && !passwordValue && (
+              <p className="text-red-600 text-sm mt-1">Please enter a password</p>
+            )}
+            {errors.password && passwordValue && getPasswordStrength(passwordValue).score < 4 && (
+              <p className="text-red-600 text-sm mt-1">
+                Please create a stronger password using the guidelines above
+              </p>
             )}
           </div>
 

@@ -86,3 +86,30 @@ class UserProfileUpdate(BaseModel):
                 # "avatar_url": "/avatars/avatar-1.png"  # Temporarily commented out
             }
         }
+
+
+class PasswordVerifyRequest(BaseModel):
+    """Schema for verifying current password."""
+    password: str
+
+
+class EmailCheckRequest(BaseModel):
+    """Schema for checking email availability."""
+    email: EmailStr
+
+
+class EmailChangeRequest(BaseModel):
+    """Schema for sending email change verification."""
+    new_email: EmailStr
+
+
+class EmailChangeVerifyRequest(BaseModel):
+    """Schema for verifying email change with OTP."""
+    new_email: EmailStr
+    verification_code: str
+
+
+class PasswordChangeRequest(BaseModel):
+    """Schema for changing password."""
+    current_password: str
+    new_password: str

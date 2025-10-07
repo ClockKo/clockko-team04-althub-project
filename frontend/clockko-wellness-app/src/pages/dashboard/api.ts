@@ -119,10 +119,12 @@ export async function fetchDashboardData() {
   if (!token) return null;
 
   try {
+    console.log('📊 Fetching dashboard data...')
     const res = await axios.get(`${API_BASE_URL}/api/dashboard/data`, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
+    console.log('📊 Dashboard data received:', res.data)
     return res.data
   } catch (e) {
     if (axios.isAxiosError(e) && e.response?.data?.message) {

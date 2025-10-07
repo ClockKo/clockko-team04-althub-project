@@ -24,7 +24,7 @@ class UserResponse(BaseModel):
     is_verified: bool = False
     is_active: bool = True
     otp_verified: bool = False
-    # onboarding_completed: bool = False  # Temporarily commented out due to missing DB column
+    onboarding_completed: bool = False
 
     @field_validator("id", mode="before")
     @classmethod
@@ -48,7 +48,7 @@ class UserResponse(BaseModel):
             is_verified=getattr(user_obj, "is_verified", False),
             is_active=getattr(user_obj, "is_active", True),
             otp_verified=getattr(user_obj, "otp_verified", False),
-            # onboarding_completed=getattr(user_obj, "onboarding_completed", False),  # Temporarily commented out
+            onboarding_completed=getattr(user_obj, "onboarding_completed", False),
         )
 
 
@@ -113,3 +113,23 @@ class PasswordChangeRequest(BaseModel):
     """Schema for changing password."""
     current_password: str
     new_password: str
+
+
+class OnboardingCompleteRequest(BaseModel):
+    """Schema for completing onboarding with user preferences."""
+    avatar_url: str | None = None
+    clock_in_time: str | None = None  # Format: "09:00 AM"
+    clock_out_time: str | None = None  # Format: "05:00 PM"
+    timezone: str | None = None
+    focus_goal: int | None = None  # Daily focus goal in minutes
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "avatar_url": "/avatars/avatar-1.png",
+                "clock_in_time": "09:00 AM",
+                "clock_out_time": "05:00 PM", 
+                "timezone": "America/New_York",
+                "focus_goal": 480
+            }
+        }

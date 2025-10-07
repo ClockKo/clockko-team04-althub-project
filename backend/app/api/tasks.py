@@ -46,6 +46,9 @@ def read_all(
     
     - **completed**: Filter by completion status (true/false)
     - **priority**: Filter by priority level (low/medium/high)
+    - **tags**: Comma-separated list of tags to filter by
+    - **due_today**: Filter tasks due today
+    - **upcoming**: Filter upcoming tasks (due in future and not completed)
     """
     user_id = current_user.id
     if not isinstance(user_id, UUID):
@@ -53,7 +56,6 @@ def read_all(
             user_id = UUID(str(user_id))
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid user ID")
-    return taskservice.get_tasks(db, user_id, completed=completed, priority=priority)
     
     # Parse tags from comma-separated string
     tags_list = None
@@ -147,7 +149,7 @@ def uncomplete_task(
             raise HTTPException(status_code=400, detail="Invalid user ID")
     
     from app.schemas.task import TaskUpdate
-    task_update = TaskUpdate(completed=False)
+    task_update = TaskUpdate(completed=False, completed_at=None)
     return taskservice.update_task(db, task_id, task_update, user_id)
 
 
@@ -164,7 +166,7 @@ def start_task_timer(
             user_id = UUID(str(user_id))
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid user ID")
-    return start_timer(db, task_id, user_id)
+    return taskservice.start_timer(db, task_id, user_id)
 
 
 @router.post("/{task_id}/stop-timer", response_model=TimeLogResponse)
@@ -180,7 +182,7 @@ def stop_task_timer(
             user_id = UUID(str(user_id))
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid user ID")
-    return stop_timer(db, task_id, user_id)
+    return taskservice.stop_timer(db, task_id, user_id)
 
 
 @router.get("/{task_id}/time-logs", response_model=List[TimeLogResponse])
@@ -196,4 +198,64 @@ def get_task_time_logs(
             user_id = UUID(str(user_id))
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid user ID")
-    return get_time_logs(db, task_id, user_id)
+    return taskservice.get_time_logs(db, task_id, user_id)
+
+
+@router.get("/status/today", response_model=List[TaskResponse])
+def get_tasks_for_today(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all tasks due today or scheduled to start today"""
+    user_id = current_user.id
+    if not isinstance(user_id, UUID):
+        try:
+            user_id = UUID(str(user_id))
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid user ID")
+    return taskservice.get_tasks(db, user_id, due_today=True)
+
+
+@router.get("/status/upcoming", response_model=List[TaskResponse])
+def get_upcoming_tasks(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all upcoming tasks (due in future and not completed)"""
+    user_id = current_user.id
+    if not isinstance(user_id, UUID):
+        try:
+            user_id = UUID(str(user_id))
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid user ID")
+    return taskservice.get_tasks(db, user_id, upcoming=True)
+
+
+@router.get("/status/completed", response_model=List[TaskResponse])
+def get_completed_tasks(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all completed tasks"""
+    user_id = current_user.id
+    if not isinstance(user_id, UUID):
+        try:
+            user_id = UUID(str(user_id))
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid user ID")
+    return taskservice.get_tasks(db, user_id, completed=True)
+
+
+@router.get("/status/pending", response_model=List[TaskResponse])
+def get_pending_tasks(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all pending (not completed) tasks"""
+    user_id = current_user.id
+    if not isinstance(user_id, UUID):
+        try:
+            user_id = UUID(str(user_id))
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid user ID")
+    return taskservice.get_tasks(db, user_id, completed=False)

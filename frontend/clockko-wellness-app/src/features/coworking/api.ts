@@ -238,3 +238,17 @@ export async function sendEmoji(roomId: string, emoji: string): Promise<any> {
     throw error;
   }
 }
+
+export async function deleteRoom(roomId: string): Promise<boolean> {
+  try {
+    console.log(`🗑️ Deleting room ${roomId}...`);
+    const response = await api.delete(`/coworking/rooms/${roomId}`);
+    const result = response.data;
+    
+    console.log('✅ Room deleted successfully:', result);
+    return result.success;
+  } catch (error) {
+    console.error(`❌ Failed to delete room ${roomId}:`, error);
+    throw error;
+  }
+}

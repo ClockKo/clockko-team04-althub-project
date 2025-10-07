@@ -1,12 +1,16 @@
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-from sqlalchemy import select, delete, update, func
+from sqlalchemy import select, delete, update, func as sql_func
 from fastapi import HTTPException, status
 from uuid import UUID
 from typing import Optional, List
 import logging
 from app.core.celery import celery_app
 from app.core.database import SessionLocal, get_db_session
+from app.models.task import Task
+from app.models.timelog import Timelog
+from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TimeLogResponse
+from kombu.exceptions import EncodeError
 from app.models.task import Task
 from app.models.timelog import Timelog
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TimeLogResponse
@@ -126,28 +130,31 @@ def get_tasks(session: Session, user_id: UUID, completed: Optional[bool] = None,
             
         # Filter by tags (if task has any of the specified tags)
         if tags:
-            from sqlalchemy import func
-            query = query.where(func.json_array_length(Task.tags) > 0)
+            query = query.where(sql_func.json_array_length(Task.tags) > 0)
             # This is a simplified check - for exact tag matching, you'd need more complex SQL
             
         # Filter for tasks due today
         if due_today:
-            from datetime import date
-            today = date.today()
-            query = query.where(func.date(Task.due_date) == today)
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
+            start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_of_today = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+            query = query.where(Task.due_date >= start_of_today, Task.due_date <= end_of_today)
             
-        # Filter for upcoming tasks (due in the future, not completed)
+        # Filter for upcoming tasks (due in the future, not completed, not due today)
         if upcoming:
             from datetime import datetime, timezone
             now = datetime.now(timezone.utc)
-            query = query.where(Task.due_date > now, Task.completed == False)
+            end_of_today = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+            query = query.where(Task.due_date > end_of_today, Task.completed == False)
             
         # Order by priority (high first) and due date
-        priority_order = func.case(
+        from sqlalchemy import case
+        priority_order = case(
             (Task.priority == 'high', 1),
             (Task.priority == 'medium', 2),
             (Task.priority == 'low', 3),
-            else_=2
+            else_=4
         )
         query = query.order_by(priority_order, Task.due_date.asc().nullslast(), Task.created_at.desc())
         

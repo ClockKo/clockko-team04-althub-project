@@ -55,24 +55,61 @@ def get_last_session(db: Session = Depends(get_db), user = Depends(get_current_u
 def get_dashboard_data(db: Session = Depends(get_db), user = Depends(get_current_user)):
     # Get dashboard data for the frontend
     try:
-        # Get tasks (this might need to be implemented)
-        tasks = taskservice.get_user_tasks(db, user.id) if hasattr(taskservice, 'get_user_tasks') else []
+        # Get all tasks
+        all_tasks = taskservice.get_tasks(db, user.id)
+        
+        # Get tasks for today's progress - includes:
+        # 1. Tasks due today (regardless of completion status) 
+        # 2. Tasks updated today (approximation until completed_at field is added)
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_today = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        today_progress_tasks = []
+        for task in all_tasks:
+            # Include if due today (handle timezone-naive dates)
+            if task.due_date:
+                # Make due_date timezone-aware if it's naive
+                due_date = task.due_date
+                if due_date.tzinfo is None:
+                    due_date = due_date.replace(tzinfo=timezone.utc)
+                if start_of_today <= due_date <= end_of_today:
+                    today_progress_tasks.append(task)
+            # Include if updated today and completed (approximation until we have completed_at)
+            elif task.completed and task.updated_at:
+                # Make updated_at timezone-aware if it's naive
+                updated_at = task.updated_at
+                if updated_at.tzinfo is None:
+                    updated_at = updated_at.replace(tzinfo=timezone.utc)
+                if start_of_today <= updated_at <= end_of_today:
+                    today_progress_tasks.append(task)
+        
+        # Remove duplicates
+        today_progress_tasks = list({task.id: task for task in today_progress_tasks}.values())
         
         # Get today's focus time
         total_focus_time = timetrackerservice.get_focus_time(db, user.id)
+        print(f"🎯 Dashboard focus time for user {user.id}: {total_focus_time} seconds")
         
         # Return data in expected format
         return {
-            "tasks": tasks,
+            "tasks": all_tasks,
+            "todayTasks": today_progress_tasks,  # Tasks relevant to today's progress
             "todaySummary": {
                 "duration": total_focus_time
             },
             "points": 0  # Placeholder for user points/streak
         }
     except Exception as e:
+        print(f"❌ Dashboard API error: {e}")
+        print(f"❌ Exception type: {type(e)}")
+        import traceback
+        print(f"❌ Full traceback: {traceback.format_exc()}")
         # Return default data if there's an error
         return {
             "tasks": [],
+            "todayTasks": [],
             "todaySummary": {
                 "duration": 0
             },
@@ -136,11 +173,17 @@ def get_shutdown_summary(db: Session = Depends(get_db), user = Depends(get_curre
         # Get today's focus time
         total_focus_time = timetrackerservice.get_focus_time(db, user.id)
         
-        # Get tasks (placeholder - implement when task service is ready)
-        tasks_completed = 0
-        tasks_total = 0
-        pending_tasks = 0
-        today_tasks = []
+        # Get today's tasks
+        today_tasks_data = taskservice.get_tasks(db, user.id, due_today=True)
+        tasks_completed = len([t for t in today_tasks_data if t.completed])
+        tasks_total = len(today_tasks_data)
+        pending_tasks = tasks_total - tasks_completed
+        
+        # Transform tasks for frontend
+        today_tasks = [
+            {"name": task.title, "completed": task.completed} 
+            for task in today_tasks_data
+        ]
         
         # Calculate other metrics
         focus_goal = 120  # Default 2 hours in minutes

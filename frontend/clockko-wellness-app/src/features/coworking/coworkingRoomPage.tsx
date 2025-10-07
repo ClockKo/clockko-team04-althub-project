@@ -91,6 +91,7 @@ export default function CoWorkingRoomsPage() {
           <div className="text-gray-600">Work together, stay focused</div>
         </div>
       </div>
+      
       <div className="font-semibold text-lg mb-3">Available Rooms</div>
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

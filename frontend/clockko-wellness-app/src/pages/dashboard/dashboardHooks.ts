@@ -36,6 +36,8 @@ export function useDashboardData() {
     queryKey: ["dashboardData"],
     queryFn: fetchDashboardData,
     retry: false,
+    staleTime: 0, // Always consider data stale to force refresh when invalidated
+    refetchOnWindowFocus: true, // Refetch when window gets focus
   });
 }
 

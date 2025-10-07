@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.schemas import user as schema
 from app.services import userservice
 from app.models.user import User
+from app.models.user_settings import UserSettings
 from app.core.database import get_db
 from app.core.auth import get_current_user
 from app.core.security import create_access_token, hash_password, verify_password
@@ -455,3 +456,47 @@ def change_password(
         db.rollback()
         logger.error(f"Password change failed for user {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Password change failed: {str(e)}")
+
+
+@router.post("/complete-onboarding", response_model=schema.UserResponse)
+async def complete_onboarding(
+    onboarding_data: schema.OnboardingCompleteRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Complete user onboarding and save preferences"""
+    try:
+        # Update user avatar and mark onboarding as completed
+        if onboarding_data.avatar_url:
+            current_user.avatar_url = onboarding_data.avatar_url
+        
+        current_user.onboarding_completed = True
+        
+        # Create or update user settings
+        user_settings = db.query(UserSettings).filter(UserSettings.user_id == current_user.id).first()
+        
+        if not user_settings:
+            user_settings = UserSettings(user_id=current_user.id)
+            db.add(user_settings)
+        
+        # Update settings with onboarding preferences
+        if onboarding_data.clock_in_time:
+            user_settings.clock_in_time = onboarding_data.clock_in_time
+        if onboarding_data.clock_out_time:
+            user_settings.clock_out_time = onboarding_data.clock_out_time
+        if onboarding_data.timezone:
+            user_settings.timezone = onboarding_data.timezone
+        if onboarding_data.focus_goal:
+            user_settings.focus_goal = onboarding_data.focus_goal
+        
+        db.commit()
+        db.refresh(current_user)
+        
+        # Return updated user data
+        user_resp = schema.UserResponse.from_user_model(current_user)
+        return user_resp.model_dump()
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Onboarding completion failed for user {current_user.id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Onboarding completion failed: {str(e)}")

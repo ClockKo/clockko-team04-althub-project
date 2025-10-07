@@ -106,7 +106,7 @@ export async function saveOnboardingSettings(settings: OnboardingSettings): Prom
   }
 }
 
-// Complete onboarding API call - combines settings save with onboarding completion
+// Complete onboarding API call - uses the new complete-onboarding endpoint
 export async function completeOnboarding(onboardingData: {
   selectedDays: string[];
   clockOut: { hour: string; minute: string };
@@ -117,17 +117,47 @@ export async function completeOnboarding(onboardingData: {
     break: boolean;
     tasks: boolean;
   };
+  avatar?: string;
 }): Promise<void> {
   try {
-    // Convert onboarding data to settings format
-    const settings = convertOnboardingToSettings(onboardingData);
+    // Convert clock out time to 12-hour format for API
+    const clockOutHour = parseInt(onboardingData.clockOut.hour);
+    const clockOutMinute = parseInt(onboardingData.clockOut.minute);
+    const clockOutTime = `${clockOutHour.toString().padStart(2, '0')}:${clockOutMinute.toString().padStart(2, '0')} ${onboardingData.ampm}`;
     
-    // Save settings to backend
-    await saveOnboardingSettings(settings);
+    // Convert focus timer to daily focus goal in minutes
+    const focusHours = parseInt(onboardingData.focusTimer.hour) || 0;
+    const focusMinutes = parseInt(onboardingData.focusTimer.minute) || 30;
+    const focusGoal = (focusHours * 60) + focusMinutes;
     
-    console.log('Onboarding completed successfully with settings:', settings);
+    // Prepare onboarding completion data
+    const completionData = {
+      avatar_url: onboardingData.avatar || null,
+      clock_in_time: "09:00 AM", // Default clock-in time
+      clock_out_time: clockOutTime,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, // Auto-detect timezone
+      focus_goal: focusGoal
+    };
+    
+    console.log('Completing onboarding with data:', completionData);
+    
+    const api = createApiInstance();
+    const response = await api.post('/auth/complete-onboarding', completionData);
+    
+    if (response.status !== 200) {
+      throw new Error(`Failed to complete onboarding: ${response.status}`);
+    }
+    
+    console.log('Onboarding completed successfully:', response.data);
+    return response.data;
   } catch (error: any) {
     console.error('Error completing onboarding:', error);
-    throw error; // Re-throw to be handled by the UI
+    
+    // Provide user-friendly error messages
+    const errorMessage = error.response?.data?.detail || 
+                        error.message || 
+                        'Failed to complete onboarding. Please try again.';
+    
+    throw new Error(errorMessage);
   }
 }

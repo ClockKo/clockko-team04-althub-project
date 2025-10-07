@@ -2,8 +2,10 @@ import React from 'react';
 import { Button } from '../../../components/ui/button';
 import { Switch } from '../../../components/ui/switch';
 import { Smartphone, Monitor } from 'lucide-react';
+import { useUserData } from '../../../pages/dashboard/dashboardHooks';
 
 const SecuritySettings: React.FC = () => {
+  const { data: userData, isLoading, error } = useUserData();
   return (
     <div className="p-4 md:p-6">
       <h1 className="text-2xl font-bold mb-6 text-gray-900">Account security</h1>
@@ -16,7 +18,9 @@ const SecuritySettings: React.FC = () => {
           <div className="flex justify-between items-center">
             <div>
               <h4 className="font-medium text-gray-800">Email</h4>
-              <p className="text-sm text-gray-500">femihemsworth@gmail.com</p>
+              <p className="text-sm text-gray-500">
+                {isLoading ? 'Loading...' : error ? 'Unable to load email' : userData?.email || 'No email found'}
+              </p>
             </div>
             <Button variant="outline">Change email</Button>
           </div>

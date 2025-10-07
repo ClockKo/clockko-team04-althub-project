@@ -23,8 +23,6 @@ class Task(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
     reminder_enabled = Column(Boolean, default=False)
     reminder_time = Column(DateTime, nullable=True)
-    
-    # New fields for enhanced task tracking
     start_date = Column(DateTime, nullable=True)  # When user plans to start the task
     due_date = Column(DateTime, nullable=True)    # When the task is due
     completed = Column(Boolean, default=False, nullable=False)  # Task completion status

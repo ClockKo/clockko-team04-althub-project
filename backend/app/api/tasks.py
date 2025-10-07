@@ -35,7 +35,6 @@ def create(
 def read_all(
     completed: bool = None,
     priority: str = None,
-    priority: str = None, 
     tags: str = None,  # Comma-separated tags
     due_today: bool = None,
     upcoming: bool = None,

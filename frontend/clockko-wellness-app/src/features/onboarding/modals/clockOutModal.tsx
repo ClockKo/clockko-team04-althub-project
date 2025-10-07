@@ -23,27 +23,79 @@ export function ClockOutModal({
   step = 2,
   totalSteps = 5,
 }: ClockOutModalProps) {
-  // Input handlers
-  // Only allow 12-hour values
   const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let time = e.target.value.replace(/\D/g, '') // only digits
-    if (time.length > 2) time = time.slice(0, 2)
-    let hourNum = parseInt(time, 10)
-    if (isNaN(hourNum)) hourNum = 0
-    if (hourNum > 12) hourNum = 12
-    if (hourNum < 1 && time.length > 0) hourNum = 1
-    // Set minutes to 00 by default if hour is entered
-    setClockOut({ hour: hourNum ? hourNum.toString().padStart(2, '0') : '', minute: '00' })
-  }
+    let value = e.target.value;
+    
+    // Allow empty input and single digit
+    if (value === '') {
+      setClockOut({ ...clockOut, hour: '' });
+      return;
+    }
+
+    // Remove non-digits
+    value = value.replace(/\D/g, '');
+
+    // Handle single digit
+    if (value.length === 1) {
+      const digit = parseInt(value);
+      if (digit >= 0) {
+        setClockOut({ ...clockOut, hour: value });
+        return;
+      }
+    }
+
+    // Handle two digits
+    if (value.length >= 2) {
+      const num = parseInt(value.slice(0, 2));
+      if (num >= 1 && num <= 12) {
+        setClockOut({ ...clockOut, hour: num.toString().padStart(2, '0') });
+      } else if (num === 0) {
+        setClockOut({ ...clockOut, hour: '12' });
+      } else {
+        // If number is > 12, take the last digit only
+        setClockOut({ ...clockOut, hour: value.slice(-1) });
+      }
+    }
+  };
 
   const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let time = e.target.value.replace(/\D/g, '') // only digits
-    if (time.length > 2) time = time.slice(0, 2)
-    let minNum = parseInt(time, 10)
-    if (isNaN(minNum)) minNum = 0
-    if (minNum > 59) minNum = 59
-    setClockOut({ ...clockOut, minute: minNum.toString().padStart(2, '0') })
-  }
+    let value = e.target.value;
+    
+    // Allow empty input
+    if (value === '') {
+      setClockOut({ ...clockOut, minute: '' });
+      return;
+    }
+
+    // Remove non-digits
+    value = value.replace(/\D/g, '');
+
+    // Handle single digit
+    if (value.length === 1) {
+      const digit = parseInt(value);
+      if (digit >= 0) {
+        setClockOut({ ...clockOut, minute: value });
+        return;
+      }
+    }
+
+    // Handle two digits
+    if (value.length >= 2) {
+      const num = parseInt(value.slice(0, 2));
+      if (num >= 0 && num <= 59) {
+        setClockOut({ ...clockOut, minute: num.toString().padStart(2, '0') });
+      } else {
+        // If number is > 59, take the first valid number from the last two digits
+        const lastTwo = value.slice(-2);
+        const lastTwoNum = parseInt(lastTwo);
+        if (lastTwoNum <= 59) {
+          setClockOut({ ...clockOut, minute: lastTwo });
+        } else {
+          setClockOut({ ...clockOut, minute: '59' });
+        }
+      }
+    }
+  };
 
   // Modal content
   return (
@@ -81,7 +133,6 @@ export function ClockOutModal({
             <input
               type="text"
               inputMode="numeric"
-              pattern="\d{1,2}"
               maxLength={2}
               value={clockOut.hour}
               onChange={handleHourChange}
@@ -93,14 +144,12 @@ export function ClockOutModal({
             <input
               type="text"
               inputMode="numeric"
-              pattern="\d{1,2}"
               maxLength={2}
               value={clockOut.minute}
               onChange={handleMinuteChange}
-              placeholder="00"
+              placeholder="MM"
               aria-label="Minute"
               className="w-15 xs:w-12 text-center text-3xl xs:text-4xl font-bold bg-transparent outline-none border-none"
-              disabled={!clockOut.hour}
             />
           </div>
 

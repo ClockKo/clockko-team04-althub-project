@@ -23,17 +23,83 @@ export function FocusModal({
   // State for editing mode
   const [editing, setEditing] = useState<boolean>(false)
 
-  // Input handlers
+  // Input handlers for hours and minutes
   const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let time = e.target.value.replace(/\D/, '') // only digits
-    if (time.length > 2) time = time.slice(0, 2)
-    setFocusTimer({ ...focusTimer, hour: time })
+    let value = e.target.value;
+    
+    // Allow empty input
+    if (value === '') {
+      setFocusTimer({ ...focusTimer, hour: '' });
+      return;
+    }
+
+    // Remove non-digits
+    value = value.replace(/\D/g, '');
+
+    // Handle single digit
+    if (value.length === 1) {
+      const digit = parseInt(value);
+      if (digit >= 0) {
+        setFocusTimer({ ...focusTimer, hour: value });
+        return;
+      }
+    }
+
+    // Handle two digits
+    if (value.length >= 2) {
+      const num = parseInt(value.slice(0, 2));
+      if (num >= 0 && num <= 23) {
+        setFocusTimer({ ...focusTimer, hour: num.toString().padStart(2, '0') });
+      } else {
+        // If number is > 23, take the first valid number from the last two digits
+        const lastTwo = value.slice(-2);
+        const lastTwoNum = parseInt(lastTwo);
+        if (lastTwoNum <= 23) {
+          setFocusTimer({ ...focusTimer, hour: lastTwo });
+        } else {
+          setFocusTimer({ ...focusTimer, hour: '23' });
+        }
+      }
+    }
   }
 
   const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let time = e.target.value.replace(/\D/, '') // only digits
-    if (time.length > 2) time = time.slice(0, 2)
-    setFocusTimer({ ...focusTimer, minute: time })
+    let value = e.target.value;
+    
+    // Allow empty input
+    if (value === '') {
+      setFocusTimer({ ...focusTimer, minute: '' });
+      return;
+    }
+
+    // Remove non-digits
+    value = value.replace(/\D/g, '');
+
+    // Handle single digit
+    if (value.length === 1) {
+      const digit = parseInt(value);
+      if (digit >= 0) {
+        setFocusTimer({ ...focusTimer, minute: value });
+        return;
+      }
+    }
+
+    // Handle two digits
+    if (value.length >= 2) {
+      const num = parseInt(value.slice(0, 2));
+      if (num >= 0 && num <= 59) {
+        setFocusTimer({ ...focusTimer, minute: num.toString().padStart(2, '0') });
+      } else {
+        // If number is > 59, take the first valid number from the last two digits
+        const lastTwo = value.slice(-2);
+        const lastTwoNum = parseInt(lastTwo);
+        if (lastTwoNum <= 59) {
+          setFocusTimer({ ...focusTimer, minute: lastTwo });
+        } else {
+          setFocusTimer({ ...focusTimer, minute: '59' });
+        }
+      }
+    }
   }
 
   const handleSet = () => setEditing(false)
@@ -76,7 +142,7 @@ export function FocusModal({
               onChange={handleHourChange}
               className="w-15 xs:w-12 text-center text-3xl xs:text-4xl font-bold bg-transparent outline-none"
               placeholder="00"
-              aria-label="Hour"
+              aria-label="Hours"
               onFocus={() => setEditing(true)}
             />
             <span className="text-3xl xs:text-4xl font-bold">:</span>
@@ -89,7 +155,7 @@ export function FocusModal({
               onChange={handleMinuteChange}
               className="w-15 xs:w-12 text-center text-3xl xs:text-4xl font-bold bg-transparent outline-none"
               placeholder="00"
-              aria-label="Minute"
+              aria-label="Minutes"
               onFocus={() => setEditing(true)}
             />
           </div>
@@ -106,7 +172,7 @@ export function FocusModal({
           </div>
         </div>
         {/* Navigation buttons */}
-        <div className="flex justify-between gap-2 flex-col flex-col-reverse lg:flex-row">
+        <div className="flex justify-between gap-2 flex-col-reverse lg:flex-row">
           <Button
             variant="ghost"
             className="md:w-[20%] font-thin cursor-pointer text-blue1 hover:bg-gray-200/50 hover:text-blue-900/80 w-full text-center"

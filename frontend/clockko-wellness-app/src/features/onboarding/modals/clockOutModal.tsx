@@ -24,16 +24,25 @@ export function ClockOutModal({
   totalSteps = 5,
 }: ClockOutModalProps) {
   // Input handlers
+  // Only allow 12-hour values
   const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let time = e.target.value.replace(/\D/, '') // only digits
+    let time = e.target.value.replace(/\D/g, '') // only digits
     if (time.length > 2) time = time.slice(0, 2)
-    setClockOut({ ...clockOut, hour: time })
+    let hourNum = parseInt(time, 10)
+    if (isNaN(hourNum)) hourNum = 0
+    if (hourNum > 12) hourNum = 12
+    if (hourNum < 1 && time.length > 0) hourNum = 1
+    // Set minutes to 00 by default if hour is entered
+    setClockOut({ hour: hourNum ? hourNum.toString().padStart(2, '0') : '', minute: '00' })
   }
 
   const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let time = e.target.value.replace(/\D/, '') // only digits
+    let time = e.target.value.replace(/\D/g, '') // only digits
     if (time.length > 2) time = time.slice(0, 2)
-    setClockOut({ ...clockOut, minute: time })
+    let minNum = parseInt(time, 10)
+    if (isNaN(minNum)) minNum = 0
+    if (minNum > 59) minNum = 59
+    setClockOut({ ...clockOut, minute: minNum.toString().padStart(2, '0') })
   }
 
   // Modal content
@@ -76,7 +85,7 @@ export function ClockOutModal({
               maxLength={2}
               value={clockOut.hour}
               onChange={handleHourChange}
-              placeholder="00"
+              placeholder="HH"
               aria-label="Hour"
               className="w-15 xs:w-12 text-center text-3xl xs:text-4xl font-bold bg-transparent outline-none border-none"
             />
@@ -91,6 +100,7 @@ export function ClockOutModal({
               placeholder="00"
               aria-label="Minute"
               className="w-15 xs:w-12 text-center text-3xl xs:text-4xl font-bold bg-transparent outline-none border-none"
+              disabled={!clockOut.hour}
             />
           </div>
 
@@ -127,7 +137,7 @@ export function ClockOutModal({
           <Button
             variant="ghost"
             onClick={onNext}
-            disabled={!clockOut.hour || !clockOut.minute}
+            disabled={!(clockOut.hour && clockOut.minute.length === 2)}
             className="w-full md:w-[20%] bg-blue1 text-white xs:px-6 xs:py-2 text-base rounded-lg hover:bg-blue-900/80 transition duration-200 scale-100 ease-in-out shadow-md cursor-pointer"
           >
             Next

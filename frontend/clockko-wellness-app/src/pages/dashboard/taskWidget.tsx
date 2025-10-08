@@ -53,17 +53,17 @@ export function TaskBacklogCard() {
             </div>
           ) : (
             <div className="space-y-2">
-              <div className="text-gray-600 text-sm">{pendingTasks} tasks pending</div>
+              <div className="text-gray-600 text-sm text-center">{pendingTasks} tasks pending</div>
               <div className="space-y-1">
                 {today.length > 0 && (
-                  <div className="text-xs text-blue-600">📅 {today.length} due today</div>
+                  <div className="text-sm text-blue-600 text-center">📅 {today.length} due today</div>
                 )}
                 {upcoming.length > 0 && (
-                  <div className="text-xs text-orange-600">⏰ {upcoming.length} upcoming</div>
+                  <div className="text-xs text-orange-600 text-center">⏰ {upcoming.length} upcoming</div>
                 )}
               </div>
               {totalTasks > 0 && (
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-500 text-center">
                   Total: {totalTasks} tasks
                 </div>
               )}

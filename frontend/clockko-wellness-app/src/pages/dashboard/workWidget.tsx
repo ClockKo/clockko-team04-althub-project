@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { Button } from '../../components/ui/button'
 import { BriefcaseBusiness } from 'lucide-react'
-// import { debugAuth } from '../../utils/authDebug'
+
 type WorkSession = {
   session_id?: string
   start_time?: string
@@ -125,11 +125,10 @@ export function WorkSessionCard({
                     if (session?.start_time) {
                       const finalDuration = formatDuration(session.start_time)
                       setDuration(finalDuration)
-                      console.log('⏹️ Session stopped with final duration:', finalDuration)
+                      // console.log('⏹️ Session stopped with final duration:', finalDuration)
                     }
                     
                     await onClockOut()
-                    console.log('✅ Clock-out completed successfully')
                   } catch (error) {
                     // If clock-out failed, revert the forced states
                     setForceStopTimer(false)
@@ -154,9 +153,9 @@ export function WorkSessionCard({
             {(session?.end_time || (session?.start_time && forceStopTimer)) && duration && (
               <div className="text-sm text-gray-600 mb-2">
                 <div className="font-medium text-green-600">✅ Session Completed</div>
-                <div className="text-blue-600 font-semibold text-lg">{duration}</div>
+                <div className="text-blue1 font-semibold text-lg text-center">{duration}</div>
                 {session?.end_time && (
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 text-center">
                     Ended: {new Date(session.end_time).toLocaleTimeString()}
                   </div>
                 )}
@@ -180,9 +179,7 @@ export function WorkSessionCard({
                   try {
                     // Reset any forced states before clock-in
                     setForceStopTimer(false)
-                    setForceInactiveUI(false)
-                    console.log('🚀 Starting new work session')
-                    
+                    setForceInactiveUI(false)                    
                     await onClockIn()
                   } finally {
                     setIsClockingIn(false)

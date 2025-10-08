@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { Button } from '../../components/ui/button'
 import { BriefcaseBusiness } from 'lucide-react'
-// import { debugAuth } from '../../utils/authDebug'
+
 type WorkSession = {
   session_id?: string
   start_time?: string
@@ -125,11 +125,10 @@ export function WorkSessionCard({
                     if (session?.start_time) {
                       const finalDuration = formatDuration(session.start_time)
                       setDuration(finalDuration)
-                      console.log('⏹️ Session stopped with final duration:', finalDuration)
+                      // console.log('⏹️ Session stopped with final duration:', finalDuration)
                     }
                     
                     await onClockOut()
-                    console.log('✅ Clock-out completed successfully')
                   } catch (error) {
                     // If clock-out failed, revert the forced states
                     setForceStopTimer(false)
@@ -180,9 +179,7 @@ export function WorkSessionCard({
                   try {
                     // Reset any forced states before clock-in
                     setForceStopTimer(false)
-                    setForceInactiveUI(false)
-                    console.log('🚀 Starting new work session')
-                    
+                    setForceInactiveUI(false)                    
                     await onClockIn()
                   } finally {
                     setIsClockingIn(false)

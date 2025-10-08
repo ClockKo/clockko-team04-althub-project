@@ -3,8 +3,3 @@ export * from './coworkingRoomPage';
 export * from './roomView';
 export * from './memberList';
 export * from './hooks/usePresence';
-export * from './test/api.test';
-export * from './test/coworkingRoom.test';
-export * from './test/roomList.test';
-export * from './test/memberList.test';
-export * from './test/usePresence.test';

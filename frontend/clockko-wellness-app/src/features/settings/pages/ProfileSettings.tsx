@@ -35,20 +35,13 @@ import {
   AlertDialogAction,
   AlertDialogCancel
 } from '../../../components/ui/alert-dialog';
+import {
+  getAvatarUrl,
+  setDeletedAvatarName,
+  clearDeletedAvatarName
+} from '../../../utils/avatarUtils';
 
-  // Helper to get initials from name
-  function getInitials(name: string | undefined) {
-    if (!name) return 'U';
-    const parts = name.split(' ');
-    if (parts.length === 1) return parts[0][0].toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
 
-  // Default avatar fallback: initials
-  function getAvatarUrl(user: any) {
-    if (user?.avatar_url) return user.avatar_url;
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(getInitials(user?.name))}&background=E0E7FF&color=1E40AF&size=128`;
-  }
 
 const ProfileSettings: React.FC = () => {
   const navigate = useNavigate();
@@ -84,16 +77,17 @@ const ProfileSettings: React.FC = () => {
     try {
       setUploadingAvatar(true);
       
+      // Store the current name to preserve avatar initials
+      if (user.id && user.name) {
+        setDeletedAvatarName(user.id, user.name);
+      }
+      
       // Invalidate cache before update
       await queryClient.invalidateQueries({ queryKey: ['userData'] });
       
-      // Explicitly set avatar to null to indicate deletion
+      // Set avatar to null to delete it
       const response = await updateUserProfile({ avatar: null });
       console.log('Delete avatar response:', response);
-      
-      if (response && response.avatar_url !== null) {
-        throw new Error('Server did not properly delete avatar');
-      }
       
       // Force immediate refetch using shared query config
       const updatedData = await queryClient.fetchQuery(userDataQuery);
@@ -168,6 +162,11 @@ const ProfileSettings: React.FC = () => {
           
           if (!response || !response.avatar_url) {
             throw new Error('Server did not return updated avatar URL');
+          }
+          
+          // Clear the stored name since user uploaded a new avatar
+          if (user?.id) {
+            clearDeletedAvatarName(user.id);
           }
           
           // Force immediate refetch using shared query config

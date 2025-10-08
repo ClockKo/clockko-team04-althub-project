@@ -213,8 +213,9 @@ def update_user_profile(
         if profile_update.phone_number is not None:
             current_user.phone_number = profile_update.phone_number
         
-        # Handle avatar update/deletion
-        if profile_update.avatar_url is not None or hasattr(profile_update, 'avatar_url'):
+        # Handle avatar update/deletion only when explicitly provided
+        request_dict = profile_update.model_dump(exclude_unset=True)
+        if 'avatar_url' in request_dict:
             logger.info(f"Updating avatar_url. Current: {current_user.avatar_url}, New: {profile_update.avatar_url}")
             # Set the new avatar_url value
             current_user.avatar_url = profile_update.avatar_url

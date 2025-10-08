@@ -62,17 +62,19 @@ export const LandingPage: React.FC = () => {
     <main className="font-sans bg-white text-gray-900 overflow-hidden">
          {/* Logo */}
           <div className="flex justify-between items-center mb-6 px-8 pt-6 max-w-8xl mx-auto w-full">
+            <Link className="cursor-pointer" to="/">
             <img src={frame1} alt="Logo" className="w-20 md:w-30 md:translate-x-[50%]" />
+            </Link>
               {/* login/sign up button */}
             <div className="text-[.7rem] p-2 z-10">
               <Link to="/signin" className="mr-[5px]">
-                <Button variant="outline" className="border-blue1 text-blue1 px-6 py-2 rounded-[50px] md:px-10">
+                <Button variant="outline" className="border-blue1 text-blue1 px-6 py-2 rounded-[50px] md:px-10 hover:bg-blue1 hover:text-white hover:transition duration-300 ease-in-out cursor-pointer">
                   Log In
                 </Button>
               </Link>
               <Link to="/create-account" className="">
-                <Button className="bg-blue1 text-white px-6 py-2 rounded-[50px] md:px-10">
-                  Sign Up
+                <Button className="bg-blue1 text-white px-6 py-2 rounded-[50px] md:px-10 hover:bg-white hover:transition duration-300 ease-in-out hover:text-blue1 hover:border hover:border-blue1 cursor-pointer">
+                  Sign Up 
                 </Button>
               </Link>
             </div>
@@ -109,9 +111,11 @@ export const LandingPage: React.FC = () => {
             whileTap={{ scale: 0.97 }}
             className="inline-block text-xs md:text-sm font-sans"
           >
-            <Button className="bg-blue1 text-white rounded-full px-6 py-2 text-base font-semibold shadow-md hover:bg-blue-700/80 transition mx-auto translate-x-15 md:mx-0 md:translate-x-0 font-inherit">
-              Get Started for Free <span className="ml-2"><MoveUpRight /></span>
+            <Link to="/create-account">
+            <Button className="bg-blue1 text-white rounded-full px-6 py-2 text-base font-semibold shadow-md hover:bg-blue-900/70 transition mx-auto translate-x-15 md:mx-0 md:translate-x-0 font-inherit cursor-pointer">
+              Get Started for Free <span className="ml-2"><MoveUpRight /></span>  
             </Button>
+            </Link>
           </motion.div>
         </div>
         {/* Right - Image */}
@@ -243,9 +247,11 @@ export const LandingPage: React.FC = () => {
           whileTap={{ scale: 0.97 }}
           className="inline-block font-sans text-xs"
         >
-          <Button className="bg-blue1 font-sans text-white rounded-full px-6 py-2 text-base font-semibold shadow-md hover:bg-blue-700 transition">
+          <Link to="/create-account">
+          <Button className="bg-blue1 font-sans text-white rounded-full px-6 py-2 text-base font-semibold shadow-md hover:bg-blue-900/70 transition cursor-pointer">
             Get Started for Free
           </Button>
+          </Link>
         </motion.div>
       </motion.section>
 

@@ -36,8 +36,8 @@ import clockkoLogo from '../../assets/images/frame1.png'
 import { useIsMobile } from '../../hooks/use-mobile'
 import { SidebarProvider } from '../../components/ui/sidebar'
 import ellipse6 from '../../assets/images/Ellipse6.png'
-// import { processAvatarImage, validateImageFile } from '../../utils/imageProcessing'
-// import toast from 'react-hot-toast'
+import { processAvatarImage, validateImageFile } from '../../utils/imageProcessing'
+import toast from 'react-hot-toast'
 
 
 
@@ -155,13 +155,11 @@ export default function MainLayout() {
         <SidebarHeader className="p-4">
           <div className="flex items-center justify-between">
             {!collapsed && (
-              <Link className="cursor-pointer" to="/dashboard">
               <img
                 src={clockkoLogo}
                 alt="ClockKo Logo"
                 className="w-30 h-8 transition-all duration-300"
               />
-                </Link>
             )}
             {/* Desktop collapse toggle */}
             <button

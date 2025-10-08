@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import frame1 from '../../assets/images/brandLogo1.png';
-import frame2 from '../../assets/images/brandLogo2.png';
+import frame1 from '../../assets/images/brandLogo2.png';
 import authImage from '../../assets/images/signup-image.jpg'
 
 // Add hideHeader to the component's props
@@ -34,7 +33,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children, hideHeader = false })
           {/* Always show logo at the top on mobile */}
           <div className="md:hidden w-full flex justify-center mb-8 mt-4">
             <Link to="/">
-              <img src={frame2} alt="ClockKo Logo" className="w-30" />
+              <img src={frame1} alt="ClockKo Logo" className="w-30" />
             </Link>
           </div>
           {/* Only show desktop header logo if not hideHeader */}

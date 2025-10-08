@@ -3,13 +3,19 @@ import boto3
 import json
 from dotenv import load_dotenv
 
-def get_secret(secret_name: str, region_name: str = "eu-west-1"):
+def get_secret(secret_name: str, region_name: str | None = None):
     """
-    Fetch secret from AWS Secrets Manager
+    Fetch secret from AWS Secrets Manager. Region is resolved from AWS_REGION env
+    if not explicitly provided.
     """
-    client = boto3.client("secretsmanager", region_name=region_name)
+    region = region_name or os.getenv("AWS_REGION", os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
+    client = boto3.client("secretsmanager", region_name=region)
     response = client.get_secret_value(SecretId=secret_name)
-    return json.loads(response["SecretString"])
+    # The secret can be a JSON string or plain text. Try JSON first.
+    try:
+        return json.loads(response.get("SecretString", "{}"))
+    except json.JSONDecodeError:
+        return {"value": response.get("SecretString", "")}
 
 class Settings:
     def __init__(self):
@@ -19,24 +25,51 @@ class Settings:
         # ====================
         # Database
         # ====================
-        try:
-            db_creds = get_secret("clockko-db-creds")
-            self.DATABASE_URL = (
-                f"postgresql://{db_creds['username']}:{db_creds['password']}@"
-                f"{db_creds['host']}/{db_creds['dbname']}"
-            )
-        except Exception:
+        # Prefer direct DATABASE_URL if provided (e.g., injected from Secrets Manager by ECS)
+        db_url_secret_name = os.getenv("DB_URL_SECRET_NAME", "")
+        db_creds_secret_name = os.getenv("DB_CREDS_SECRET_NAME", "")
+
+        self.DATABASE_URL = os.getenv("DATABASE_URL", "")
+        if not self.DATABASE_URL and db_url_secret_name:
+            # Try a secret that stores the full URL
+            try:
+                db_url_secret = get_secret(db_url_secret_name)
+                # Support either {"value": "postgresql://..."} or raw string under key DATABASE_URL
+                self.DATABASE_URL = (
+                    db_url_secret.get("DATABASE_URL")
+                    or db_url_secret.get("value")
+                    or ""
+                )
+            except Exception:
+                self.DATABASE_URL = ""
+
+        if not self.DATABASE_URL and db_creds_secret_name:
+            # Build URL from discrete creds stored in a secret
+            try:
+                db_creds = get_secret(db_creds_secret_name)
+                self.DATABASE_URL = (
+                    f"postgresql://{db_creds['username']}:{db_creds['password']}@"
+                    f"{db_creds['host']}/{db_creds.get('dbname') or db_creds.get('db_name') or 'postgres'}"
+                )
+            except Exception:
+                self.DATABASE_URL = ""
+
+        if not self.DATABASE_URL:
             # Fallback for local development
             self.DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./clockko.db")
 
         # ====================
         # Security (JWT)
         # ====================
-        try:
-            jwt_secret = get_secret("clockko-jwt-secret")
-            self.SECRET_KEY = jwt_secret["SECRET_KEY"]
-        except Exception:
-            self.SECRET_KEY = os.getenv("SECRET_KEY", "your-local-secret")
+        # Prefer SECRET_KEY env (injected from Secrets Manager by task definition)
+        self.SECRET_KEY = os.getenv("SECRET_KEY", "")
+        if not self.SECRET_KEY:
+            try:
+                jwt_secret_name = os.getenv("JWT_SECRET_NAME", "") or "clockko-jwt-secret"
+                jwt_secret = get_secret(jwt_secret_name)
+                self.SECRET_KEY = jwt_secret.get("SECRET_KEY") or jwt_secret.get("value") or "your-local-secret"
+            except Exception:
+                self.SECRET_KEY = os.getenv("SECRET_KEY", "your-local-secret")
 
         self.ALGORITHM = "HS256"
         self.ACCESS_TOKEN_EXPIRE_MINUTES = int(
@@ -69,7 +102,13 @@ class Settings:
         # ====================
         self.APP_NAME = "ClockKo API"
         self.DEBUG = os.getenv("DEBUG", "False").lower() == "true"
-        self.FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+        # Allow comma-separated origins for CORS and derive a primary base URL for links
+        origins_str = os.getenv("FRONTEND_URL", "http://localhost:3000")
+        self.FRONTEND_URL = origins_str
+        self.FRONTEND_URLS = [o.strip() for o in origins_str.split(",") if o.strip()]
+        self.FRONTEND_URL_BASE = self.FRONTEND_URLS[0] if self.FRONTEND_URLS else "http://localhost:3000"
+        # Region for AWS SDKs
+        self.AWS_REGION = os.getenv("AWS_REGION", os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
 
         # ====================
         # OTP Configuration

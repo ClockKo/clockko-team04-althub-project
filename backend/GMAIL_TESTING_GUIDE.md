@@ -15,10 +15,33 @@ We use Gmail for email testing because:
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=clockko04@gmail.com
-SMTP_PASSWORD=xpgijswtzbdrzmpe
+# Do NOT commit secrets. Store this in AWS Secrets Manager and reference its ARN in Terraform.
+SMTP_PASSWORD=SET_IN_AWS_SECRETS_MANAGER
 SMTP_FROM=clockko04@gmail.com
 SMTP_FROM_NAME=ClockKo Team
 ```
+
+> Important: If a password was previously committed here, rotate the Gmail App Password immediately and remove it from git history.
+
+### 🔐 Managing the Gmail App Password Secret (AWS)
+
+Use AWS Secrets Manager to store and update the Gmail App Password. The backend reads it at task startup via the secret ARN in Terraform.
+
+1) Create or open the secret in Secrets Manager
+   - Name example: `clockko-smtp-password`
+   - Store the app password as plain text (no JSON)
+
+2) Edit/update the secret value
+   - Console: Secrets Manager → your secret → Edit → Update secret value → Save
+   - CLI:
+     - `aws secretsmanager put-secret-value --secret-id clockko-smtp-password --secret-string 'NEW_APP_PASSWORD' --region us-east-1`
+
+3) Ensure Terraform has the secret ARN set
+   - In `iac/stacks/backend/terraform.tfvars` set `smtp_password_secret_arn = "arn:aws:secretsmanager:...:secret:clockko-smtp-password-..."`
+
+4) Roll out to ECS so tasks pick up the new value
+   - Either run a Terraform apply that updates the task definition, or force a new deployment of the ECS service so containers restart and re-read the secret at start.
+   - Running tasks won’t see the updated secret until they are restarted.
 
 ## 🔧 **Best Practices for Email Testing**
 

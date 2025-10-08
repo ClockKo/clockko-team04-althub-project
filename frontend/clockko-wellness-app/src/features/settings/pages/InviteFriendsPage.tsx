@@ -1,13 +1,14 @@
 import React from 'react';
 import { Button } from '../../../components/ui/button';
 import { Link2, Send } from 'lucide-react';
-import ko_faces_1 from '../../../assets/images/ko_faces_1.png';
-import ko_faces_2 from '../../../assets/images/ko_faces_2.png';
-import ko_faces_3 from '../../../assets/images/ko_faces_3.png';
-import ko_faces_4 from '../../../assets/images/ko_faces_4.png';
+import Ko_Faces_1 from '../../../assets/images/Ko_Faces_1.png';
+import Ko_Faces_2 from '../../../assets/images/Ko_Faces_2.png';
+import Ko_Faces_3 from '../../../assets/images/Ko_Faces_3.png';
+import Ko_Faces_4 from '../../../assets/images/Ko_Faces_4.png';
 
 const InviteFriendsPage: React.FC = () => {
   return (
+<<<<<<< HEAD
     <div className="flex flex-col md:flex-row md:items-center md:justify-center min-h-[calc(100vh-200px)] p-4 md:p-6">
       {/* Mobile title */}
       <h1 className="text-2xl font-semibold text-[#4F63D2] mb-8 text-center md:hidden">
@@ -21,6 +22,19 @@ const InviteFriendsPage: React.FC = () => {
             <img src={ko_faces_2} alt="Koala Face 2" className="h-12 md:h-14 mx-auto" />
             <img src={ko_faces_3} alt="Koala Face 3" className="h-12 md:h-14 mx-auto" />
             <img src={ko_faces_4} alt="Koala Face 4" className="h-12 md:h-14 mx-auto" />
+=======
+    <div className="flex flex-col items-center justify-start md:justify-center h-full p-4 md:p-0">
+
+      <h1 className="text-2xl font-semibold text-blue-800 mb-12 md:hidden">Invite Friends</h1>
+    
+      <div className="w-full max-w-xl bg-white rounded-lg shadow-sm p-6 md:p-12 text-center">
+        <div className="flex justify-center items-center mb-6">
+          <div className="grid grid-cols-2 gap-4 md:flex md:space-x-4 md:justify-center">
+            <img src={Ko_Faces_1} alt="Koala Face 1" className="h-16" />
+            <img src={Ko_Faces_2} alt="Koala Face 2" className="h-16" />
+            <img src={Ko_Faces_3} alt="Koala Face 3" className="h-16" />
+            <img src={Ko_Faces_4} alt="Koala Face 4" className="h-16" />
+>>>>>>> b91f78e (Refactor IaC)
           </div>
         </div>
         

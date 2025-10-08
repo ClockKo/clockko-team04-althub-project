@@ -33,7 +33,7 @@ def create_user(db: Session, user_data: UserCreate) -> User:
         
         # Send welcome email with verification link (don't let email failure affect user creation)
         try:
-            verification_link = f"{settings.FRONTEND_URL}/verify-email?token={verification_token}"
+            verification_link = f"{settings.FRONTEND_URL_BASE}/verify-email?token={verification_token}"
             email_service.send_welcome_email(
                 to_email=str(user.email),  # type: ignore
                 username=str(user.username),  # type: ignore
@@ -74,7 +74,7 @@ def send_welcome_otp(db: Session, email: str) -> bool:
         db.commit()
         
         # Create verification link for the email
-        verification_link = f"{settings.FRONTEND_URL}/verify-email?token={user.verification_token}"
+    verification_link = f"{settings.FRONTEND_URL_BASE}/verify-email?token={user.verification_token}"
         
         # Send welcome email with OTP and verification link
         try:
@@ -108,7 +108,7 @@ def send_otp(db: Session, email: str) -> bool:
         db.commit()
         
         # Create verification link for the email
-        verification_link = f"{settings.FRONTEND_URL}/verify-email?token={user.verification_token}"
+    verification_link = f"{settings.FRONTEND_URL_BASE}/verify-email?token={user.verification_token}"
         
         # Send OTP via email with verification link
         try:
@@ -234,7 +234,7 @@ def request_password_reset(db: Session, email: str) -> Optional[str]:
         db.commit()
         
         # Send password reset email
-        reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}"
+    reset_link = f"{settings.FRONTEND_URL_BASE}/reset-password?token={token}"
         try:
             email_service.send_password_reset_email(
                 to_email=str(user.email),  # type: ignore

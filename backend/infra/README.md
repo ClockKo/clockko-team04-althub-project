@@ -1,7 +1,13 @@
+> [!WARNING]
+> Deprecated: This folder (`backend/infra`) is no longer the recommended way to deploy the backend or bootstrap state.
+> Use the new IaC layout under `iac/` instead:
+> - Remote state bootstrap: `iac/bootstrap`
+> - Backend stack: `iac/stacks/backend`
+>
 # ClockKo – Infrastructure Handover
 
 **Environment:** dev  
-**Region:** eu-west-1  
+**Region:** us-east-1  
 
 ## 1. Networking
 

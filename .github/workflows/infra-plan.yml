@@ -1,0 +1,133 @@
+
+name: Terraform Plan (Frontend & Backend)
+
+on:
+  pull_request:
+    branches: ["**"]
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - "iac/**"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      frontend_infra: ${{ steps.filter.outputs.frontend_infra }}
+      backend: ${{ steps.filter.outputs.backend }}
+      backend_infra: ${{ steps.filter.outputs.backend_infra }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            frontend_infra:
+              - 'iac/stacks/frontend/**'
+              - 'iac/modules/frontend_static_site/**'
+              - 'iac/bootstrap/**'
+            backend:
+              - 'backend/**'
+            backend_infra:
+              - 'iac/stacks/backend/**'
+              - 'iac/modules/backend_service/**'
+              - 'iac/bootstrap/**'
+
+  plan-frontend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.frontend_infra == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.0
+
+      - name: Terraform Init (frontend)
+        working-directory: iac/stacks/frontend
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="dynamodb_table=${{ vars.TF_STATE_DYNAMO_TABLE }}" \
+            -backend-config="key=${{ vars.TF_STATE_KEY }}" \
+            -backend-config="region=${{ vars.AWS_REGION }}"
+
+      - name: Terraform Plan (frontend)
+        id: plan_frontend
+        working-directory: iac/stacks/frontend
+        run: |
+          terraform plan -no-color \
+            -var="project_name=${{ vars.FRONTEND_PROJECT_NAME }}" \
+            -var="domain_name=${{ vars.FRONTEND_DOMAIN }}" \
+            -var="route53_zone_id=${{ vars.ROUTE53_ZONE_ID }}" \
+            -var="create_hosted_zone=${{ vars.CREATE_HOSTED_ZONE }}" \
+            | tee ../../.terraform-plan-frontend.txt
+
+      - name: Upload plan (frontend)
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-frontend
+          path: iac/.terraform-plan-frontend.txt
+
+  plan-backend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.backend_infra == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.0
+
+      - name: Terraform Init (backend)
+        working-directory: iac/stacks/backend
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="dynamodb_table=${{ vars.TF_STATE_DYNAMO_TABLE }}" \
+            -backend-config="key=${{ vars.TF_STATE_KEY_BACKEND }}" \
+            -backend-config="region=${{ vars.AWS_REGION }}"
+
+      - name: Terraform Plan (backend)
+        id: plan_backend
+        working-directory: iac/stacks/backend
+        env:
+          TF_VAR_image_tag: pr-${{ github.sha }}
+        run: |
+          terraform plan -no-color \
+            -var="aws_region=${{ vars.AWS_REGION }}" \
+            -var="project_name=${{ vars.BACKEND_PROJECT_NAME || vars.FRONTEND_PROJECT_NAME }}" \
+            -var="github_org=${{ github.repository_owner }}" \
+            -var="github_repo=${{ github.event.repository.name }}" \
+            | tee ../../.terraform-plan-backend.txt
+
+      - name: Upload plan (backend)
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-backend
+          path: iac/.terraform-plan-backend.txt

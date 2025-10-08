@@ -95,9 +95,17 @@ const SignInPage: React.FC = () => {
     }
 
     try {
+<<<<<<< HEAD
       // Send the ID token to backend
       const response = await axios.post(`http://localhost:8000/api/auth/google/verify`, {
         token: googleIdToken
+=======
+      // Send the access token to backend /api/auth/google/verify
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/auth/google/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: accessToken }),
+>>>>>>> b91f78e (Refactor IaC)
       });
 
       if (response.data.access_token) {
@@ -116,10 +124,18 @@ const SignInPage: React.FC = () => {
     }
   };
 
+<<<<<<< HEAD
   const handleGoogleError = () => {
     console.error('Google Login Failed');
     setApiError('Google sign-in was cancelled or failed.');
   };
+=======
+  const hasGoogleClient = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+  const googleLogin = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: () => console.error('Google Login Failed'),
+  });
+>>>>>>> b91f78e (Refactor IaC)
 
   return (
     <AuthLayout hideHeader={true}>
@@ -174,6 +190,7 @@ const SignInPage: React.FC = () => {
         </div>
 
         {/* Google Sign In Button */}
+<<<<<<< HEAD
         <button
           onClick={() => {
             // Try to find and click the hidden Google button
@@ -213,6 +230,18 @@ const SignInPage: React.FC = () => {
             auto_select={false}
           />
         </div>
+=======
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full flex items-center justify-center text-gray-700 py-6 text-md rounded-[24px]"
+          onClick={() => hasGoogleClient ? googleLogin() : null}
+          disabled={!hasGoogleClient}
+        >
+          <img src={googleLogo} alt="Google logo" className="mr-3 h-6 w-6" />
+          {hasGoogleClient ? 'Sign in with Google' : 'Google sign-in unavailable'}
+        </Button>
+>>>>>>> b91f78e (Refactor IaC)
 
         <p className="mt-8 text-center text-sm text-gray-600">
           Don't have an account?{' '}

@@ -7,12 +7,12 @@ set -euo pipefail
 # - Optionally destroys remote state backend (S3 + DynamoDB)
 
 # ---------- Config (override via env) ----------
-: "${AWS_REGION:=eu-west-1}"
+: "${AWS_REGION:=us-east-1}"
 : "${TF_VAR_image_tag:=placeholder}"
 REPO_NAME="${REPO_NAME:-clockko-backend}"         # matches ${var.project_name}-backend
 INFRA_DIR="${INFRA_DIR:-$(cd "$(dirname "$0")" && pwd)}"  # this script's folder
 MAIN_DIR="${MAIN_DIR:-$(dirname "$INFRA_DIR")}"            # ../
-REMOTE_STATE_BUCKET="${REMOTE_STATE_BUCKET:-clockko-terraform-state-eu-west-1}"
+REMOTE_STATE_BUCKET="${REMOTE_STATE_BUCKET:-clockko-terraform-state-us-east-1}"
 REMOTE_STATE_LOCK_TABLE="${REMOTE_STATE_LOCK_TABLE:-clockko-terraform-locks}"
 DESTROY_REMOTE_STATE="${DESTROY_REMOTE_STATE:-false}"        # set to true to delete state backend
 

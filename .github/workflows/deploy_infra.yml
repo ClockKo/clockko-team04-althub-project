@@ -1,135 +1,60 @@
-# name: Deploy Backend to ECS
+name: "Deprecated: Legacy Backend Deploy"
 
-# on:
-#   push:
-#     branches: ["main"]
-#   workflow_dispatch:
-#     inputs:
-#       image_tag:
-#         description: "Image tag to rollback to (must exist in ECR)"
-#         required: false
-#         default: "latest"
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to rollback to (must exist in ECR)"
+        required: false
+        default: "latest"
 
-# permissions:
-#   id-token: write
-#   contents: read
+permissions:
+  id-token: write
+  contents: read
 
-# jobs:
-#   deploy:
-#     if: github.event_name == 'push'
-#     runs-on: ubuntu-latest
+jobs:
+  rollback:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
 
-#     steps:
-#       - name: Checkout
-#         uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-#       - name: Configure AWS (OIDC)
-#         uses: aws-actions/configure-aws-credentials@v4
-#         with:
-#           role-to-assume: arn:aws:iam::474422890464:role/clockko-gha-role
-#           aws-region: eu-west-1
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::474422890464:role/clockko-gha-role
+          aws-region: us-east-1
 
-#       - name: Login to ECR
-#         id: ecr
-#         uses: aws-actions/amazon-ecr-login@v2
+      - name: Download latest image tag artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: image-tag
+          path: .
 
-#       - name: Set image tag
-#         id: vars
-#         run: |
-#           echo "IMAGE_TAG=backend-$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::7}" >> $GITHUB_ENV
-#           echo "${IMAGE_TAG}" > image_tag.txt
+      - name: Rollback with Terraform
+        run: |
+          IMAGE_TAG="${{ github.event.inputs.image_tag }}"
+          if [ "$IMAGE_TAG" = "latest" ]; then
+            echo "No tag provided, using last built tag from artifact"
+            IMAGE_TAG=$(cat image_tag.txt)
+          fi
+          echo "Rolling back to $IMAGE_TAG"
+          cd backend/infra
+          terraform init -input=false
+          TF_VAR_image_tag=$IMAGE_TAG terraform apply -auto-approve -input=false
 
-#       - name: Upload image tag artifact (for rollback)
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: image-tag
-#           path: image_tag.txt
-#           retention-days: 14
+      - name: Unlock Terraform state if rollback failed
+        if: failure()
+        run: |
+          cd backend/infra
+          LOCK_INFO=$(terraform plan -detailed-exitcode || true)
+          LOCK_ID=$(echo "$LOCK_INFO" | grep -oE 'ID: [a-z0-9-]+' | awk '{print $2}' || true)
 
-#       - name: Build & Push image
-#         env:
-#           ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
-#           ECR_REPOSITORY: clockko-backend
-#           IMAGE_TAG: ${{ env.IMAGE_TAG }}
-#         run: |
-#           cd backend
-#           # Build with versioned tag
-#           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-#           # Also tag as latest for manual testing/compat, but deploys use the unique tag
-#           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-#           # Push both
-#           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-#           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-
-#       - name: Setup Terraform
-#         uses: hashicorp/setup-terraform@v3
-#         with:
-#           terraform_version: 1.12.0
-
-#       - name: Deploy via Terraform
-#         env:
-#           TF_VAR_image_tag: ${{ env.IMAGE_TAG }}
-#         run: |
-#           cd backend/infra
-#           terraform init -input=false
-#           terraform apply -auto-approve -input=false
-
-#       - name: Unlock Terraform state if failed
-#         if: failure()
-#         run: |
-#           cd backend/infra
-#           LOCK_INFO=$(terraform plan -detailed-exitcode || true)
-#           LOCK_ID=$(echo "$LOCK_INFO" | grep -oE 'ID: [a-z0-9-]+' | awk '{print $2}' || true)
-
-#           if [ -n "$LOCK_ID" ]; then
-#             echo "Found Terraform lock: $LOCK_ID"
-#             terraform force-unlock -force $LOCK_ID || true
-#           else
-#             echo "No Terraform lock detected"
-#           fi
-
-#   rollback:
-#     if: github.event_name == 'workflow_dispatch'
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: Checkout
-#         uses: actions/checkout@v4
-
-#       - name: Configure AWS (OIDC)
-#         uses: aws-actions/configure-aws-credentials@v4
-#         with:
-#           role-to-assume: arn:aws:iam::474422890464:role/clockko-gha-role
-#           aws-region: eu-west-1
-
-#       - name: Download latest image tag artifact
-#         uses: actions/download-artifact@v4
-#         with:
-#           name: image-tag
-#           path: .
-
-#       - name: Rollback with Terraform
-#         run: |
-#           IMAGE_TAG="${{ github.event.inputs.image_tag }}"
-#           if [ "$IMAGE_TAG" = "latest" ]; then
-#             echo "No tag provided, using last built tag from artifact"
-#             IMAGE_TAG=$(cat image_tag.txt)
-#           fi
-#           echo "Rolling back to $IMAGE_TAG"
-#           cd backend/infra
-#           terraform init -input=false
-#           TF_VAR_image_tag=$IMAGE_TAG terraform apply -auto-approve -input=false
-
-#       - name: Unlock Terraform state if rollback failed
-#         if: failure()
-#         run: |
-#           cd backend/infra
-#           LOCK_INFO=$(terraform plan -detailed-exitcode || true)
-#           LOCK_ID=$(echo "$LOCK_INFO" | grep -oE 'ID: [a-z0-9-]+' | awk '{print $2}' || true)
-
-#           if [ -n "$LOCK_ID" ]; then
-#             echo "Found Terraform lock: $LOCK_ID"
-#             terraform force-unlock -force $LOCK_ID || true
-#           else
-#             echo "No Terraform lock detected"
-#           fi
+          if [ -n "$LOCK_ID" ]; then
+            echo "Found Terraform lock: $LOCK_ID"
+            terraform force-unlock -force $LOCK_ID || true
+          else
+            echo "No Terraform lock detected"
+          fi

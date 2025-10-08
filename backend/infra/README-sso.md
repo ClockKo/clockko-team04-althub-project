@@ -21,7 +21,7 @@ This guide helps you configure AWS CLI using **AWS Single Sign-On (SSO)** with t
 ## SSO Details
 
 - **SSO Start URL:** `https://d-9367a4f4a4.awsapps.com/start`
-- **SSO Region:** `eu-west-1`
+- **SSO Region:** `us-east-1`
 - **AWS Account ID:** `474422890464`
 - **Permission Set:** `AdministratorAccess`
 
@@ -39,14 +39,14 @@ When prompted, enter:
 
 - SSO session name: `clockko`
 - SSO start URL: `https://d-9367a4f4a4.awsapps.com/start`
-- SSO region: `eu-west-1`
+- SSO region: `us-east-1`
 - SSO registration scopes: *(Press Enter)*
 
 Sign in via the browser and select:
 
 - Account: `474422890464`
 - Role: `AdministratorAccess`
-- Default client Region: `eu-west-1`
+- Default client Region: `us-east-1`
 - Default output format: `json`
 
 ---
@@ -212,7 +212,7 @@ aws elbv2 describe-load-balancers \
 Example output:
 
 ```markdown
-clockko-backend-alb-123456789.eu-west-1.elb.amazonaws.com
+clockko-backend-alb-123456789.us-east-1.elb.amazonaws.com
 ```
 
 ### B. Import Postman Collection
@@ -225,7 +225,7 @@ In Postman:
 - Update the `{{base_url}}` environment variable in Postman:
 
   ```markdown
-  http://clockko-backend-alb-123456789.eu-west-1.elb.amazonaws.com
+  http://clockko-backend-alb-123456789.us-east-1.elb.amazonaws.com
   ```
 
 ### C. Test Authentication

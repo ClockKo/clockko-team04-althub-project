@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import auth, timetracker, tasks, users, dashboard, coworking, user_settings, two_factor_auth, challenges, websocket
 from app.api import auth_google  # Google ID token verification endpoints
+from app.api import coworking_ws  # WebSocket signaling for coworking rooms
 from app.core.config import settings
 from app.core.database import Base, engine
 
@@ -34,11 +35,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+<<<<<<< HEAD
 # CORS settings (adjust as needed for frontend origin)
+=======
+
+# CORS settings: read allowed origins from env via settings.FRONTEND_URL (comma-separated supported)
+origins = [o.strip() for o in str(getattr(settings, 'FRONTEND_URL', '')).split(',') if o.strip()] or ["*"]
+allow_credentials = False if origins == ["*"] else True
+>>>>>>> b91f78e (Refactor IaC)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or restrict to specific domains
-    allow_credentials=True,
+    allow_origins=origins,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"]
 )
@@ -54,8 +62,12 @@ app.include_router(coworking.router, prefix="/api", tags=["Coworking"])
 app.include_router(user_settings.router)  # Has its own prefix /api/users
 app.include_router(two_factor_auth.router, prefix="/api/auth", tags=["Two-Factor Authentication"])
 app.include_router(auth_google.router)  # router has its own prefix
+<<<<<<< HEAD
 app.include_router(challenges.router, prefix="/api/challenges", tags=["challenges"])
 app.include_router(websocket.router, prefix="/api", tags=["websocket"])
+=======
+app.include_router(coworking_ws.router)  # includes /ws/rooms/{room_id}
+>>>>>>> b91f78e (Refactor IaC)
 
 # If you have a reminder thread, import and start it here
 # from app.reminders import start_reminder_thread

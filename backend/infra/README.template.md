@@ -1,7 +1,7 @@
 # ClockKo – Infrastructure Handover
 
 **Environment:** dev  
-**Region:** eu-west-1  
+**Region:** us-east-1  
 
 ## 1. Networking
 

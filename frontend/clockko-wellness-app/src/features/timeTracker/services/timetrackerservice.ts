@@ -136,7 +136,7 @@ class TimeTrackerService {
     }
 
     // Get user data to get user ID
-    const userResponse = await fetch('http://localhost:8000/api/auth/user', {
+  const userResponse = await fetch(`${(import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/auth/user`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -159,7 +159,7 @@ class TimeTrackerService {
 
     // Make API call
     const endpoint = sessionType === 'focus' ? '/focus-sessions/start' : '/break-sessions/start'
-    const response = await fetch(`http://localhost:8000/api${endpoint}`, {
+  const response = await fetch(`${(import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8000/api'}${endpoint}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -225,7 +225,7 @@ class TimeTrackerService {
       ? `/focus-sessions/${sessionId}/end` 
       : `/break-sessions/${sessionId}/end`
     
-    const response = await fetch(`http://localhost:8000/api${endpoint}`, {
+  const response = await fetch(`${(import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8000/api'}${endpoint}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -277,7 +277,7 @@ class TimeTrackerService {
     }
 
     // Make API call to pause session
-    const response = await fetch(`http://localhost:8000/api/focus-sessions/${sessionId}/pause`, {
+  const response = await fetch(`${(import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/focus-sessions/${sessionId}/pause`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -320,7 +320,7 @@ class TimeTrackerService {
     }
 
     // Make API call to resume session
-    const response = await fetch(`http://localhost:8000/api/focus-sessions/${sessionId}/resume`, {
+  const response = await fetch(`${(import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/focus-sessions/${sessionId}/resume`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -366,7 +366,7 @@ class TimeTrackerService {
       const token = localStorage.getItem('authToken')
       if (!token) return null
 
-      const response = await fetch('http://localhost:8000/api/time-logs/current', {
+  const response = await fetch(`${(import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/time-logs/current`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -421,7 +421,7 @@ class TimeTrackerService {
       }
 
       // Fetch daily summary from API
-      const response = await fetch(`http://localhost:8000/api/time-logs/daily-summary?date=${targetDate}`, {
+  const response = await fetch(`${(import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/time-logs/daily-summary?date=${targetDate}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -512,7 +512,7 @@ class TimeTrackerService {
 
     try {
       console.log('📡 Making DELETE request to clear-all endpoint...')
-      const response = await fetch('http://localhost:8000/api/time-logs/clear-all', {
+  const response = await fetch(`${(import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/time-logs/clear-all`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

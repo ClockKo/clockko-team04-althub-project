@@ -1,24 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Purpose: Tear down frontend static site infra without relying on remote Terraform state.
-# - Finds S3 website buckets created by this stack (name pattern: <project_name>-<rand>-site)
-# - Empties all objects and versions, then deletes the buckets
-#
-# Config via env:
-#   AWS_REGION (default: eu-west-1)
-#   AWS_PROFILE (optional)
-#   PROJECT_NAME (default: clockko-frontend)
+# Purge and delete S3 website buckets created by the iac module
+# Pattern: <project>-<hex6>-site
 
-: "${AWS_REGION:=eu-west-1}"
-: "${PROJECT_NAME:=clockko-frontend}"
-export AWS_REGION
-if [[ -n "${AWS_PROFILE-}" ]]; then export AWS_PROFILE; fi
-
-command -v aws >/dev/null 2>&1 || { echo "aws CLI not found"; exit 1; }
-
-echo "Using AWS region: $AWS_REGION${AWS_PROFILE:+, profile: $AWS_PROFILE}"
-aws sts get-caller-identity >/dev/null || { echo "AWS credentials not valid"; exit 1; }
+PROJECT_NAME=${PROJECT_NAME:-clockko-frontend}
+AWS_REGION=${AWS_REGION:-us-east-1}
 
 purge_s3_bucket() {
   local bucket="$1"
@@ -51,7 +38,6 @@ purge_s3_bucket() {
 delete_bucket() {
   local bucket="$1"
   echo "Deleting bucket: $bucket"
-  # Best-effort cleanup of website config and policy before delete
   aws s3api delete-bucket-website --bucket "$bucket" >/dev/null 2>&1 || true
   aws s3api delete-bucket-policy --bucket "$bucket" >/dev/null 2>&1 || true
   aws s3api delete-public-access-block --bucket "$bucket" >/dev/null 2>&1 || true
@@ -59,18 +45,17 @@ delete_bucket() {
   aws s3api delete-bucket --bucket "$bucket"
 }
 
-echo "Discovering website buckets for project: $PROJECT_NAME"
+echo "Discovering website buckets with prefix: ${PROJECT_NAME}-"
 BUCKETS=$(aws s3api list-buckets --query 'Buckets[].Name' --output text | tr '\t' '\n' | grep -E "^${PROJECT_NAME}-[a-f0-9]{6}-site$" || true)
 
 if [[ -z "${BUCKETS}" ]]; then
-  echo "No matching buckets found (pattern: ${PROJECT_NAME}-<hex6>-site). Nothing to do."
+  echo "No matching buckets found."
   exit 0
 fi
 
-echo "Found buckets:\n${BUCKETS}"
 for b in ${BUCKETS}; do
   purge_s3_bucket "$b"
   delete_bucket "$b"
 done
 
-echo "Frontend teardown complete."
+echo "Frontend buckets deleted."

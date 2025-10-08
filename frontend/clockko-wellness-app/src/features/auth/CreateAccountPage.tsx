@@ -131,9 +131,17 @@ const CreateAccountPage: React.FC = () => {
     }
 
     try {
+<<<<<<< HEAD
       // Send Google ID token to backend
       const response = await axios.post('http://localhost:8000/api/auth/google/verify', {
         token: googleIdToken
+=======
+      // Send Google token to backend /api/auth/google/verify
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/auth/google/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: googleAccessToken }),
+>>>>>>> b91f78e (Refactor IaC)
       });
 
       const data = response.data;
@@ -153,10 +161,19 @@ const CreateAccountPage: React.FC = () => {
     }
   };
 
+<<<<<<< HEAD
   const handleGoogleError = () => {
     console.error('Google Login Failed');
     setApiError('Google sign-up was cancelled or failed.');
   };
+=======
+  // Google login popup
+  const hasGoogleClient = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID)
+  const googleLogin = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: () => console.error('Google Login Failed'),
+  })
+>>>>>>> b91f78e (Refactor IaC)
 
   return (
     <AuthLayout hideHeader={true}>
@@ -320,7 +337,21 @@ const CreateAccountPage: React.FC = () => {
             ux_mode="popup"
             auto_select={false}
           />
+<<<<<<< HEAD
         </div>
+=======
+        </div> */}
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full flex items-center justify-center text-gray-700 py-6 text-md rounded-[24px]"
+          onClick={() => hasGoogleClient ? googleLogin() : null}
+          disabled={!hasGoogleClient}
+        >
+          <img src={googleLogo} alt="Google logo" className="mr-3 h-6 w-6" />
+          {hasGoogleClient ? 'Sign up with Google' : 'Google sign-up unavailable'}
+        </Button>
+>>>>>>> b91f78e (Refactor IaC)
 
         {/* Link to Sign In */}
         <p className="mt-8 text-center text-sm text-gray-600">

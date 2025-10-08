@@ -29,7 +29,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetErrorBoundary
           </p>
           
           {/* Error Details (only show in development) */}
-          {process.env.NODE_ENV === 'development' && (
+          {import.meta.env.DEV && (
             <details className="mt-4 text-left">
               <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700 mb-2">
                 Show error details
@@ -88,7 +88,7 @@ const AppErrorBoundary: React.FC<AppErrorBoundaryProps> = ({ children }) => {
     
     // In production, you might want to send this to an error reporting service
     // like Sentry, LogRocket, or Bugsnag
-    if (process.env.NODE_ENV === 'production') {
+  if (import.meta.env.PROD) {
       // Example: errorReportingService.captureException(error, errorInfo)
     }
   }

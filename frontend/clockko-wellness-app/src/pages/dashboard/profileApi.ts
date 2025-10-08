@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+<<<<<<< HEAD
 const API_BASE_URL = 'http://localhost:8000';
 
 export interface UserProfileUpdateParams {
@@ -19,6 +20,9 @@ export interface UserProfileResponse {
   otp_verified: boolean;
 }
 
+=======
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || 'http://localhost:8000';
+>>>>>>> b91f78e (Refactor IaC)
 function getToken() {
   return localStorage.getItem('authToken') || '';
 }

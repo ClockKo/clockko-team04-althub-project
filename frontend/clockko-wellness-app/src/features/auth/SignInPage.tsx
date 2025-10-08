@@ -8,11 +8,12 @@ import AuthLayout from './AuthLayout';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { useGoogleLogin } from '@react-oauth/google';
-import { loginUser } from './api';
+import { loginUser} from './api';
 import { useAuth } from './authcontext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import googleLogo from '../../assets/images/google.png';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 // Validation schema for the sign-in form
 const signInSchema = z.object({
@@ -86,22 +87,17 @@ const SignInPage: React.FC = () => {
     console.log('Google Access Token:', accessToken);
 
     try {
-      // Send the access token to backend /api/auth/google/verify
-      const response = await fetch('http://localhost:8000/api/auth/google/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: accessToken }),
+      // Send the access token to backend
+      const response = await axios.post(`http://localhost:8000/api/auth/google/verify`, {
+        token: accessToken
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.access_token) {
-          setAuthToken(data.access_token);
-          
-          // Check onboarding status after Google login and redirect accordingly
-          await checkBackendOnboardingStatus();
-          navigate('/dashboard'); // Navigate to dashboard, ProtectedRoutes will handle onboarding redirect if needed
-        }
+      if (response.data.access_token) {
+        setAuthToken(response.data.access_token);
+        
+        // Check onboarding status after Google login and redirect accordingly
+        await checkBackendOnboardingStatus();
+        navigate('/dashboard'); // Navigate to dashboard, ProtectedRoutes will handle onboarding redirect if needed
       } else {
         console.error('Google login failed on the backend');
         setApiError('Google login failed. Please try again.');

@@ -13,6 +13,7 @@ import { useAuth } from './authcontext'
 import { useGoogleLogin } from '@react-oauth/google'
 import googleLogo from '../../assets/images/google.png'
 import toast from 'react-hot-toast'
+import axios from 'axios'
 
 
 // Validation schema
@@ -124,27 +125,21 @@ const CreateAccountPage: React.FC = () => {
     console.log('Google Access Token:', googleAccessToken);
 
     try {
-      // Send Google token to backend /api/auth/google/verify
-      const response = await fetch('http://localhost:8000/api/auth/google/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: googleAccessToken }),
+      // Send Google token to backend
+      const response = await axios.post('http://localhost:8000/api/auth/google/verify', {
+        token: googleAccessToken
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.access_token) {
-          setAuthToken(data.access_token);
-          if (data.is_new_user) {
-            navigate('/onboarding');
-          } else {
-            navigate('/dashboard');
-          }
+      const data = response.data;
+      if (data.access_token) {
+        setAuthToken(data.access_token);
+        if (data.is_new_user) {
+          navigate('/onboarding');
         } else {
-          setApiError('Failed to log in after Google sign-up.');
+          navigate('/dashboard');
         }
       } else {
-        setApiError('Google sign-up failed. Please try again.');
+        setApiError('Failed to log in after Google sign-up.');
       }
     } catch (error) {
       console.error('Google sign-up failed:', error);

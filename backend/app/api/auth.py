@@ -12,8 +12,10 @@ import uuid
 import json
 from sqlalchemy.exc import IntegrityError
 import logging
+from app.core.config import Settings
 
 logger = logging.getLogger(__name__)
+settings = Settings()
 
 router = APIRouter(tags=["auth"])
 

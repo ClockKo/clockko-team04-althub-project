@@ -35,7 +35,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    // Clear the app token
     setAuthToken(null);
+    
+    // Try to sign out from Google OAuth session
+    try {
+      const googleWindow = window as any;
+      if (googleWindow.google && googleWindow.google.accounts) {
+        googleWindow.google.accounts.id.disableAutoSelect();
+      }
+    } catch (error) {
+      console.warn('Could not disable Google auto-select:', error);
+    }
   };
 
   const isAuthenticated = !!authToken;

@@ -172,13 +172,17 @@ const SignInPage: React.FC = () => {
         </div>
 
         {/* Google Sign In Button */}
-        <div className="w-full">
+        <div className="w-full [&>div]:w-full [&>div>div]:w-full">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
             text="signin_with"
             width="100%"
             size="large"
+            ux_mode="popup"
+            auto_select={false}
+            theme="outline"
+            shape="rectangular"
           />
         </div>
 

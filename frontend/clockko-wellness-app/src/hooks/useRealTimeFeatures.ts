@@ -78,7 +78,7 @@ export function useSmartNotifications() {
           recommendedBreakFrequency: Math.max(1, Math.round(avgSessionLength / 25))
         };
         
-        console.log('📊 Updated work pattern with real data:', updatedPattern);
+        // console.log('📊 Updated work pattern with real data:', updatedPattern);
         setWorkPattern(updatedPattern);
       }
     } catch (error) {

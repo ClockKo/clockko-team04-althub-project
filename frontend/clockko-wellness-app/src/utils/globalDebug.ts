@@ -23,10 +23,10 @@ if (import.meta.env.DEV) {
   window.testAuthenticatedRequest = testAuthenticatedRequest
   window.testClockInRequest = testClockInRequest
   
-  console.log('🔧 Debug functions available:')
-  console.log('- window.debugAuth()')
-  console.log('- window.isAuthenticated()')
-  console.log('- window.checkTokenExpiration()')
-  console.log('- window.testAuthenticatedRequest()')
-  console.log('- window.testClockInRequest()')
+  // console.log('🔧 Debug functions available:')
+  // console.log('- window.debugAuth()')
+  // console.log('- window.isAuthenticated()')
+  // console.log('- window.checkTokenExpiration()')
+  // console.log('- window.testAuthenticatedRequest()')
+  // console.log('- window.testClockInRequest()')
 }

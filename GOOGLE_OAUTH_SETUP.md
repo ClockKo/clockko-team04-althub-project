@@ -16,25 +16,8 @@
    VITE_GOOGLE_CLIENT_ID="1041621987892-ruan8gh12d87kso2f0adh1amv3mso7ha.apps.googleusercontent.com"
    ```
 
-### 2. Google Cloud Console Configuration
 
-**⚠️ IMPORTANT:** The project owner needs to add authorized domains in Google Cloud Console:
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Navigate to **APIs & Services > Credentials**
-3. Click on your OAuth 2.0 Client ID
-4. In **Authorized JavaScript origins**, add:
-   - `http://localhost:3000`
-   - `http://localhost:5173` (Vite dev server)
-   - `http://127.0.0.1:3000`
-   - `http://127.0.0.1:5173`
-5. In **Authorized redirect URIs**, add:
-   - `http://localhost:3000`
-   - `http://localhost:5173`
-   - `http://127.0.0.1:3000`
-   - `http://127.0.0.1:5173`
-
-### 3. Backend Environment Setup
+### 2. Backend Environment Setup
 
 1. **Copy backend environment file:**
    ```bash
@@ -49,7 +32,7 @@
    GOOGLE_CLIENT_SECRET=your-google-client-secret-here
    ```
 
-### 4. Common Issues & Solutions
+### 3. Common Issues & Solutions
 
 #### Issue: "redirect_uri_mismatch" error
 **Solution:** Ensure your dev server port matches the authorized origins in Google Console.

@@ -10,7 +10,7 @@ import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
 import { registerUser } from './api' 
 import { useAuth } from './authcontext'
-import { useGoogleLogin } from '@react-oauth/google'
+import { GoogleLogin } from '@react-oauth/google'
 import googleLogo from '../../assets/images/google.png'
 import toast from 'react-hot-toast'
 import axios from 'axios'
@@ -120,14 +120,20 @@ const CreateAccountPage: React.FC = () => {
 };
 
 
-  const handleGoogleSuccess = async (tokenResponse: any) => {
-    const googleAccessToken = tokenResponse.access_token;
-    console.log('Google Access Token:', googleAccessToken);
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    const googleIdToken = credentialResponse.credential;
+    console.log('Google ID Token received:', googleIdToken ? 'Yes' : 'No');
+
+    if (!googleIdToken) {
+      console.error('No Google ID token received');
+      setApiError('Google sign-up failed. Please try again.');
+      return;
+    }
 
     try {
-      // Send Google token to backend
+      // Send Google ID token to backend
       const response = await axios.post('http://localhost:8000/api/auth/google/verify', {
-        token: googleAccessToken
+        token: googleIdToken
       });
 
       const data = response.data;
@@ -147,11 +153,10 @@ const CreateAccountPage: React.FC = () => {
     }
   };
 
-  // Google login popup
-  const googleLogin = useGoogleLogin({
-    onSuccess: handleGoogleSuccess,
-    onError: () => console.error('Google Login Failed'),
-  })
+  const handleGoogleError = () => {
+    console.error('Google Login Failed');
+    setApiError('Google sign-up was cancelled or failed.');
+  };
 
   return (
     <AuthLayout hideHeader={true}>
@@ -277,25 +282,15 @@ const CreateAccountPage: React.FC = () => {
         </div>
 
         {/* Google Sign Up Button */}
-        {/* <div className="[&>div]:w-full">
+        <div className="w-full">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
-            onError={() => console.log('Google Login Failed')}
-            theme="outline"
+            onError={handleGoogleError}
+            text="signup_with"
+            width="100%"
             size="large"
-            shape="pill"
-            text="signup_with" // 👈 Add this prop
           />
-        </div> */}
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full flex items-center justify-center text-gray-700 py-6 text-md rounded-[24px]"
-          onClick={() => googleLogin()}
-        >
-          <img src={googleLogo} alt="Google logo" className="mr-3 h-6 w-6" />
-          Sign up with Google
-        </Button>
+        </div>
 
         {/* Link to Sign In */}
         <p className="mt-8 text-center text-sm text-gray-600">

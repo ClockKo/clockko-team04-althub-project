@@ -7,7 +7,7 @@ import { useHead } from '@unhead/react';
 import AuthLayout from './AuthLayout';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { useGoogleLogin } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
 import { loginUser} from './api';
 import { useAuth } from './authcontext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
@@ -82,14 +82,20 @@ const SignInPage: React.FC = () => {
   };
 
   // Google Sign-In handler
-  const handleGoogleSuccess = async (tokenResponse: any) => {
-    const accessToken = tokenResponse.access_token;
-    console.log('Google Access Token:', accessToken);
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    const googleIdToken = credentialResponse.credential;
+    console.log('Google ID Token received:', googleIdToken ? 'Yes' : 'No');
+
+    if (!googleIdToken) {
+      console.error('No Google ID token received');
+      setApiError('Google sign-in failed. Please try again.');
+      return;
+    }
 
     try {
-      // Send the access token to backend
+      // Send the ID token to backend
       const response = await axios.post(`http://localhost:8000/api/auth/google/verify`, {
-        token: accessToken
+        token: googleIdToken
       });
 
       if (response.data.access_token) {
@@ -108,10 +114,10 @@ const SignInPage: React.FC = () => {
     }
   };
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: handleGoogleSuccess,
-    onError: () => console.error('Google Login Failed'),
-  });
+  const handleGoogleError = () => {
+    console.error('Google Login Failed');
+    setApiError('Google sign-in was cancelled or failed.');
+  };
 
   return (
     <AuthLayout hideHeader={true}>
@@ -166,15 +172,15 @@ const SignInPage: React.FC = () => {
         </div>
 
         {/* Google Sign In Button */}
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full flex items-center justify-center text-gray-700 py-6 text-md rounded-[24px]"
-          onClick={() => googleLogin()}
-        >
-          <img src={googleLogo} alt="Google logo" className="mr-3 h-6 w-6" />
-          Sign in with Google
-        </Button>
+        <div className="w-full">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            text="signin_with"
+            width="100%"
+            size="large"
+          />
+        </div>
 
         <p className="mt-8 text-center text-sm text-gray-600">
           Don't have an account?{' '}

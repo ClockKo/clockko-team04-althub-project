@@ -4,6 +4,11 @@ import uuid
 from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
 
 
+class GoogleTokenVerify(BaseModel):
+    """Schema for Google OAuth token verification"""
+    token: str
+
+
 class UserCreate(BaseModel):
     # Frontend sends "name"; we'll map this to a display name from the model
     name: str

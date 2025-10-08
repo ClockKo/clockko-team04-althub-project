@@ -48,6 +48,17 @@ class Settings:
         # ====================
         self.SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
         self.SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+
+        # ====================
+        # Google OAuth
+        # ====================
+        try:
+            google_creds = get_secret("clockko-google-oauth")
+            self.GOOGLE_CLIENT_ID = google_creds["client_id"]
+            self.GOOGLE_CLIENT_SECRET = google_creds["client_secret"]
+        except Exception:
+            self.GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+            self.GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
         self.SMTP_USER = os.getenv("SMTP_USER", "")
         self.SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
         self.SMTP_FROM = os.getenv("SMTP_FROM", "")

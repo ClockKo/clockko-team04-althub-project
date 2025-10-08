@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, timetracker, tasks, users, dashboard, coworking, user_settings  # , two_factor_auth - COMMENTED OUT UNTIL MIGRATION IS READY
+from app.api import auth, timetracker, tasks, users, dashboard, coworking, user_settings, two_factor_auth
 from app.api import auth_google  # Google ID token verification endpoints
 from app.core.config import settings
 from app.core.database import Base, engine
@@ -46,13 +46,14 @@ app.add_middleware(
 
 # Include API routers
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(auth_google.router)  # Already has its prefix defined
 app.include_router(timetracker.router, prefix="/api", tags=["time-log"])
 app.include_router(users.router, prefix="/api/users", tags=["User Management"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(coworking.router, prefix="/api", tags=["Coworking"])
 app.include_router(user_settings.router)  # Has its own prefix /api/users
-# app.include_router(two_factor_auth.router, prefix="/api/auth", tags=["Two-Factor Authentication"])  # COMMENTED OUT UNTIL MIGRATION IS READY
+app.include_router(two_factor_auth.router, prefix="/api/auth", tags=["Two-Factor Authentication"])
 app.include_router(auth_google.router)  # router has its own prefix
 
 # If you have a reminder thread, import and start it here

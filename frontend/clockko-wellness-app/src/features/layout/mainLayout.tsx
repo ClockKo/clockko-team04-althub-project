@@ -36,8 +36,9 @@ import clockkoLogo from '../../assets/images/frame1.png'
 import { useIsMobile } from '../../hooks/use-mobile'
 import { SidebarProvider } from '../../components/ui/sidebar'
 import ellipse6 from '../../assets/images/Ellipse6.png'
-// import { processAvatarImage, validateImageFile } from '../../utils/imageProcessing'
-// import toast from 'react-hot-toast'
+import { processAvatarImage, validateImageFile } from '../../utils/imageProcessing'
+import { getAvatarUrl } from '../../utils/avatarUtils'
+import toast from 'react-hot-toast'
 
 
 
@@ -51,24 +52,7 @@ export default function MainLayout() {
   const isMobile = useIsMobile()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
-  // Helper to get initials from name
-  function getInitials(name: string | undefined) {
-    if (!name) return 'U';
-    const parts = name.split(' ');
-    if (parts.length === 1) return parts[0][0].toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
-  // Default avatar fallback: initials
-  function getAvatarUrl(user: any) {
-    console.log('🖼️ Getting avatar URL for user:', user);
-    if (user?.avatar_url) {
-      console.log('✅ Using avatar_url:', user.avatar_url);
-      return user.avatar_url;
-    }
-    const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(getInitials(user?.name))}&background=E0E7FF&color=1E40AF&size=128`;
-    console.log('⚠️ Using fallback avatar:', fallbackUrl);
-    return fallbackUrl;
-  }
+
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [isProcessingAvatar, setIsProcessingAvatar] = useState(false)
   // Sidebar mode: 'main' or 'settings'
@@ -155,13 +139,11 @@ export default function MainLayout() {
         <SidebarHeader className="p-4">
           <div className="flex items-center justify-between">
             {!collapsed && (
-              <Link className="cursor-pointer" to="/dashboard">
               <img
                 src={clockkoLogo}
                 alt="ClockKo Logo"
                 className="w-30 h-8 transition-all duration-300"
               />
-                </Link>
             )}
             {/* Desktop collapse toggle */}
             <button

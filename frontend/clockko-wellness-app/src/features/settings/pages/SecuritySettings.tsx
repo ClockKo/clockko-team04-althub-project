@@ -80,7 +80,8 @@ const SecuritySettings: React.FC = () => {
   const [backupCodesRemaining, setBackupCodesRemaining] = useState<number | null>(null);
   
   // Device management state
-  const [terminatingSession, setTerminatingSession] = useState<string | null>(null);  // Reset dialog state when opened
+  const [terminatingSession, setTerminatingSession] = useState<string | null>(null);
+  const [signOutAllDialogOpen, setSignOutAllDialogOpen] = useState(false);  // Reset dialog state when opened
   const handleDialogOpen = () => {
     setStep('password');
     setCurrentPassword('');
@@ -550,11 +551,14 @@ const SecuritySettings: React.FC = () => {
     // TODO: Implement API call to terminate session
     console.log('Terminating session:', sessionId);
     setTerminatingSession(null);
+    toast.success('Session has been signed out');
   };
 
   const handleTerminateAllOtherSessions = () => {
     // TODO: Implement API call to terminate all other sessions
     console.log('Terminating all other sessions');
+    setSignOutAllDialogOpen(false);
+    toast.success('All other sessions have been signed out');
   };
   
   return (
@@ -978,7 +982,7 @@ const SecuritySettings: React.FC = () => {
               Other Active Sessions
             </h3>
             {mockSessions.filter(session => !session.is_current && session.is_active).length > 0 && (
-              <AlertDialog>
+              <AlertDialog open={signOutAllDialogOpen} onOpenChange={setSignOutAllDialogOpen}>
                 <AlertDialogTrigger asChild>
                   <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50">
                     <LogOut className="h-4 w-4 mr-2" />
@@ -993,7 +997,9 @@ const SecuritySettings: React.FC = () => {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <Button variant="outline">Cancel</Button>
+                    <Button variant="outline" onClick={() => setSignOutAllDialogOpen(false)}>
+                      Cancel
+                    </Button>
                     <Button 
                       variant="destructive" 
                       onClick={handleTerminateAllOtherSessions}
@@ -1035,7 +1041,10 @@ const SecuritySettings: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    <AlertDialog>
+                    <AlertDialog 
+                      open={terminatingSession === session.id} 
+                      onOpenChange={(open) => setTerminatingSession(open ? session.id : null)}
+                    >
                       <AlertDialogTrigger asChild>
                         <Button 
                           variant="outline" 
@@ -1055,7 +1064,9 @@ const SecuritySettings: React.FC = () => {
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <Button variant="outline">Cancel</Button>
+                          <Button variant="outline" onClick={() => setTerminatingSession(null)}>
+                            Cancel
+                          </Button>
                           <Button 
                             variant="destructive" 
                             onClick={() => handleTerminateSession(session.id)}

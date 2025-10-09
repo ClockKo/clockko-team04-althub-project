@@ -75,3 +75,7 @@ class User(Base):
     coworking_participations = relationship("RoomParticipant", back_populates="user")
     coworking_messages = relationship("RoomMessage", back_populates="user")
 
+    # Relationships - Challenges feature
+    challenges = relationship("ChallengeParticipant", back_populates="user")
+    challenge_stats = relationship("UserChallengeStats", uselist=False, back_populates="user")
+

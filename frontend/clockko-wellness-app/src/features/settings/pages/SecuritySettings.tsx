@@ -81,7 +81,10 @@ const SecuritySettings: React.FC = () => {
   
   // Device management state
   const [terminatingSession, setTerminatingSession] = useState<string | null>(null);
-  const [signOutAllDialogOpen, setSignOutAllDialogOpen] = useState(false);  // Reset dialog state when opened
+  const [signOutAllDialogOpen, setSignOutAllDialogOpen] = useState(false);
+  const [sessionFilter, setSessionFilter] = useState<'all' | 'mobile' | 'pc' | 'tablet'>('all');
+  const [sessionSearch, setSessionSearch] = useState('');
+  const [viewMode, setViewMode] = useState<'list' | 'timeline'>('list');  // Reset dialog state when opened
   const handleDialogOpen = () => {
     setStep('password');
     setCurrentPassword('');
@@ -560,6 +563,30 @@ const SecuritySettings: React.FC = () => {
     setSignOutAllDialogOpen(false);
     toast.success('All other sessions have been signed out');
   };
+
+  // Filter sessions based on search and filter criteria
+  const getFilteredSessions = (sessions: typeof mockSessions) => {
+    return sessions.filter(session => {
+      // Apply device type filter
+      if (sessionFilter !== 'all' && session.device_type !== sessionFilter) {
+        return false;
+      }
+      
+      // Apply search filter
+      if (sessionSearch) {
+        const searchLower = sessionSearch.toLowerCase();
+        return (
+          session.device_name.toLowerCase().includes(searchLower) ||
+          session.location.toLowerCase().includes(searchLower) ||
+          session.ip_address.includes(searchLower) ||
+          session.os_name.toLowerCase().includes(searchLower) ||
+          session.browser_name.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return true;
+    });
+  };
   
   return (
     <div className="p-4 md:p-6">
@@ -935,9 +962,56 @@ const SecuritySettings: React.FC = () => {
       <section className="bg-white rounded-lg shadow-sm p-6">
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-2">Device & Session Management</h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 mb-4">
             Manage your active sessions and devices. You can see where you're logged in and sign out of sessions you don't recognize.
           </p>
+          
+          {/* Session Statistics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {mockSessions.filter(session => session.is_active).length}
+              </div>
+              <div className="text-xs text-gray-600">Active Sessions</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {new Set(mockSessions.filter(session => session.is_active).map(s => s.device_type)).size}
+              </div>
+              <div className="text-xs text-gray-600">Device Types</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">
+                {new Set(mockSessions.filter(session => session.is_active).map(s => s.location.split(',')[1]?.trim())).size}
+              </div>
+              <div className="text-xs text-gray-600">Locations</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-600">
+                {mockSessions.filter(session => !session.is_active).length}
+              </div>
+              <div className="text-xs text-gray-600">Recent Sessions</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Session Security Overview */}
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-blue-900 mb-1">Session Security Score</h3>
+              <p className="text-sm text-blue-700">
+                Your sessions are secure. All locations are trusted.
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-blue-600">85%</div>
+              <div className="text-xs text-blue-600">Secure</div>
+            </div>
+          </div>
+          <div className="mt-3 w-full bg-blue-200 rounded-full h-2">
+            <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
+          </div>
         </div>
 
         {/* Current Session */}
@@ -957,11 +1031,21 @@ const SecuritySettings: React.FC = () => {
                     <p className="text-sm text-gray-600">
                       {session.os_name} • {session.browser_name} {session.browser_version}
                     </p>
-                    <div className="flex items-center mt-2 text-sm text-gray-500">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      <span className="mr-4">{session.location}</span>
-                      <Clock className="h-3 w-3 mr-1" />
-                      <span>Active now</span>
+                    <div className="flex flex-col mt-2 text-sm text-gray-500 space-y-1">
+                      <div className="flex items-center">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        <span className="mr-4">{session.location}</span>
+                        <Clock className="h-3 w-3 mr-1" />
+                        <span>Active now</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-xs bg-gray-100 px-2 py-0.5 rounded font-mono">
+                          IP: {session.ip_address}
+                        </span>
+                        <span className="ml-2 text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded">
+                          Trusted Location
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -974,13 +1058,75 @@ const SecuritySettings: React.FC = () => {
           ))}
         </div>
 
+        {/* Quick Actions */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <button className="flex items-center justify-center p-3 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">
+            <LogOut className="h-4 w-4 text-red-600 mr-2" />
+            <span className="text-sm font-medium text-red-700">Sign out all devices</span>
+          </button>
+          <button className="flex items-center justify-center p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
+            <Shield className="h-4 w-4 text-blue-600 mr-2" />
+            <span className="text-sm font-medium text-blue-700">Review security</span>
+          </button>
+          <button className="flex items-center justify-center p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+            <AlertCircle className="h-4 w-4 text-green-600 mr-2" />
+            <span className="text-sm font-medium text-green-700">Report suspicious</span>
+          </button>
+        </div>
+
+        {/* Session Filters */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <Input
+              type="text"
+              placeholder="Search sessions by device, location, or IP..."
+              value={sessionSearch}
+              onChange={(e) => setSessionSearch(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <div className="flex gap-2">
+            {(['all', 'mobile', 'pc', 'tablet'] as const).map((filter) => (
+              <Button
+                key={filter}
+                variant={sessionFilter === filter ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSessionFilter(filter)}
+                className="capitalize"
+              >
+                {filter === 'all' ? 'All Devices' : filter}
+              </Button>
+            ))}
+          </div>
+        </div>
+
         {/* Other Active Sessions */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-semibold text-gray-900 flex items-center">
-              <Monitor className="h-4 w-4 text-blue-500 mr-2" />
-              Other Active Sessions
-            </h3>
+            <div className="flex items-center">
+              <h3 className="text-base font-semibold text-gray-900 flex items-center">
+                <Monitor className="h-4 w-4 text-blue-500 mr-2" />
+                Other Active Sessions ({mockSessions.filter(session => !session.is_current && session.is_active).length})
+              </h3>
+              <div className="ml-4 flex bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                    viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
+                  }`}
+                >
+                  List
+                </button>
+                <button
+                  onClick={() => setViewMode('timeline')}
+                  className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                    viewMode === 'timeline' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
+                  }`}
+                >
+                  Timeline
+                </button>
+              </div>
+            </div>
             {mockSessions.filter(session => !session.is_current && session.is_active).length > 0 && (
               <AlertDialog open={signOutAllDialogOpen} onOpenChange={setSignOutAllDialogOpen}>
                 <AlertDialogTrigger asChild>
@@ -1012,7 +1158,10 @@ const SecuritySettings: React.FC = () => {
             )}
           </div>
 
-          {mockSessions.filter(session => !session.is_current && session.is_active).length === 0 ? (
+          {(() => {
+            const filteredActiveSessions = getFilteredSessions(mockSessions.filter(session => !session.is_current && session.is_active));
+            return filteredActiveSessions.length === 0;
+          })() ? (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
               <Shield className="h-8 w-8 text-gray-400 mx-auto mb-3" />
               <h4 className="text-base font-medium text-gray-900 mb-2">No other active sessions</h4>
@@ -1020,7 +1169,7 @@ const SecuritySettings: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {mockSessions.filter(session => !session.is_current && session.is_active).map(session => (
+              {getFilteredSessions(mockSessions.filter(session => !session.is_current && session.is_active)).map(session => (
                 <div key={session.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3">
@@ -1030,15 +1179,31 @@ const SecuritySettings: React.FC = () => {
                         <p className="text-sm text-gray-600">
                           {session.os_name} • {session.browser_name} {session.browser_version}
                         </p>
-                        <div className="flex items-center mt-1 text-sm text-gray-500">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          <span className="mr-4">{session.location}</span>
-                          <Clock className="h-3 w-3 mr-1" />
-                          <span>{getTimeAgo(session.last_activity)}</span>
+                        <div className="flex flex-col mt-1 text-sm text-gray-500 space-y-1">
+                          <div className="flex items-center">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            <span className="mr-4">{session.location}</span>
+                            <Clock className="h-3 w-3 mr-1" />
+                            <span>{getTimeAgo(session.last_activity)}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded font-mono">
+                              IP: {session.ip_address}
+                            </span>
+                            {session.location.includes('Nigeria') ? (
+                              <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded">
+                                Trusted Location
+                              </span>
+                            ) : (
+                              <span className="text-xs text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded">
+                                New Location
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-400">
+                            First signed in: {formatDate(session.created_at)}
+                          </p>
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">
-                          First signed in: {formatDate(session.created_at)}
-                        </p>
                       </div>
                     </div>
                     <AlertDialog 
@@ -1090,13 +1255,16 @@ const SecuritySettings: React.FC = () => {
             Recent Sessions
           </h3>
 
-          {mockSessions.filter(session => !session.is_active).length === 0 ? (
+          {(() => {
+            const filteredRecentSessions = getFilteredSessions(mockSessions.filter(session => !session.is_active));
+            return filteredRecentSessions.length === 0;
+          })() ? (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
               <p className="text-sm text-gray-600">No recent expired sessions.</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {mockSessions.filter(session => !session.is_active).map(session => (
+              {getFilteredSessions(mockSessions.filter(session => !session.is_active)).map(session => (
                 <div key={session.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
                   <div className="flex items-center space-x-3">
                     {getDeviceIcon(session.device_type)}

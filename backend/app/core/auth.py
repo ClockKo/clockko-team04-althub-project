@@ -34,20 +34,15 @@ def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
     return current_user
 
 
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
-import jwt
-from app.models.user import User
-from app.core.config import settings
-
 async def get_current_user_websocket(token: str, db: Session) -> User:
     """Authenticate user for WebSocket connection"""
     try:
+        from app.core.config import settings
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         user_id: str = payload.get("sub")
         if user_id is None:
             return None
-    except jwt.PyJWTError:
+    except JWTError:
         return None
     
     user = db.query(User).filter(User.id == user_id).first()

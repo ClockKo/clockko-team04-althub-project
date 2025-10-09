@@ -8,21 +8,6 @@ import Ko_Faces_4 from '../../../assets/images/Ko_Faces_4.png';
 
 const InviteFriendsPage: React.FC = () => {
   return (
-<<<<<<< HEAD
-    <div className="flex flex-col md:flex-row md:items-center md:justify-center min-h-[calc(100vh-200px)] p-4 md:p-6">
-      {/* Mobile title */}
-      <h1 className="text-2xl font-semibold text-[#4F63D2] mb-8 text-center md:hidden">
-        Invite friends
-      </h1>
-      
-      <div className="w-full max-w-lg bg-white rounded-2xl shadow-sm p-8 md:p-12 text-center">
-        <div className="flex justify-center items-center mb-6 md:mb-8">
-          <div className="grid grid-cols-2 gap-3 md:flex md:space-x-4 md:gap-0">
-            <img src={ko_faces_1} alt="Koala Face 1" className="h-12 md:h-14 mx-auto" />
-            <img src={ko_faces_2} alt="Koala Face 2" className="h-12 md:h-14 mx-auto" />
-            <img src={ko_faces_3} alt="Koala Face 3" className="h-12 md:h-14 mx-auto" />
-            <img src={ko_faces_4} alt="Koala Face 4" className="h-12 md:h-14 mx-auto" />
-=======
     <div className="flex flex-col items-center justify-start md:justify-center h-full p-4 md:p-0">
 
       <h1 className="text-2xl font-semibold text-blue-800 mb-12 md:hidden">Invite Friends</h1>
@@ -34,7 +19,6 @@ const InviteFriendsPage: React.FC = () => {
             <img src={Ko_Faces_2} alt="Koala Face 2" className="h-16" />
             <img src={Ko_Faces_3} alt="Koala Face 3" className="h-16" />
             <img src={Ko_Faces_4} alt="Koala Face 4" className="h-16" />
->>>>>>> b91f78e (Refactor IaC)
           </div>
         </div>
         

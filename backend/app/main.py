@@ -35,14 +35,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-<<<<<<< HEAD
+
 # CORS settings (adjust as needed for frontend origin)
-=======
+
 
 # CORS settings: read allowed origins from env via settings.FRONTEND_URL (comma-separated supported)
 origins = [o.strip() for o in str(getattr(settings, 'FRONTEND_URL', '')).split(',') if o.strip()] or ["*"]
 allow_credentials = False if origins == ["*"] else True
->>>>>>> b91f78e (Refactor IaC)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -61,13 +60,11 @@ app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"]
 app.include_router(coworking.router, prefix="/api", tags=["Coworking"])
 app.include_router(user_settings.router)  # Has its own prefix /api/users
 app.include_router(two_factor_auth.router, prefix="/api/auth", tags=["Two-Factor Authentication"])
-app.include_router(auth_google.router)  # router has its own prefix
-<<<<<<< HEAD
 app.include_router(challenges.router, prefix="/api/challenges", tags=["challenges"])
 app.include_router(websocket.router, prefix="/api", tags=["websocket"])
-=======
+
 app.include_router(coworking_ws.router)  # includes /ws/rooms/{room_id}
->>>>>>> b91f78e (Refactor IaC)
+
 
 # If you have a reminder thread, import and start it here
 # from app.reminders import start_reminder_thread
@@ -93,3 +90,4 @@ def health():
 def google_health():
     configured = bool(getattr(settings, 'GOOGLE_CLIENT_ID', ''))
     return {"google_sign_in_configured": configured}
+

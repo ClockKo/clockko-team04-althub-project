@@ -11,9 +11,12 @@ class RoomStatus(str, enum.Enum):
     INACTIVE = "inactive"
 
 class RoomMessageType(str, enum.Enum):
-    TEXT = "text"
-    SYSTEM = "system"
-    EMOJI = "emoji"
+    text = "text"
+    system = "system"
+    emoji = "emoji"
+
+# Coworking room model is defined in app/models/room.py
+# This is to avoid duplicate table definitions
 
 # class CoworkingRoom(Base):
 #     __tablename__ = "coworking_rooms"
@@ -26,6 +29,7 @@ class RoomMessageType(str, enum.Enum):
 #     description = Column(Text, nullable=True)
 #     status = Column(Enum(RoomStatus), default=RoomStatus.ACTIVE, nullable=False)
 #     max_participants = Column(Integer, default=10)
+#     current_participants = Column(Integer, default=0)
 #     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 #     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -63,7 +67,7 @@ class RoomMessage(Base):
     room_id = Column(UUID(as_uuid=True), ForeignKey("coworking_rooms.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     message_text = Column(Text, nullable=False)
-    message_type = Column(Enum(RoomMessageType), default=RoomMessageType.TEXT, nullable=False)
+    message_type = Column(Enum(RoomMessageType), default=RoomMessageType.text, nullable=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
     room = relationship("CoworkingRoom", back_populates="messages")

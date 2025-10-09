@@ -198,7 +198,7 @@ const ProfileSettings: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const [nameLoading, setNameLoading] = useState(false);
+  const [_nameLoading, setNameLoading] = useState(false);
 
   const handleNameSave = async () => {
     if (!editName || editName === user?.name) {

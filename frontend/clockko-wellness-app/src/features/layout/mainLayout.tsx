@@ -142,7 +142,6 @@ export default function MainLayout() {
       items: [
         { path: '/settings/email', label: 'Email and Calendars', icon: Mail },
         { path: '/settings/security', label: 'Security', icon: Shield },
-        { path: '/settings/devices', label: 'Device Management', icon: Smartphone },
         { path: '/settings/whats-new', label: "What's new", icon: Flame },
         { path: '/settings/invite', label: 'Invite friends', icon: Gift },
         { path: '/settings/help', label: 'Help & feedback', icon: HelpCircle },

@@ -1,7 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, timetracker, tasks, users, dashboard, coworking, user_settings, two_factor_auth
+from app.api import auth, timetracker, tasks, users, dashboard, coworking, user_settings, two_factor_auth, challenges, websocket
 from app.api import auth_google  # Google ID token verification endpoints
 from app.core.config import settings
 from app.core.database import Base, engine
@@ -34,7 +34,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
 # CORS settings (adjust as needed for frontend origin)
 app.add_middleware(
     CORSMiddleware,
@@ -55,6 +54,8 @@ app.include_router(coworking.router, prefix="/api", tags=["Coworking"])
 app.include_router(user_settings.router)  # Has its own prefix /api/users
 app.include_router(two_factor_auth.router, prefix="/api/auth", tags=["Two-Factor Authentication"])
 app.include_router(auth_google.router)  # router has its own prefix
+app.include_router(challenges.router, prefix="/api/challenges", tags=["challenges"])
+app.include_router(websocket.router, prefix="/api", tags=["websocket"])
 
 # If you have a reminder thread, import and start it here
 # from app.reminders import start_reminder_thread

@@ -32,3 +32,23 @@ def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
             detail="Admin privileges required. This operation is restricted to administrators only."
         )
     return current_user
+
+
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+import jwt
+from app.models.user import User
+from app.core.config import settings
+
+async def get_current_user_websocket(token: str, db: Session) -> User:
+    """Authenticate user for WebSocket connection"""
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+    except jwt.PyJWTError:
+        return None
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    return user

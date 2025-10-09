@@ -44,3 +44,4 @@ redis==6.4.0
 pyotp==2.9.0
 qrcode[pil]==8.0
 cryptography==45.0.6
+websockets==12.0

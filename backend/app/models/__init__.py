@@ -2,10 +2,9 @@
 from app.models.user import User
 from app.models.task import Task
 from app.models.user_settings import UserSettings
-from app.models.room import CoworkingRoom, RoomStatus
-from app.models.room_participant import RoomParticipant
-from app.models.room_message import RoomMessage, RoomMessageType
+from app.models.coworking import RoomParticipant, RoomMessage, RoomStatus, RoomMessageType
 from app.models.shutdown_reflection import ShutdownReflection
+from app.models.room import CoworkingRoom
 
 __all__ = [
     "User",

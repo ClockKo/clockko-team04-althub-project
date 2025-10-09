@@ -19,7 +19,7 @@ import { OnboardingFlow } from './features/onboarding';
 import NotFoundPage from './components/NotFoundPage';
 import { Toaster } from 'react-hot-toast';
 import CoWorkingRoomsPage from './features/coworking/coworkingRoomPage';
-import {ProfileSettings, GeneralSettings, SecuritySettings } from './features/settings';
+import {ProfileSettings, GeneralSettings, SecuritySettings, DeviceSettings } from './features/settings';
 import IntegrationsSettings from './features/settings/pages/IntegrationsSettings';
 import EmailSettings from './features/settings/pages/EmailSettings';
 import WhatsNewPage from './features/settings/pages/WhatsNewPage';
@@ -76,6 +76,7 @@ function App() {
                   <Route path="/settings/profile" element={<ProfileSettings />} />
                   <Route path="/settings/general" element={<GeneralSettings />} />
                   <Route path="/settings/security" element={<SecuritySettings />} />
+                  <Route path="/settings/devices" element={<DeviceSettings />} />
                   <Route path="/settings/integrations" element={<IntegrationsSettings />} />
                   <Route path="/settings/email" element={<EmailSettings />} />
                   <Route path="/settings/security" element={<SecuritySettings />} />

@@ -59,7 +59,7 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/clockko_dev_yourname
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=clockko04@gmail.com
-SMTP_PASSWORD=xpgijswtzbdrzmpe
+SMTP_PASSWORD=your-app-password  # For AWS, use Secrets Manager via Terraform
 SMTP_FROM=clockko04@gmail.com
 
 # For email testing, use your personal email address

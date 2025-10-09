@@ -1,7 +1,4 @@
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8000';
-
 export interface UserProfileUpdateParams {
   name?: string;
   avatar?: string | null;
@@ -19,6 +16,7 @@ export interface UserProfileResponse {
   otp_verified: boolean;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || 'http://localhost:8000';
 function getToken() {
   return localStorage.getItem('authToken') || '';
 }

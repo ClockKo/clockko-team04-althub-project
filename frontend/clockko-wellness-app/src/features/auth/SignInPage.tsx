@@ -95,10 +95,9 @@ const SignInPage: React.FC = () => {
     }
 
     try {
-      // Send the ID token to backend
-      const response = await axios.post(`http://localhost:8000/api/auth/google/verify`, {
-        token: googleIdToken
-      });
+      // Send the ID token to backend using configured API base
+      const apiBase = (import.meta.env.VITE_API_BASE_URL as string | undefined) || 'http://localhost:8000/api';
+      const response = await axios.post(`${apiBase}/auth/google/verify`, { token: googleIdToken });
 
       if (response.data.access_token) {
         setAuthToken(response.data.access_token);

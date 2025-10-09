@@ -55,7 +55,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=clockko04@gmail.com
-SMTP_PASSWORD=xpgijswtzbdrzmpe
+# For local-only testing, set your personal Gmail App Password here or via environment
+# Do NOT commit real passwords; in AWS we read SMTP_PASSWORD from Secrets Manager
+SMTP_PASSWORD=your-app-password
 SMTP_FROM=clockko04@gmail.com
 SMTP_FROM_NAME=Clockko Team
 

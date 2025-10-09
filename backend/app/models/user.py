@@ -63,10 +63,10 @@ class User(Base):
     verification_token = Column(String, unique=True, nullable=True)
     onboarding_completed = Column(Boolean, default=False, nullable=False)
     
-    # Two-Factor Authentication fields
-    two_factor_enabled = Column(Boolean, default=False, nullable=False)
-    two_factor_secret = Column(String, nullable=True)  # Encrypted TOTP secret
-    backup_codes = Column(String, nullable=True)  # JSON array of hashed backup codes
+    # Two-Factor Authentication fields - Temporarily commented out
+    # two_factor_enabled = Column(Boolean, default=False, nullable=False)
+    # two_factor_secret = Column(String, nullable=True)  # Encrypted TOTP secret
+    # backup_codes = Column(String, nullable=True)  # JSON array of hashed backup codes
 
     # Relationships
     settings = relationship("UserSettings", back_populates="user", uselist=False)

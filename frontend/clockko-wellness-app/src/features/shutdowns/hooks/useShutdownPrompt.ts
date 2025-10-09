@@ -1,1 +1,0 @@
-/* useShutdownPrompt.ts   // Custom hook for prompt timing/logic*/

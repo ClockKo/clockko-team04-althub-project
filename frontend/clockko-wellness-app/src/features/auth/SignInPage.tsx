@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,7 +11,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { loginUser} from './api';
 import { useAuth } from './authcontext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
-import googleLogo from '../../assets/images/google.png';
+// import googleLogo from '../../assets/images/google.png';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
@@ -24,7 +24,7 @@ const signInSchema = z.object({
 type SignInFormData = z.infer<typeof signInSchema>
 
 const SignInPage: React.FC = () => {
-  const googleLoginRef = useRef<any>(null);
+//   const googleLoginRef = useRef<any>(null);
   
   // Set meta tags for sign-in page
   useHead({

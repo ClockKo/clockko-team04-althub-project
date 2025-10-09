@@ -1,1 +1,0 @@
-/* ShutdownPrompt.tsx     // Guided shutdown prompt UI*/

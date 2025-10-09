@@ -11,7 +11,7 @@ import { Button } from '../../components/ui/button'
 import { registerUser } from './api' 
 import { useAuth } from './authcontext'
 import { GoogleLogin } from '@react-oauth/google'
-import googleLogo from '../../assets/images/google.png'
+// import googleLogo from '../../assets/images/google.png'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 

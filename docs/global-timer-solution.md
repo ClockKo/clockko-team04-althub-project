@@ -50,7 +50,8 @@ globalTimer.startFocusSession(25) // 25 minutes
 ### **Test Scenarios**
 
 **🎯 Focus Session Test**:
-```
+
+```text
 1. Start 25-minute focus session from dashboard
 2. Navigate to Tasks page
 3. Wait for session to complete (or set shorter time for testing)
@@ -58,7 +59,8 @@ globalTimer.startFocusSession(25) // 25 minutes
 ```
 
 **☕ Break Session Test**:
-```
+
+```text
 1. Start 5-minute break session
 2. Navigate to Coworking page
 3. Wait for break to complete
@@ -66,7 +68,8 @@ globalTimer.startFocusSession(25) // 25 minutes
 ```
 
 **⏸️ Pause/Resume Test**:
-```
+
+```text
 1. Start any session
 2. Pause it from any page
 3. Navigate to different page
@@ -188,10 +191,12 @@ const { timeLeft, isRunning, startFocusSession } = useGlobalTimer()
 
 ## 🔔 **User Experience**
 
-**Before**: 
+**Before**:
+
 - Start timer → Navigate away → Timer stops → No notification 😞
 
-**After**: 
+**After**:
+
 - Start timer → Navigate away → Timer continues → Get notification + sound when complete! 🎉
 
 The global timer service ensures users never lose their focus sessions again!

@@ -68,7 +68,7 @@ class GlobalTimerService {
       const currentSession = await timeTrackerService.getCurrentSessionFromAPI()
       
       if (currentSession && currentSession.status === 'active') {
-        console.log('🔄 Found active session, restoring timer state:', currentSession)
+        // console.log('🔄 Found active session, restoring timer state:', currentSession)
         
         // Calculate time left based on session start time and planned duration
         const startTime = new Date(currentSession.startTime)
@@ -101,7 +101,7 @@ class GlobalTimerService {
       if (pausedSession) {
         this.state.pausedFocusSession = pausedSession.session
         this.state.pausedFocusTimeLeft = pausedSession.timeLeft
-        console.log('📋 Found paused focus session:', pausedSession)
+        // console.log('📋 Found paused focus session:', pausedSession)
       }
       
       this.isInitialized = true
@@ -162,7 +162,7 @@ class GlobalTimerService {
   
   async startFocusSession(durationMinutes: number): Promise<void> {
     try {
-      console.log('🚀 Starting focus session:', durationMinutes, 'minutes')
+    //   console.log('🚀 Starting focus session:', durationMinutes, 'minutes')
       
       const duration = durationMinutes * 60
       const session = await timeTrackerService.startFocusSession(durationMinutes, 'focus')
@@ -187,7 +187,7 @@ class GlobalTimerService {
   
   async startBreakSession(durationMinutes: number, pauseFocusSession?: boolean): Promise<void> {
     try {
-      console.log('🌴 Starting break session:', durationMinutes, 'minutes')
+    //   console.log('🌴 Starting break session:', durationMinutes, 'minutes')
       
       // If there's an active focus session and we should pause it
       if (pauseFocusSession && this.state.currentSession && this.state.mode === 'focus') {
@@ -241,7 +241,7 @@ class GlobalTimerService {
       this.stopTimer()
       
       if (this.state.currentSession) {
-        console.log('🛑 Stopping session:', this.state.currentSession.id)
+        // console.log('🛑 Stopping session:', this.state.currentSession.id)
         // Note: timeTrackerService doesn't have a stop method yet, so we'll just clear local state
       }
       
@@ -274,7 +274,7 @@ class GlobalTimerService {
     this.stopTimer()
     
     const completedMode = this.state.mode
-    console.log(`⏰ ${completedMode} session completed!`)
+    // console.log(`⏰ ${completedMode} session completed!`)
     
     try {
       if (this.state.currentSession) {
@@ -319,7 +319,7 @@ class GlobalTimerService {
     }
     
     try {
-      console.log('🔄 Resuming paused focus session')
+    //   console.log('🔄 Resuming paused focus session')
       
       const resumedSession = await timeTrackerService.resumeFocusSession(this.state.pausedFocusSession.id)
       
@@ -361,7 +361,7 @@ class GlobalTimerService {
     }
     
     // Also show console notification for development
-    console.log(`🔔 ${title}: ${body}`)
+    // console.log(`🔔 ${title}: ${body}`)
   }
   
   private createNotification(title: string, body: string): void {

@@ -1,9 +1,4 @@
-/*
-timeTrackerService.ts        # API calls or local storage logic
-*/ 
-
-// Time Tracker API Service - Prepared for Backend Integration
-// Currently uses localStorage, ready to switch to real API calls
+ // Time Tracker API Service 
 
 interface FocusSession {
   id: string
@@ -34,24 +29,17 @@ class TimeTrackerService {
   // Helper method to invalidate dashboard cache
   private invalidateDashboardCache() {
     if (this.queryClient) {
-      console.log('🔄 Invalidating dashboard cache after session completion')
+      // console.log('🔄 Invalidating dashboard cache after session completion')
       this.queryClient.invalidateQueries({ queryKey: ["dashboardData"] })
-      console.log('🔄 Dashboard cache invalidation call completed')
+      // console.log('🔄 Dashboard cache invalidation call completed')
     } else {
       console.warn('⚠️ Query client not available for dashboard cache invalidation')
     }
   }
 
-  // private readonly STORAGE_KEYS = {
-  //   DAILY_SUMMARY: 'timetracker_daily_summary',
-  //   CURRENT_SESSION: 'timetracker_current_session',
-  //   PAUSED_SESSION: 'timetracker_paused_session',
-  //   USER_SESSIONS: 'timetracker_user_sessions'
-  // }
-
   // TODO: Replace with real API calls when backend is ready
   async startFocusSession(durationMinutes: number, sessionType: 'focus' | 'break' = 'focus'): Promise<FocusSession> {
-    console.log('🚀 Starting focus session:', { durationMinutes, sessionType })
+    // console.log('🚀 Starting focus session:', { durationMinutes, sessionType })
     
     // Check for existing active session via API first (ignore errors for now)
     try {
@@ -62,9 +50,9 @@ class TimeTrackerService {
         const isStaleSession = sessionAgeHours > 2
         
         if (isStaleSession) {
-          console.log(`🕒 Detected stale ${currentSession.sessionType} session (${sessionAgeHours.toFixed(1)} hours old), auto-completing...`)
+          // console.log(`🕒 Detected stale ${currentSession.sessionType} session (${sessionAgeHours.toFixed(1)} hours old), auto-completing...`)
           await this.completeFocusSession(currentSession.id)
-          console.log('✅ Stale session auto-completed, continuing with new session...')
+          // console.log('✅ Stale session auto-completed, continuing with new session...')
           // Continue to start new session
         } else {
           // Same session type - offer to complete the existing one
@@ -76,7 +64,7 @@ class TimeTrackerService {
           
           if (shouldComplete) {
             await this.completeFocusSession(currentSession.id)
-            console.log('✅ Previous session completed, starting new one...')
+            // console.log('✅ Previous session completed, starting new one...')
             // Continue to start new session
           } else {
             throw new Error(`Cannot start new ${sessionType} session - you have an active ${currentSession.sessionType} session`)
@@ -90,14 +78,14 @@ class TimeTrackerService {
           const isStaleSession = sessionAgeHours > 2
           
           if (isStaleSession) {
-            console.log(`🕒 Detected stale focus session (${sessionAgeHours.toFixed(1)} hours old), auto-completing before break...`)
+            // console.log(`🕒 Detected stale focus session (${sessionAgeHours.toFixed(1)} hours old), auto-completing before break...`)
             await this.completeFocusSession(currentSession.id)
-            console.log('✅ Stale focus session auto-completed, starting break...')
+            // console.log('✅ Stale focus session auto-completed, starting break...')
             // Continue to start break session
           } else {
             // Check if the focus session is already paused (paused by UI before calling this)
             if (currentSession.status === 'paused') {
-              console.log('🔄 Focus session is already paused, proceeding with break...')
+              // console.log('🔄 Focus session is already paused, proceeding with break...')
               // Focus session is already paused, continue to start break
             } else {
               // User wants to take a break - pause the focus session
@@ -108,7 +96,7 @@ class TimeTrackerService {
               
               if (shouldPause) {
                 await this.pauseFocusSession(currentSession.id)
-                console.log('⏸️ Focus session paused, starting break...')
+                // console.log('⏸️ Focus session paused, starting break...')
                 // Continue to start break session
               } else {
                 throw new Error('Cannot start break - focus session is still active')
@@ -121,9 +109,9 @@ class TimeTrackerService {
           const isStaleSession = sessionAgeHours > 2
           
           if (isStaleSession) {
-            console.log(`🕒 Detected stale ${currentSession.sessionType} session (${sessionAgeHours.toFixed(1)} hours old), auto-completing...`)
+            // console.log(`🕒 Detected stale ${currentSession.sessionType} session (${sessionAgeHours.toFixed(1)} hours old), auto-completing...`)
             await this.completeFocusSession(currentSession.id)
-            console.log('✅ Stale session auto-completed, continuing with new session...')
+            // console.log('✅ Stale session auto-completed, continuing with new session...')
             // Continue to start new session
           } else {
             // Recent session - ask user
@@ -132,7 +120,7 @@ class TimeTrackerService {
         }
       }
     } catch (error) {
-      console.log('⚠️ Could not check for existing session (backend might be starting):', error)
+      // console.log('⚠️ Could not check for existing session (backend might be starting):', error)
       // If it's our own error from above, re-throw it
       if (error instanceof Error && (error.message.includes('Cannot start') || error.message.includes('Complete it first'))) {
         throw error
@@ -198,15 +186,13 @@ class TimeTrackerService {
       status: responseData.status as 'active' | 'completed' | 'stopped' | 'paused'
     }
     
-    // TODO: REMOVED localStorage for testing - Store current session locally for offline support only
-    // localStorage.setItem(this.STORAGE_KEYS.CURRENT_SESSION, JSON.stringify(session))
     
-    console.log('✅ Focus session started via API:', session)
+    // console.log('✅ Focus session started via API:', session)
     return session
   }
 
   async completeFocusSession(sessionId: string): Promise<FocusSession> {
-    console.log('🏁 Completing focus session:', sessionId)
+    // console.log('🏁 Completing focus session:', sessionId)
     
     // Get current session from API first
     const currentSession = await this.getCurrentSessionFromAPI()
@@ -226,13 +212,13 @@ class TimeTrackerService {
       end_time: now.toISOString()
     }
 
-    console.log('📅 Completion time data:', {
-      sessionId,
-      localTime: now.toString(),
-      isoTime: now.toISOString(),
-      startTime: currentSession.startTime.toString(),
-      startTimeISO: currentSession.startTime.toISOString()
-    })
+    // console.log('📅 Completion time data:', {
+    //   sessionId,
+    //   localTime: now.toString(),
+    //   isoTime: now.toISOString(),
+    //   startTime: currentSession.startTime.toString(),
+    //   startTimeISO: currentSession.startTime.toISOString()
+    // })
 
     // Make API call to end session
     const endpoint = currentSession.sessionType === 'focus' 
@@ -265,25 +251,19 @@ class TimeTrackerService {
       sessionType: responseData.type as 'focus' | 'break',
       status: responseData.status as 'active' | 'completed' | 'stopped' | 'paused'
     }
-
-    // TODO: REMOVED localStorage for testing - Clear current session from localStorage
-    // localStorage.removeItem(this.STORAGE_KEYS.CURRENT_SESSION)
     
-    // TODO: REMOVED localStorage for testing - Add to daily summary locally for immediate UI update
-    // this.addSessionToDailySummary(completedSession)
-    
-    console.log('✅ Focus session completed via API:', completedSession)
+    // console.log('✅ Focus session completed via API:', completedSession)
     
     // Invalidate dashboard cache to update focus time display
-    console.log('🔄 About to invalidate dashboard cache...')
+    // console.log('🔄 About to invalidate dashboard cache...')
     this.invalidateDashboardCache()
-    console.log('🔄 Dashboard cache invalidation completed')
+    // console.log('🔄 Dashboard cache invalidation completed')
     
     return completedSession
   }
 
   async pauseFocusSession(sessionId: string): Promise<FocusSession> {
-    console.log('⏸️ Pausing focus session:', sessionId)
+    // console.log('⏸️ Pausing focus session:', sessionId)
     
     // Get current session from API first
     const currentSession = await this.getCurrentSessionFromAPI()
@@ -327,12 +307,12 @@ class TimeTrackerService {
       status: 'paused' as const
     }
     
-    console.log('⏸️ Focus session paused via API:', pausedSession)
+    // console.log('⏸️ Focus session paused via API:', pausedSession)
     return pausedSession
   }
 
   async resumeFocusSession(sessionId: string): Promise<FocusSession> {
-    console.log('▶️ Resuming focus session:', sessionId)
+    // console.log('▶️ Resuming focus session:', sessionId)
     
     const token = localStorage.getItem('authToken')
     if (!token) {
@@ -370,7 +350,7 @@ class TimeTrackerService {
       status: 'active' as const
     }
     
-    console.log('▶️ Focus session resumed via API:', resumedSession)
+    // console.log('▶️ Focus session resumed via API:', resumedSession)
     return resumedSession
   }
 
@@ -379,67 +359,7 @@ class TimeTrackerService {
     
     // TODO: REMOVED localStorage for testing - Use API instead
     throw new Error('Stop functionality not implemented for API-only testing')
-    
-    // const currentSession = this.getCurrentSession()
-    // if (!currentSession || currentSession.id !== sessionId) {
-    //   throw new Error('Active session not found')
-    // }
-
-    // const now = new Date()
-    // const stoppedSession: FocusSession = {
-    //   ...currentSession,
-    //   endTime: now,
-    //   actualDuration: Math.round((now.getTime() - currentSession.startTime.getTime()) / 60000),
-    //   status: 'stopped'
-    // }
-
-    // // Clear current session
-    // localStorage.removeItem(this.STORAGE_KEYS.CURRENT_SESSION)
-    
-    // // Add to daily summary
-    // this.addSessionToDailySummary(stoppedSession)
-    
-    // console.log('⏹️ Focus session stopped:', stoppedSession)
-    // return stoppedSession
   }
-
-  // Method to manually stop a session that's not in current storage (for paused sessions)
-  // COMMENTED OUT FOR API-ONLY TESTING
-  // async stopSessionManually(session: FocusSession): Promise<FocusSession> {
-  //   console.log('⏹️ Manually stopping session:', session.id)
-    
-  //   const now = new Date()
-  //   const stoppedSession: FocusSession = {
-  //     ...session,
-  //     endTime: now,
-  //     actualDuration: Math.round((now.getTime() - session.startTime.getTime()) / 60000),
-  //     status: 'stopped'
-  //   }
-    
-  //   // Add to daily summary
-  //   this.addSessionToDailySummary(stoppedSession)
-    
-  //   console.log('⏹️ Session manually stopped:', stoppedSession)
-  //   return stoppedSession
-  // }
-
-  // COMMENTED OUT FOR API-ONLY TESTING - localStorage version
-  // getCurrentSession(): FocusSession | null {
-  //   try {
-  //     const stored = localStorage.getItem(this.STORAGE_KEYS.CURRENT_SESSION)
-  //     if (!stored) return null
-      
-  //     const session = JSON.parse(stored)
-  //     // Convert date strings back to Date objects
-  //     session.startTime = new Date(session.startTime)
-  //     if (session.endTime) session.endTime = new Date(session.endTime)
-      
-  //     return session
-  //   } catch (error) {
-  //     console.error('Error getting current session:', error)
-  //     return null
-  //   }
-  // }
 
   async getCurrentSessionFromAPI(): Promise<FocusSession | null> {
     try {
@@ -482,23 +402,6 @@ class TimeTrackerService {
     }
   }
 
-  // COMMENTED OUT FOR API-ONLY TESTING - localStorage version
-  // getPausedSession(): FocusSession | null {
-  //   try {
-  //     const stored = localStorage.getItem(this.STORAGE_KEYS.PAUSED_SESSION)
-  //     if (!stored) return null
-      
-  //     const session = JSON.parse(stored)
-  //     // Convert date strings back to Date objects
-  //     session.startTime = new Date(session.startTime)
-  //     if (session.endTime) session.endTime = new Date(session.endTime)
-      
-  //     return session
-  //   } catch (error) {
-  //     console.error('Error getting paused session:', error)
-  //     return null
-  //   }
-  // }
 
   async getDailySummary(date?: string): Promise<DailySummary> {
     const targetDate = date || new Date().toISOString().split('T')[0]
@@ -565,16 +468,16 @@ class TimeTrackerService {
         sessions: sessions
       }
 
-      console.log('🔍 Summary before any conversion:', summary)
+      // console.log('🔍 Summary before any conversion:', summary)
 
-      console.log('🔄 Recalculated totals from sessions:', { 
-        sessions: sessions.length, 
-        focusSessions: summary.totalFocusSessions, 
-        focusTime: summary.totalFocusTime, 
-        breakTime: summary.totalBreakTime 
-      })
+      // console.log('🔄 Recalculated totals from sessions:', { 
+      //   sessions: sessions.length, 
+      //   focusSessions: summary.totalFocusSessions, 
+      //   focusTime: summary.totalFocusTime, 
+      //   breakTime: summary.totalBreakTime 
+      // })
       
-      console.log('📊 Daily summary:', summary)
+      // console.log('📊 Daily summary:', summary)
       return summary
 
     } catch (error) {
@@ -590,58 +493,6 @@ class TimeTrackerService {
     }
   }
 
-  // COMMENTED OUT FOR API-ONLY TESTING - localStorage daily summary
-  // private addSessionToDailySummary(session: FocusSession) {
-  //   // Ensure startTime is a Date object for proper date extraction
-  //   const startTime = typeof session.startTime === 'string' ? new Date(session.startTime) : session.startTime;
-  //   const date = startTime.toISOString().split('T')[0]
-    
-  //   console.log('💾 Adding session to daily summary:', { sessionId: session.id, date, sessionType: session.sessionType, status: session.status });
-    
-  //   try {
-  //     const stored = localStorage.getItem(this.STORAGE_KEYS.DAILY_SUMMARY)
-  //     const allSummaries: Record<string, DailySummary> = stored ? JSON.parse(stored) : {}
-      
-  //     if (!allSummaries[date]) {
-  //       allSummaries[date] = {
-  //         date,
-  //         totalFocusSessions: 0,
-  //         totalFocusTime: 0,
-  //         totalBreakTime: 0,
-  //         sessions: []
-  //       }
-  //     }
-      
-  //     const summary = allSummaries[date]
-  //     summary.sessions.push(session)
-      
-  //     // Count both completed and stopped sessions (stopped still counts as productive time)
-  //     if ((session.status === 'completed' || session.status === 'stopped') && session.actualDuration) {
-  //       if (session.sessionType === 'focus') {
-  //         summary.totalFocusSessions += 1
-  //         summary.totalFocusTime += session.actualDuration * 60 // convert to seconds
-  //       } else if (session.sessionType === 'break') {
-  //         summary.totalBreakTime += session.actualDuration * 60 // convert to seconds
-  //       }
-  //       console.log(`📊 Updated totals: ${session.sessionType} sessions: ${summary.totalFocusSessions}, focus time: ${summary.totalFocusTime}s`);
-  //     }
-      
-  //     localStorage.setItem(this.STORAGE_KEYS.DAILY_SUMMARY, JSON.stringify(allSummaries))
-  //     console.log('💾 Session added to daily summary:', { date, session })
-      
-  //   } catch (error) {
-  //     console.error('Error adding session to daily summary:', error)
-  //   }
-  // }
-
-  // Helper method to clear all data (for testing)
-  // COMMENTED OUT FOR API-ONLY TESTING
-  // clearAllData() {
-  //   Object.values(this.STORAGE_KEYS).forEach(key => {
-  //     localStorage.removeItem(key)
-  //   })
-  //   console.log('🗑️ All time tracker data cleared')
-  // }
 
   // Clear all timetracker sessions via API for clean slate
   async clearAllSessions(): Promise<void> {
@@ -682,9 +533,9 @@ class TimeTrackerService {
       console.log('✅ Clear successful:', clearResult)
       
       // Clear any localStorage as well for complete clean slate
-      localStorage.removeItem('timetracker_current_session')
-      localStorage.removeItem('timetracker_daily_summary')
-      localStorage.removeItem('timetracker_paused_session')
+      // localStorage.removeItem('timetracker_current_session')
+      // localStorage.removeItem('timetracker_daily_summary')
+      // localStorage.removeItem('timetracker_paused_session')
       
       return clearResult
     } catch (error) {
@@ -693,11 +544,6 @@ class TimeTrackerService {
     }
   }
 
-  // Helper method to check if there's a paused session
-  // COMMENTED OUT FOR API-ONLY TESTING
-  // hasPausedSession(): boolean {
-  //   return this.getPausedSession() !== null
-  // }
 }
 
 // Export singleton instance

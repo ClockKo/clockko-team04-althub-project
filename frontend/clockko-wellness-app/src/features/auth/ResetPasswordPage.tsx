@@ -92,7 +92,7 @@ const ResetPasswordPage: React.FC = () => {
         <div className="mt-4">
           <p className="text-sm text-gray-600 text-center">
             Remembered your password?{' '}
-            <a href="/sign-in" className="text-blue1 hover:underline">
+            <a href="/signin" className="text-blue1 hover:underline">
               Sign In
             </a>
             {/* go back to the home page */}

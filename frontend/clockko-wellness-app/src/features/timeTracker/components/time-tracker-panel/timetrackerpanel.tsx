@@ -124,7 +124,7 @@ function TimeTrackerPanel() {
   const [isRunning, setIsRunning] = useState(false) // Whether the timer is actively counting down
   const [mode, setMode] = useState<'initial' | 'focus' | 'break' | 'completed'>('initial') // Current mode of the timer
   const [focusDuration, setFocusDuration] = useState(FOCUS_DEFAULT_DURATION) // Stores the currently selected focus duration
-  const [breakDuration, setBreakDuration] = useState(BREAK_DEFAULT_DURATION) // Default break duration (can be updated by dropdown)
+  const [breakDuration, _setBreakDuration] = useState(BREAK_DEFAULT_DURATION) // Default break duration (can be updated by dropdown)
   const timerRef = useRef<number | null>(null) // To store the interval ID for cleanup
   const [isDropdownOpen, setIsDropdownOpen] = useState(false) // For "Start" button's focus duration dropdown
   const [isBreakDropdownOpen, setIsBreakDropdownOpen] = useState(false) // For "Take a Break" button's break duration dropdown
@@ -231,12 +231,12 @@ function TimeTrackerPanel() {
 
   // Effect for handling global timer completion events
   useEffect(() => {
-    console.log('🔍 Global timer state changed:', {
-      mode: globalTimer.mode,
-      timeLeft: globalTimer.timeLeft,
-      isRunning: globalTimer.isRunning,
-      currentSession: globalTimer.currentSession
-    })
+    // console.log('🔍 Global timer state changed:', {
+    //   mode: globalTimer.mode,
+    //   timeLeft: globalTimer.timeLeft,
+    //   isRunning: globalTimer.isRunning,
+    //   currentSession: globalTimer.currentSession
+    // })
 
     // Handle when global timer completes a focus session (shows completion UI)
     if (globalTimer.mode === 'completed') {
@@ -272,7 +272,7 @@ function TimeTrackerPanel() {
   // --- Timer Control Functions ---
 
   // Resumes a paused timer
-  const resumeCurrentTimer = () => {
+  const _resumeCurrentTimer = () => {
     setIsRunning(true)
     setIsDropdownOpen(false) // Ensure start dropdown is closed
     setIsBreakDropdownOpen(false) // Ensure break dropdown is closed
@@ -282,7 +282,7 @@ function TimeTrackerPanel() {
   }
 
   // Pauses the current timer
-  const pauseTimer = () => {
+  const _pauseTimer = () => {
     setIsRunning(false)
     if (timerRef.current) {
       window.clearInterval(timerRef.current) // Using window.clearInterval
@@ -293,7 +293,7 @@ function TimeTrackerPanel() {
   }
 
   // Stops the timer and resets it to the initial state with default focus duration
-  const stopTimer = () => {
+  const _stopTimer = () => {
     if (timerRef.current) {
       window.clearInterval(timerRef.current) // Using window.clearInterval
     }
@@ -507,7 +507,7 @@ function TimeTrackerPanel() {
   }
 
   // Selects a focus preset duration and starts the timer
-  const selectFocusPresetAndStart = (minutes: number) => {
+  const _selectFocusPresetAndStart = (minutes: number) => {
     if (timerRef.current) {
       window.clearInterval(timerRef.current) // Using window.clearInterval
     }

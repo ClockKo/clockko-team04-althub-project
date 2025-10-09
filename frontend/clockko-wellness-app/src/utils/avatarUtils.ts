@@ -25,11 +25,11 @@ export function clearDeletedAvatarName(userId: string): void {
 
 // Generate avatar URL with consistent handling of deleted avatars
 export function getAvatarUrl(user: any): string {
-  console.log('🖼️ Getting avatar URL for user:', user);
+  // console.log('🖼️ Getting avatar URL for user:', user);
   
   // If user has a real avatar URL, use it
   if (user?.avatar_url) {
-    console.log('✅ Using avatar_url:', user.avatar_url);
+    // console.log('✅ Using avatar_url:', user.avatar_url);
     return user.avatar_url;
   }
   
@@ -37,12 +37,12 @@ export function getAvatarUrl(user: any): string {
   const deletedAvatarName = user?.id ? getDeletedAvatarName(user.id) : null;
   if (deletedAvatarName) {
     const preservedFallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(getInitials(deletedAvatarName))}&background=E0E7FF&color=1E40AF&size=128`;
-    console.log('⚠️ Using preserved deleted avatar:', preservedFallbackUrl);
+    // console.log('⚠️ Using preserved deleted avatar:', preservedFallbackUrl);
     return preservedFallbackUrl;
   }
   
   // Default fallback for new users
   const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(getInitials(user?.name))}&background=E0E7FF&color=1E40AF&size=128`;
-  console.log('⚠️ Using fallback avatar:', fallbackUrl);
+  // console.log('⚠️ Using fallback avatar:', fallbackUrl);
   return fallbackUrl;
 }

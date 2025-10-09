@@ -49,12 +49,12 @@ const PasswordResetConfirmPage: React.FC = () => {
     
     try {
       await resetPassword(data.email, data.otp, data.newPassword);
-      toast.success('Password reset successfully! You can now log in with your new password.');
+      toast.success('Password reset successfully! Redirecting to sign in...');
       
       // Navigate to sign-in after success
       setTimeout(() => {
-        navigate('/sign-in');
-      }, 2000);
+        navigate('/signin');
+      }, 1500);
       
     } catch (error: any) {
       console.error('Password reset failed:', error);
@@ -136,7 +136,7 @@ const PasswordResetConfirmPage: React.FC = () => {
               Request new code
             </a>
             {' '} | {' '}
-            <a href="/sign-in" className="text-blue1 hover:underline">
+            <a href="/signin" className="text-blue1 hover:underline">
               Back to Sign In
             </a>
           </p>

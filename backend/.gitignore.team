@@ -1,0 +1,47 @@
+# Team-specific additions
+
+# Personal environment files
+.env.maureen
+.env.john
+.env.jane
+.env.admin
+.env.*
+*.env
+
+# Personal developer files
+dev_notes.md
+personal_notes.txt
+team_secrets.txt
+local_config.py
+
+# Database backups and dumps
+backups/
+backup/
+*.dump
+*.pg_dump
+
+# Development databases
+clockko_dev_*
+*.db
+*.sqlite
+*.sqlite3
+clockko.db
+test.db
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Caches and bytecode
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

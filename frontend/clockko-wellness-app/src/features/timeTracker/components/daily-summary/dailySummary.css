@@ -1,0 +1,120 @@
+/* dailySummary.css */
+
+/* summarypanel styling */
+.summary-panel{
+    display: flex;
+    gap: 30px;
+    padding: 20px;
+    padding-left: 35px;
+}
+/* first summary panel styling */
+.first-panel{
+    display: flex;
+    background-color: var(--white);
+    border-radius: 25px;
+    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.05);
+    width: 270px;
+    height: 105px;
+    padding: 20px;
+    padding-top: 25px;
+}
+/* first-panel-image styling */
+.first-panel-image{
+    width: 30px;
+}
+/* first panel text styling */
+.first-panel-text{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-left: 15px;
+    margin-top: 1px;
+}
+.first-panel-text p:nth-of-type(1){
+    font-weight: bolder;
+}
+.first-panel-text p:nth-of-type(2){
+    font-size: 13px;
+}
+/* second summary panel styling */
+.second-panel{
+    display: flex;
+    background-color: var(--white);
+    border-radius: 25px;
+    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.05);
+    width: 270px;
+    height: 105px;
+    padding: 20px;
+    padding-top: 25px;
+}
+/* second-panel-image styling */
+.second-panel-image{
+    width: 30px;
+}
+/* second panel text styling */
+.second-panel-text{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-left: 15px;
+    margin-top: 1px;
+}
+.second-panel-text p:nth-of-type(1){
+    font-weight: bolder;
+}
+.second-panel-text p:nth-of-type(2){
+    font-size: 13px;
+}
+/* third summary panel styling */
+.third-panel{
+    display: flex;
+    background-color: var(--white);
+    border-radius: 25px;
+    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.05);
+    width: 270px;
+    height: 105px;
+    padding: 20px;
+    padding-top: 25px;
+}
+/* third-panel-image styling */
+.third-panel-image{
+    width: 30px;
+}
+/* third panel text styling */
+.third-panel-text{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-left: 15px;
+    margin-top: 1px;
+}
+.third-panel-text p:nth-of-type(1){
+    font-weight: bolder;
+}
+.third-panel-text p:nth-of-type(2){
+    font-size: 13px;
+}
+
+/* mobile styling */
+@media only screen and (max-width: 500px){
+    .summary-panel{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    margin-top: 18rem;
+}
+}
+
+/* tablet and other screen styling */
+
+@media  (min-width: 501px) and (max-width: 1200px){
+   .summary-panel{
+      display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: center;
+    margin-top: 17rem;
+   }
+}
+

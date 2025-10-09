@@ -1,0 +1,22 @@
+sequenceDiagram
+  actor Dev as Developer
+  participant GHA as GitHub Actions
+  participant IAM as AWS IAM (OIDC Role)
+  participant ECR as Amazon ECR
+  participant TF as Terraform (backend/infra)
+  participant ECS as Amazon ECS (Fargate)
+  participant Task as ECS Task
+  participant SM as Secrets Manager
+  participant RDS as RDS PostgreSQL
+  participant CW as CloudWatch Logs
+
+  Dev->>GHA: Push to main / Manual dispatch
+  GHA->>IAM: OIDC: AssumeRole (least-privileged)
+  GHA->>ECR: Build & Push image (:immutable, :latest)
+  GHA->>TF: terraform apply (TF_VAR_image_tag)
+  TF->>ECS: Register task def + Update service (circuit breaker on)
+  ECS->>Task: Launch new tasks
+  Task->>ECR: Pull image
+  Task->>SM: Fetch secrets/env
+  Task->>RDS: Connect to database
+  Task->>CW: Stream logs

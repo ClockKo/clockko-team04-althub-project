@@ -1,17 +1,102 @@
-import { Button } from "./components/ui/button"
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { LandingPage } from './pages/landingpage'
+import MainLayout from './features/layout/mainLayout'
+import { DashboardLayout } from './pages/dashboard'
+import ChallengesPage from "./features/challenges/challengePage";
+import { OnboardingProvider } from './contexts/OnboardingContext';
+import { UserProvider } from './contexts/UserContext';
+import { AuthProvider } from './features/auth';
+import TaskTrackerFeatures from './features/tasks-management/taskTrackerFeatures'
+import TimeTrackerFeatures from './features/timeTracker/timetrackerfeatures';
+import SmartFeaturesPage from './pages/SmartFeaturesPage';
+import CreateAccountPage from './features/auth/CreateAccountPage';
+import SignInPage from './features/auth/SignInPage';
+import ResetPasswordPage from './features/auth/ResetPasswordPage';
+import PasswordResetConfirmPage from './features/auth/PasswordResetConfirmPage';
+import EmailVerificationPage from './features/auth/EmailVerificationPage';
+import ProtectedRoutes from './features/auth/protectedroutes';
+import { OnboardingFlow } from './features/onboarding';
+import NotFoundPage from './components/NotFoundPage';
+import { Toaster } from 'react-hot-toast';
+import CoWorkingRoomsPage from './features/coworking/coworkingRoomPage';
+import {ProfileSettings, GeneralSettings, SecuritySettings } from './features/settings';
+import IntegrationsSettings from './features/settings/pages/IntegrationsSettings';
+import EmailSettings from './features/settings/pages/EmailSettings';
+import WhatsNewPage from './features/settings/pages/WhatsNewPage';
+import InviteFriendsPage from './features/settings/pages/InviteFriendsPage';
+import HelpSettings from './features/settings/pages/HelpSettings';
+
+
 
 function App() {
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-2xl mx-auto space-y-4">
-        <h1 className="text-3xl font-bold">Hello World</h1>
-        <p className="text-lg text-gray-700">Welcome to the Clockko Wellness App!</p>
-        <Button className="mt-4">Click Me</Button>
-        <p className="mt-2 text-sm text-gray-500">This is a simple example of a React component styled with Tailwind CSS.</p>
-        <p className="mt-2 text-sm text-gray-500">You can customize this app further by adding more components and styles.</p>
-        <p className="mt-2 text-sm text-gray-500">Enjoy building your wellness app!</p>
-      </div>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <UserProvider>
+          <OnboardingProvider>
+            {/* Toast notifications */}
+            <Toaster 
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                },
+                success: {
+                  style: {
+                    background: '#10b981',
+                  },
+                },
+                error: {
+                  style: {
+                    background: '#ef4444',
+                  },
+                },
+              }}
+            />
+
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/create-account" element={<CreateAccountPage />} />
+              <Route path="/signin" element={<SignInPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/reset-password-confirm" element={<PasswordResetConfirmPage />} />
+              <Route path="/verify-email" element={<EmailVerificationPage />} />
+              <Route path="/onboarding" element={<OnboardingFlow />} />
+              <Route element={<ProtectedRoutes />}>
+                <Route element={<MainLayout />}>
+                  <Route path="/dashboard" element={<DashboardLayout />} />
+                  <Route path="/tasks" element={<TaskTrackerFeatures />} />
+                  <Route path="/time-tracker" element={<TimeTrackerFeatures />} />
+                  <Route path="/co-working" element={<CoWorkingRoomsPage/>} />
+                  <Route path="/reports" element={<div className="p-6"><h1 className="text-2xl font-bold">Reports</h1><p>Coming soon...</p></div>} />
+                  <Route path="/challenges" element={<ChallengesPage/>} />
+                  
+                  <Route path="/settings/profile" element={<ProfileSettings />} />
+                  <Route path="/settings/general" element={<GeneralSettings />} />
+                  <Route path="/settings/security" element={<SecuritySettings />} />
+                  <Route path="/settings/integrations" element={<IntegrationsSettings />} />
+                  <Route path="/settings/email" element={<EmailSettings />} />
+                  <Route path="/settings/security" element={<SecuritySettings />} />
+                  <Route path="/settings/whats-new" element={<WhatsNewPage />} />
+                  <Route path="/settings/invite" element={<InviteFriendsPage />} />
+                  <Route path="/settings/help" element={<HelpSettings />} />
+                  
+                  <Route path="/smart-features" element={<SmartFeaturesPage />} />
+                  <Route path="/settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Settings</h1><p>Coming soon...</p></div>} />
+                  {/* add more protected routes here */}
+                </Route>
+              </Route>
+
+              {/* 404 Not Found route - should be last */}
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+
+          </OnboardingProvider>
+        </UserProvider>
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
 

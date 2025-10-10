@@ -26,5 +26,8 @@ if [[ -z "$ENI_ID" ]]; then
 fi
 
 PUBLIC_IP=$(aws ec2 describe-network-interfaces --region "$AWS_REGION" --network-interface-ids "$ENI_ID" --query 'NetworkInterfaces[0].Association.PublicIp' --output text)
-
+if [[ -z "$PUBLIC_IP" || "$PUBLIC_IP" == "None" || "$PUBLIC_IP" == "null" ]]; then
+  echo "No public IP associated with ENI $ENI_ID" >&2
+  exit 1
+fi
 echo "$PUBLIC_IP"

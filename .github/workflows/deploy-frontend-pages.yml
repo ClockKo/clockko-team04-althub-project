@@ -1,0 +1,63 @@
+name: Deploy Frontend to GitHub Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "frontend/clockko-wellness-app/**"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: frontend/clockko-wellness-app/pnpm-lock.yaml
+
+      - name: Enable Corepack (pnpm)
+        run: corepack enable
+
+      - name: Build frontend
+        working-directory: frontend/clockko-wellness-app
+        env:
+          # API base URL exposed to the frontend. Set a repo variable VITE_API_BASE_URL or override on dispatch.
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          # GitHub Pages project site base path
+          VITE_BASE: "/clockko-team04-althub-project/"
+          # Google Client ID used on the client
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+        run: |
+          pnpm install
+          pnpm build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/clockko-wellness-app/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

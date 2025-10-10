@@ -40,3 +40,13 @@ output "db_secret_arn" { value = module.backend.db_secret_arn }
 output "jwt_secret_arn" { value = module.backend.jwt_secret_arn }
 output "redis_url" { value = module.backend.redis_url }
 output "google_oauth_secret_arn" { value = module.backend.google_oauth_secret_arn }
+
+output "api_gateway_url" {
+  description = "Base invoke URL for the HTTP API"
+  value       = aws_apigatewayv2_api.backend_api.api_endpoint
+}
+
+output "aws_apigatewayv2_api_backend_api_id" {
+  description = "ID of the HTTP API for backend"
+  value       = aws_apigatewayv2_api.backend_api.id
+}

@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Purge and delete S3 website buckets created by the iac module
 # Pattern: <project>-<hex6>-site
+# Note: GitHub Pages deployments are managed via Actions and do not use S3. This script is for legacy S3 sites only.
 
 PROJECT_NAME=${PROJECT_NAME:-clockko-frontend}
 AWS_REGION=${AWS_REGION:-us-east-1}

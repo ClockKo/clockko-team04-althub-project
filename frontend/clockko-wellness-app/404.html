@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting…</title>
+    <meta http-equiv="refresh" content="0;url=./index.html">
+    <script>
+      // spa-github-pages: redirect to index.html while preserving path via query
+      (function() {
+        var l = window.location;
+        // Only rewrite if this is a direct 404 (no search/hash) on GH Pages
+        if (l.pathname && !l.search) {
+          var newUrl = l.origin + l.pathname.replace(/\/[^/]+$/, '/') + 'index.html?redirect=' + encodeURIComponent(l.pathname + l.search + l.hash);
+          l.replace(newUrl);
+        }
+      })();
+    </script>
+  </head>
+  <body>Redirecting…</body>
+  </html>

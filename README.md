@@ -161,7 +161,55 @@ For full details and ongoing updates, see [recent pull requests](https://github.
 
 ---
 
-### 🔐 Cybersecurity
+### � CI/CD Workflows
+
+This project uses GitHub Actions with Terraform + Docker to deploy the backend behind an HTTPS API Gateway and the frontend to GitHub Pages.
+
+#### Workflows
+
+- infra-plan.yml (pull_request)
+    - Runs Terraform plan for frontend and backend stacks when PRs touch infra/app code (frontend/**, backend/**, iac/**).
+    - Concurrency: infra-plan-${{ github.ref }} (auto-cancels superseded runs).
+
+- infra-apply-deploy.yml (push → main)
+    - Triggers on changes under backend/** and iac/**.
+    - Steps: build → Trivy scan → Terraform apply (backend stack) → Alembic migrations → update API Gateway integration via helper → HTTPS smoke tests (/api/health, /api/health/google).
+    - Concurrency: infra-apply (auto-cancels superseded runs).
+
+- deploy-frontend-pages.yml (push → main, manual)
+    - Builds and deploys the frontend to GitHub Pages when files under `frontend/clockko-wellness-app/**` change.
+    - Uses Vite envs: VITE_API_BASE_URL, VITE_GOOGLE_CLIENT_ID, VITE_BASE (defaults to `/clockko-team04-althub-project/`).
+
+#### Required repo configuration
+
+- Secrets
+    - AWS_ROLE_ARN: OIDC role ARN used by Actions to access AWS.
+
+- Variables
+    - AWS_REGION: e.g., `us-east-1`
+    - TF_STATE_BUCKET: S3 bucket for Terraform state
+    - TF_STATE_DYNAMO_TABLE: DynamoDB lock table
+    - TF_STATE_KEY_BACKEND: backend state object key (e.g., `clockko/backend/terraform.tfstate`)
+    - FRONTEND_PROJECT_NAME: (optional) project name; CI defaults to `clockko` when unset
+    - ECR_REPOSITORY: (optional) defaults to `clockko-backend`
+    - VITE_API_BASE_URL: `https://<api-id>.execute-api.<region>.amazonaws.com/api`
+    - VITE_GOOGLE_CLIENT_ID: your Google OAuth Client ID
+
+#### Helper scripts (iac/scripts)
+
+- backend-update-apigw-integration.sh: Points the API Gateway HTTP API integration to the current ECS public IP using `{proxy}` for the `/api/{proxy+}` route.
+- run-db-migration.sh: Runs Alembic `upgrade head` in a one-off ECS task using the deployed task definition and networking.
+- ecs-task-public-ip.sh: Prints the current ECS task public IP (for quick diagnostics).
+- frontend-deploy.sh: Builds the frontend. Defaults to GitHub Pages (triggers the workflow via `gh` if available); supports legacy S3 via `DEPLOY_TARGET=s3`.
+
+#### Notes
+
+- Frontend deploys are handled exclusively by GitHub Pages; the backend workflow does not rebuild or deploy the frontend.
+- The backend exposes HTTPS via API Gateway; smoke tests verify `/api/health` and Google config at `/api/health/google` after each deploy.
+
+---
+
+### �🔐 Cybersecurity
 
 **Tech Stack:** Security Frameworks, Encryption, Monitoring Tools
 

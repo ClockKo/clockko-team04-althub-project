@@ -4,7 +4,6 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "frontend/**"
       - "backend/**"
       - "iac/**"
 
@@ -12,90 +11,12 @@ permissions:
   id-token: write
   contents: read
 
+concurrency:
+  group: "infra-apply"
+  cancel-in-progress: true
+
 jobs:
-  detect-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      frontend: ${{ steps.filter.outputs.frontend }}
-      frontend_infra: ${{ steps.filter.outputs.frontend_infra }}
-      backend: ${{ steps.filter.outputs.backend }}
-      backend_infra: ${{ steps.filter.outputs.backend_infra }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            frontend:
-              - 'frontend/**'
-            frontend_infra:
-              - 'iac/stacks/frontend/**'
-              - 'iac/modules/frontend_static_site/**'
-            backend:
-              - 'backend/**'
-            backend_infra:
-              - 'iac/stacks/backend/**'
-              - 'iac/modules/backend_service/**'
-
-  apply-frontend:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.frontend_infra == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.9.5
-
-      - name: Terraform Init
-        working-directory: iac/stacks/frontend
-        run: |
-          terraform init \
-            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
-            -backend-config="dynamodb_table=${{ vars.TF_STATE_DYNAMO_TABLE }}" \
-            -backend-config="key=${{ vars.TF_STATE_KEY }}" \
-            -backend-config="region=${{ vars.AWS_REGION }}"
-
-      - name: Terraform Apply (frontend)
-        working-directory: iac/stacks/frontend
-        run: |
-          terraform apply -auto-approve \
-            -var="project_name=${{ vars.FRONTEND_PROJECT_NAME }}" \
-            -var="domain_name=${{ vars.FRONTEND_DOMAIN }}" \
-            -var="route53_zone_id=${{ vars.ROUTE53_ZONE_ID }}" \
-            -var="create_hosted_zone=${{ vars.CREATE_HOSTED_ZONE }}"
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-          cache-dependency-path: frontend/clockko-wellness-app/pnpm-lock.yaml
-
-      - name: Enable Corepack (pnpm)
-        run: corepack enable
-
-      - name: Build & Deploy Frontend
-        working-directory: iac/scripts
-        env:
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
-          # Google Client ID is public (used on the client). Prefer a repo variable; if undefined, it will be empty and the FE should disable Google sign-in gracefully.
-          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
-        run: |
-          bash ./frontend-deploy.sh
-
   apply-backend:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.backend_infra == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -114,23 +35,31 @@ jobs:
       - name: Compute image tag
         id: vars
         run: |
-          echo "IMAGE_TAG=backend-$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::7}" >> $GITHUB_ENV
+          TAG="backend-$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
+          echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
+          echo "image_tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Resolve ECR repository
+        id: ecr_repo
+        run: |
+          REPO="${{ vars.ECR_REPOSITORY }}"
+          if [ -z "$REPO" ] || [ "$REPO" = "null" ]; then REPO="clockko-backend"; fi
+          echo "repo=$REPO" >> $GITHUB_OUTPUT
 
       - name: Build & Push Backend Image
         env:
           ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+          ECR_REPOSITORY: ${{ steps.ecr_repo.outputs.repo }}
+          IMAGE_TAG: ${{ steps.vars.outputs.image_tag }}
         run: |
           cd backend
-          : "${ECR_REPOSITORY:=clockko-backend}" # default if unset
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Scan image with Trivy (HIGH,CRITICAL)
         uses: aquasecurity/trivy-action@0.21.0
         with:
-          image-ref: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY != '' && vars.ECR_REPOSITORY || 'clockko-backend' }}:${{ env.IMAGE_TAG }}
+          image-ref: ${{ steps.ecr.outputs.registry }}/${{ steps.ecr_repo.outputs.repo }}:${{ steps.vars.outputs.image_tag }}
           format: 'table'
           severity: 'HIGH,CRITICAL'
           exit-code: '1'
@@ -152,15 +81,18 @@ jobs:
       - name: Terraform Apply (backend)
         working-directory: iac/stacks/backend
         env:
-          TF_VAR_image_tag: ${{ env.IMAGE_TAG }}
+          TF_VAR_image_tag: ${{ steps.vars.outputs.image_tag }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+          FRONTEND_PROJECT_NAME: ${{ vars.FRONTEND_PROJECT_NAME }}
         run: |
-          PROJECT_NAME="${{ vars.BACKEND_PROJECT_NAME }}"; [ -z "$PROJECT_NAME" ] && PROJECT_NAME="${{ vars.FRONTEND_PROJECT_NAME }}"
+          PROJECT_NAME="$FRONTEND_PROJECT_NAME"; [ -z "$PROJECT_NAME" ] || [ "$PROJECT_NAME" = "null" ] && PROJECT_NAME="clockko"
           terraform apply -auto-approve \
-            -var="aws_region=${{ vars.AWS_REGION }}" \
+            -var="aws_region=$AWS_REGION" \
             -var="project_name=$PROJECT_NAME" \
             -var="github_org=${{ github.repository_owner }}" \
             -var="github_repo=${{ github.event.repository.name }}" \
-            -var="google_client_id=${{ vars.VITE_GOOGLE_CLIENT_ID }}" \
+            -var="google_client_id=$VITE_GOOGLE_CLIENT_ID" \
             -var="google_oauth_secret_name=clockko-google-oauth"
 
       - name: Run DB Migrations (Alembic upgrade head)
@@ -180,80 +112,37 @@ jobs:
             exit 1
           fi
 
-      - name: Determine Backend Public IP (if any)
-        id: backend_ip
+      - name: Update API Gateway integration (helper)
         env:
           AWS_REGION: ${{ vars.AWS_REGION }}
         run: |
           set -euo pipefail
-          CLUSTER=$(terraform -chdir=iac/stacks/backend output -raw ecs_cluster_name)
-          SERVICE=$(terraform -chdir=iac/stacks/backend output -raw ecs_service_name)
-          TASK_ARN=$(aws ecs list-tasks --cluster "$CLUSTER" --service-name "$SERVICE" --desired-status RUNNING --query 'taskArns[0]' --output text || true)
-          if [ -z "$TASK_ARN" ] || [ "$TASK_ARN" = "None" ]; then
-            echo "task_arn=" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          ENI=$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$TASK_ARN" --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text || true)
-          IP=$(aws ec2 describe-network-interfaces --network-interface-ids "$ENI" --query 'NetworkInterfaces[0].Association.PublicIp' --output text || true)
-          # Normalize empty values
-          if [ -z "$IP" ] || [ "$IP" = "None" ] || [ "$IP" = "null" ]; then
-            echo "public_ip=" >> $GITHUB_OUTPUT
-            echo "No public IP discovered (service may not assign public IP). Skipping frontend API URL auto-update."
-            exit 0
-          fi
-          echo "public_ip=$IP" >> $GITHUB_OUTPUT
-          echo "Found backend public IP: $IP"
+          bash iac/scripts/backend-update-apigw-integration.sh
 
-      - name: Setup Node.js for Frontend Rebuild
-        if: steps.backend_ip.outputs.public_ip != ''
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-          cache-dependency-path: frontend/clockko-wellness-app/pnpm-lock.yaml
-
-      - name: Enable Corepack (pnpm)
-        if: steps.backend_ip.outputs.public_ip != ''
-        run: corepack enable
-
-      - name: Terraform Init (frontend) for outputs
-        working-directory: iac/stacks/frontend
-        run: |
-          terraform init \
-            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
-            -backend-config="dynamodb_table=${{ vars.TF_STATE_DYNAMO_TABLE }}" \
-            -backend-config="key=${{ vars.TF_STATE_KEY }}" \
-            -backend-config="region=${{ vars.AWS_REGION }}"
-
-      - name: Rebuild & Deploy Frontend with new API base
-        if: steps.backend_ip.outputs.public_ip != ''
-        working-directory: iac/scripts
-        env:
-          VITE_API_BASE_URL: http://${{ steps.backend_ip.outputs.public_ip }}:8000/api
-          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
-        run: |
-          echo "Using VITE_API_BASE_URL=$VITE_API_BASE_URL"
-          bash ./frontend-deploy.sh
-
-      - name: Get Frontend Website URL
-        id: fe_url
-        working-directory: iac/stacks/frontend
-        run: |
-          URL=$(terraform output -raw website_url)
-          echo "url=$URL" >> $GITHUB_OUTPUT
-          echo "WEBSITE_URL=$URL"
-
-      - name: Frontend S3 Website Smoke Test
-        if: steps.fe_url.outputs.url != ''
+      - name: API Gateway Smoke Test (HTTPS)
         run: |
           set -euo pipefail
-          URL="${{ steps.fe_url.outputs.url }}"
-          echo "Checking $URL"
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
-          echo "HTTP status: $STATUS"
-          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
-            echo "Frontend is reachable."
-          else
-            echo "Frontend check failed with status $STATUS" >&2
+          API_URL=$(terraform -chdir=iac/stacks/backend output -raw api_gateway_url)
+          BASE="$API_URL/api"
+          echo "Testing $BASE/health"
+          STATUS=""
+          for i in 1 2 3; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE/health" || true)
+            if [ "$STATUS" = "200" ]; then break; fi
+            echo "Health check attempt $i failed with $STATUS; retrying in 5s..."
+            sleep 5
+          done
+          if [ "$STATUS" != "200" ]; then
+            echo "Health endpoint unhealthy (status $STATUS)" >&2
             exit 1
           fi
+          echo "Testing $BASE/health/google"
+          STATUS2=$(curl -s -o /dev/null -w "%{http_code}" "$BASE/health/google" || true)
+          if [ "$STATUS2" != "200" ]; then
+            echo "Google health endpoint unhealthy (status $STATUS2)" >&2
+            exit 1
+          fi
+          echo "API smoke tests passed."
+
+  # The frontend is deployed via GitHub Pages workflow on frontend changes.
+  # No frontend rebuild is required for backend-only changes when using API Gateway, as the API URL is stable.

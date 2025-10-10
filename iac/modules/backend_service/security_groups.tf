@@ -1,7 +1,7 @@
 resource "aws_security_group" "ecs_sg" {
   name        = "${var.project_name}-ecs-sg"
   description = "SG for ECS tasks"
-  vpc_id      = aws_vpc.clockko_vpc.id
+  vpc_id      = local.vpc_id
 
   ingress {
     description = "Allow HTTP traffic directly to app"
@@ -24,7 +24,7 @@ resource "aws_security_group" "ecs_sg" {
 resource "aws_security_group" "db_sg" {
   name        = "${var.project_name}-db-sg"
   description = "Postgres access from ECS"
-  vpc_id      = aws_vpc.clockko_vpc.id
+  vpc_id      = local.vpc_id
 
   ingress {
     description     = "Postgres from ECS tasks"

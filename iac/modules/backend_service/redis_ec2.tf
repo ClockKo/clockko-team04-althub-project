@@ -6,7 +6,7 @@ resource "aws_security_group" "redis_sg" {
   count       = var.use_ec2_redis ? 1 : 0
   name        = "${var.project_name}-redis-sg"
   description = "Allow Redis from ECS tasks"
-  vpc_id      = aws_vpc.clockko_vpc.id
+  vpc_id      = local.vpc_id
 
   ingress {
     description     = "Redis from ECS SG"
@@ -40,7 +40,7 @@ resource "aws_instance" "redis" {
   count                       = var.use_ec2_redis ? 1 : 0
   ami                         = data.aws_ami.ubuntu[0].id
   instance_type               = var.redis_instance_type
-  subnet_id                   = aws_subnet.public.id
+  subnet_id                   = local.public_subnet_ids[0]
   vpc_security_group_ids      = [aws_security_group.redis_sg[0].id]
   associate_public_ip_address = true
   user_data                   = <<-EOF
@@ -65,5 +65,5 @@ resource "aws_instance" "redis" {
 }
 
 output "redis_url" {
-  value = var.use_ec2_redis ? "redis://${aws_instance.redis[0].private_ip}:6379" : null
+  value = var.use_ec2_redis ? "redis://${try(aws_instance.redis[0].private_ip, "")}:6379" : null
 }

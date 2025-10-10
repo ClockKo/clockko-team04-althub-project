@@ -1,7 +1,7 @@
 // WARNING: Publicly accessible RDS for MVP/demo to avoid NAT costs. Secure with SG and restrict in production.
 resource "aws_db_subnet_group" "public" {
   name       = "${var.project_name}-db-subnet-group"
-  subnet_ids = [aws_subnet.public.id, aws_subnet.public_b.id]
+  subnet_ids = local.public_subnet_ids
   tags = { Name = "${var.project_name}-db-subnet-group" }
 }
 

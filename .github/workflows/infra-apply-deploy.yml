@@ -2,6 +2,11 @@ name: Apply Infra + Deploy (Frontend & Backend)
 
 on:
   workflow_dispatch:
+    inputs:
+      disable_lock:
+        description: "Temporarily disable Terraform state locking (-lock=false) for bootstrap"
+        type: boolean
+        default: false
   push:
     branches: ["main"]
     paths:
@@ -82,6 +87,18 @@ jobs:
             -backend-config="key=${{ vars.TF_STATE_KEY_BACKEND }}" \
             -backend-config="region=${{ vars.AWS_REGION }}"
 
+      - name: Export Terraform variables (TF_VAR_*)
+        run: |
+          set -euo pipefail
+          USE_EXISTING_VPC="${{ vars.USE_EXISTING_VPC }}"; [ -z "$USE_EXISTING_VPC" ] || [ "$USE_EXISTING_VPC" = "null" ] && USE_EXISTING_VPC="false"
+          CREATE_RDS="${{ vars.CREATE_RDS }}"; [ -z "$CREATE_RDS" ] || [ "$CREATE_RDS" = "null" ] && CREATE_RDS="false"
+          EXISTING_VPC_ID="${{ vars.EXISTING_VPC_ID }}"; [ "$EXISTING_VPC_ID" = "null" ] && EXISTING_VPC_ID=""
+          EXISTING_PUBLIC_SUBNET_IDS="${{ vars.EXISTING_PUBLIC_SUBNET_IDS }}"; [ "$EXISTING_PUBLIC_SUBNET_IDS" = "null" ] && EXISTING_PUBLIC_SUBNET_IDS=""
+          echo "TF_VAR_use_existing_vpc=$USE_EXISTING_VPC" >> $GITHUB_ENV
+          echo "TF_VAR_create_rds=$CREATE_RDS" >> $GITHUB_ENV
+          echo "TF_VAR_existing_vpc_id=$EXISTING_VPC_ID" >> $GITHUB_ENV
+          echo "TF_VAR_existing_public_subnet_ids=$EXISTING_PUBLIC_SUBNET_IDS" >> $GITHUB_ENV
+
       - name: Terraform Apply (backend)
         working-directory: iac/stacks/backend
         env:
@@ -91,7 +108,10 @@ jobs:
           FRONTEND_PROJECT_NAME: ${{ vars.FRONTEND_PROJECT_NAME }}
         run: |
           PROJECT_NAME="$FRONTEND_PROJECT_NAME"; [ -z "$PROJECT_NAME" ] || [ "$PROJECT_NAME" = "null" ] && PROJECT_NAME="clockko"
+          LOCK_FLAG=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.disable_lock }}" = "true" ]; then LOCK_FLAG="-lock=false"; fi
           terraform apply -auto-approve \
+            ${LOCK_FLAG} \
             -var="aws_region=$AWS_REGION" \
             -var="project_name=$PROJECT_NAME" \
             -var="github_org=${{ github.repository_owner }}" \

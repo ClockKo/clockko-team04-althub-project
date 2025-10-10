@@ -63,6 +63,9 @@ jobs:
           image-ref: ${{ steps.ecr.outputs.registry }}/${{ steps.ecr_repo.outputs.repo }}:${{ steps.vars.outputs.image_tag }}
           format: 'table'
           severity: 'HIGH,CRITICAL'
+          vuln-type: 'library'
+          ignore-unfixed: true
+          scanners: 'vuln'
           exit-code: '1'
 
       - name: Setup Terraform

@@ -54,7 +54,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.12.0
+          terraform_version: 1.9.5
 
       - name: Terraform Init
         working-directory: iac/stacks/frontend
@@ -73,6 +73,16 @@ jobs:
             -var="domain_name=${{ vars.FRONTEND_DOMAIN }}" \
             -var="route53_zone_id=${{ vars.ROUTE53_ZONE_ID }}" \
             -var="create_hosted_zone=${{ vars.CREATE_HOSTED_ZONE }}"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: frontend/clockko-wellness-app/pnpm-lock.yaml
+
+      - name: Enable Corepack (pnpm)
+        run: corepack enable
 
       - name: Build & Deploy Frontend
         working-directory: iac/scripts
@@ -119,7 +129,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.12.0
+          terraform_version: 1.9.5
 
       - name: Terraform Init
         working-directory: iac/stacks/backend
@@ -141,3 +151,8 @@ jobs:
             -var="project_name=$PROJECT_NAME" \
             -var="github_org=${{ github.repository_owner }}" \
             -var="github_repo=${{ github.event.repository.name }}"
+
+      - name: Run DB Migrations (Alembic upgrade head)
+        working-directory: iac/scripts
+        run: |
+          bash ./run-db-migration.sh

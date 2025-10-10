@@ -57,7 +57,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.12.0
+          terraform_version: 1.9.5
 
       - name: Terraform Init (frontend)
         working-directory: iac/stacks/frontend
@@ -102,7 +102,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.12.0
+          terraform_version: 1.9.5
 
       - name: Terraform Init (backend)
         working-directory: iac/stacks/backend

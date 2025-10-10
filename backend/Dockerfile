@@ -1,12 +1,12 @@
 # ==============================
 # Stage 1 - Build dependencies
 # ==============================
-FROM python:3.11-slim-bookworm as builder
+FROM python:3.11-slim-bookworm AS builder
 
 WORKDIR /app
 
 # Install system build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get -y upgrade && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     gcc \
@@ -29,14 +29,15 @@ FROM python:3.11-slim-bookworm
 WORKDIR /app
 
 # Install only runtime libraries
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev \
-    curl \
+RUN apt-get update && apt-get -y upgrade && apt-get install -y --no-install-recommends \
+    libpq5 \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy pre-built wheels and install
 COPY --from=builder /wheels /wheels
-RUN pip install --no-cache /wheels/*
+RUN pip install --no-cache /wheels/* \
+    && pip cache purge
 
 # Copy project files
 COPY . .

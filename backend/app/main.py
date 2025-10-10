@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Query
+import os
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import (
@@ -14,7 +15,7 @@ from app.api import (
     websocket,
 )
 from app.api import auth_google  # Google ID token verification endpoints
-from app.core.config import settings
+from app.core.config import settings, get_secret
 from app.core.database import Base, engine
 
 # Create all tables (if using without Alembic migrations)
@@ -91,6 +92,43 @@ def health():
 
 @app.get("/health/google")
 def google_health():
+    # Prefer the in-memory setting, but if empty, attempt to read from Secrets Manager
     configured = bool(getattr(settings, 'GOOGLE_CLIENT_ID', ''))
+    if not configured:
+        try:
+            secret_name = os.getenv("GOOGLE_OAUTH_SECRET_NAME", "clockko-google-oauth")
+            google_creds = get_secret(secret_name) or {}
+            configured = bool(google_creds.get("client_id"))
+        except Exception:
+            configured = False
     return {"google_sign_in_configured": configured}
+
+
+@app.get("/health/google/details")
+def google_health_details():
+    """
+    Diagnostic endpoint exposing non-sensitive signals to help troubleshoot Google OAuth config.
+    Does NOT return any secret values.
+    """
+    source = "settings"
+    configured = bool(getattr(settings, 'GOOGLE_CLIENT_ID', ''))
+    region = getattr(settings, 'AWS_REGION', None)
+    secret_name = os.getenv("GOOGLE_OAUTH_SECRET_NAME", "clockko-google-oauth")
+    error = None
+    if not configured:
+        try:
+            google_creds = get_secret(secret_name)
+            configured = bool(google_creds.get("client_id"))
+            source = "secretsmanager" if configured else "none"
+        except Exception as e:  # pragma: no cover
+            source = "error"
+            # Return a minimal error shape to avoid leaking internals
+            error = str(e).split("\n")[0][:200]
+    return {
+        "configured": configured,
+        "source": source,
+        "secret_name": secret_name,
+        "region": region,
+        "error": error,
+    }
 

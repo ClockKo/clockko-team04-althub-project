@@ -12,7 +12,7 @@ The legacy `frontend/frontend-infra` folder is deprecated—see the note below.
 
 ## Prerequisites
 
-- Terraform >= 1.12.0
+- Terraform >= 1.5.0 and < 2.0.0 (CI currently pins to 1.9.5)
 - AWS credentials configured (env vars, profile, or GitHub OIDC in CI)
 - AWS Region(s):
   - Primary provider region (e.g., `AWS_REGION` like `us-east-1` or your preferred region)
@@ -61,7 +61,7 @@ You can retrieve them anytime with `terraform output` inside `iac/bootstrap`.
    - `cloudfront_distribution_id` — For invalidations
    - `website_bucket` / `website_bucket_regional_domain` — S3 bucket for the site
 
-## 3) Deploy frontend assets to S3
+## 3) Deploy frontend assets to S3 (CloudFront optional)
 
 Use the shared script for local and CI parity.
 
@@ -78,8 +78,8 @@ Environment variables you can set:
 The script will:
 - Build the app if needed
 - Sync `dist/` to S3 (delete removed files)
-- Invalidate `/index.html` on CloudFront
-- Print the CloudFront URL
+- If CloudFront is enabled in the frontend stack, invalidate `/index.html` and print the CloudFront URL.
+   Otherwise, the S3 Website endpoint will serve the SPA.
 
 ## Backend stack: provision infra (ECS/RDS)
 

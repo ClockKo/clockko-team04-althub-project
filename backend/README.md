@@ -32,6 +32,9 @@ A FastAPI-based backend application for ClockKo - Authentication and user manage
 - `POST /api/auth/send-verification-email` - Send verification code
 - `POST /api/auth/verify-email` - Verify email with OTP
 
+### Email Diagnostics
+- `GET /api/auth/test-email-config` — Returns SMTP configuration validity and connection status (no secrets). Use to verify AWS Secrets + env wiring in ECS.
+
 ### Password Reset
 
 - `POST /api/auth/forgot-password` - Send password reset code

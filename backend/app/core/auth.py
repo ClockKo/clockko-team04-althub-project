@@ -7,7 +7,8 @@ from app.models.user import User
 from app.core.security import SECRET_KEY, ALGORITHM
 from uuid import UUID
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+# The login endpoint is mounted under /api/auth in main.py, so include the full path here
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     try:

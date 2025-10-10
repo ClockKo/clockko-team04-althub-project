@@ -5,3 +5,4 @@ output "gha_role_arn" { value = aws_iam_role.gha_role.arn }
 output "db_endpoint" { value = try(aws_db_instance.postgres[0].endpoint, null) }
 output "db_secret_arn" { value = aws_secretsmanager_secret.db_creds.arn }
 output "jwt_secret_arn" { value = aws_secretsmanager_secret.jwt_secret.arn }
+output "google_oauth_secret_arn" { value = aws_secretsmanager_secret.google_oauth.arn }

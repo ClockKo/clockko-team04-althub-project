@@ -86,10 +86,20 @@ class Settings:
         # Google OAuth
         # ====================
         try:
-            google_creds = get_secret("clockko-google-oauth")
-            self.GOOGLE_CLIENT_ID = google_creds["client_id"]
-            self.GOOGLE_CLIENT_SECRET = google_creds["client_secret"]
+            # Allow overriding the secret name via env var, default to legacy name
+            google_secret_name = os.getenv("GOOGLE_OAUTH_SECRET_NAME", "clockko-google-oauth")
+            google_creds = get_secret(google_secret_name) or {}
+            # Client secret is optional for ID token verification; client_id is required
+            self.GOOGLE_CLIENT_ID = (
+                google_creds.get("client_id")
+                or os.getenv("GOOGLE_CLIENT_ID", "")
+            )
+            self.GOOGLE_CLIENT_SECRET = (
+                google_creds.get("client_secret")
+                or os.getenv("GOOGLE_CLIENT_SECRET", "")
+            )
         except Exception:
+            # Fallback to env vars only
             self.GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
             self.GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
         self.SMTP_USER = os.getenv("SMTP_USER", "")
@@ -115,11 +125,6 @@ class Settings:
         # ====================
         self.OTP_EXPIRE_MINUTES = int(os.getenv("OTP_EXPIRE_MINUTES", "5"))
         self.OTP_LENGTH = 6
-
-        # ====================
-        # Google OAuth
-        # ====================
-        self.GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 
         # ====================
         # Two-Factor Authentication

@@ -51,3 +51,10 @@ resource "aws_secretsmanager_secret_version" "db_url_version" {
   # URL-encode the password to ensure a valid connection string even with special characters
   secret_string = "postgresql://${local.db_user}:${urlencode(local.db_pass)}@${aws_db_instance.postgres[0].address}:5432/${local.db_name_val}"
 }
+
+# Google OAuth secret (managed by IaC - version left unset by default; set manually or by CI secure step)
+resource "aws_secretsmanager_secret" "google_oauth" {
+  name        = var.google_oauth_secret_name
+  description = "Google OAuth client credentials (client_id, client_secret) for ${var.project_name}"
+  tags        = { Env = "dev" }
+}

@@ -88,7 +88,8 @@ jobs:
         working-directory: iac/scripts
         env:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
-          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          # Google Client ID is public (used on the client). Prefer a repo variable; if undefined, it will be empty and the FE should disable Google sign-in gracefully.
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
         run: |
           bash ./frontend-deploy.sh
 
@@ -126,6 +127,14 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
+      - name: Scan image with Trivy (HIGH,CRITICAL)
+        uses: aquasecurity/trivy-action@0.21.0
+        with:
+          image-ref: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY != '' && vars.ECR_REPOSITORY || 'clockko-backend' }}:${{ env.IMAGE_TAG }}
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -150,9 +159,101 @@ jobs:
             -var="aws_region=${{ vars.AWS_REGION }}" \
             -var="project_name=$PROJECT_NAME" \
             -var="github_org=${{ github.repository_owner }}" \
-            -var="github_repo=${{ github.event.repository.name }}"
+            -var="github_repo=${{ github.event.repository.name }}" \
+            -var="google_client_id=${{ vars.VITE_GOOGLE_CLIENT_ID }}" \
+            -var="google_oauth_secret_name=clockko-google-oauth"
 
       - name: Run DB Migrations (Alembic upgrade head)
         working-directory: iac/scripts
         run: |
           bash ./run-db-migration.sh
+
+      - name: Backend Service Health Check
+        run: |
+          set -euo pipefail
+          CLUSTER=$(terraform -chdir=iac/stacks/backend output -raw ecs_cluster_name)
+          SERVICE=$(terraform -chdir=iac/stacks/backend output -raw ecs_service_name)
+          RUNNING=$(aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" --query 'services[0].runningCount' --output text)
+          echo "ECS runningCount=$RUNNING"
+          if [ "$RUNNING" -lt 1 ]; then
+            echo "No running ECS tasks after deploy" >&2
+            exit 1
+          fi
+
+      - name: Determine Backend Public IP (if any)
+        id: backend_ip
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+        run: |
+          set -euo pipefail
+          CLUSTER=$(terraform -chdir=iac/stacks/backend output -raw ecs_cluster_name)
+          SERVICE=$(terraform -chdir=iac/stacks/backend output -raw ecs_service_name)
+          TASK_ARN=$(aws ecs list-tasks --cluster "$CLUSTER" --service-name "$SERVICE" --desired-status RUNNING --query 'taskArns[0]' --output text || true)
+          if [ -z "$TASK_ARN" ] || [ "$TASK_ARN" = "None" ]; then
+            echo "task_arn=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          ENI=$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$TASK_ARN" --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text || true)
+          IP=$(aws ec2 describe-network-interfaces --network-interface-ids "$ENI" --query 'NetworkInterfaces[0].Association.PublicIp' --output text || true)
+          # Normalize empty values
+          if [ -z "$IP" ] || [ "$IP" = "None" ] || [ "$IP" = "null" ]; then
+            echo "public_ip=" >> $GITHUB_OUTPUT
+            echo "No public IP discovered (service may not assign public IP). Skipping frontend API URL auto-update."
+            exit 0
+          fi
+          echo "public_ip=$IP" >> $GITHUB_OUTPUT
+          echo "Found backend public IP: $IP"
+
+      - name: Setup Node.js for Frontend Rebuild
+        if: steps.backend_ip.outputs.public_ip != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: frontend/clockko-wellness-app/pnpm-lock.yaml
+
+      - name: Enable Corepack (pnpm)
+        if: steps.backend_ip.outputs.public_ip != ''
+        run: corepack enable
+
+      - name: Terraform Init (frontend) for outputs
+        working-directory: iac/stacks/frontend
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="dynamodb_table=${{ vars.TF_STATE_DYNAMO_TABLE }}" \
+            -backend-config="key=${{ vars.TF_STATE_KEY }}" \
+            -backend-config="region=${{ vars.AWS_REGION }}"
+
+      - name: Rebuild & Deploy Frontend with new API base
+        if: steps.backend_ip.outputs.public_ip != ''
+        working-directory: iac/scripts
+        env:
+          VITE_API_BASE_URL: http://${{ steps.backend_ip.outputs.public_ip }}:8000/api
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+        run: |
+          echo "Using VITE_API_BASE_URL=$VITE_API_BASE_URL"
+          bash ./frontend-deploy.sh
+
+      - name: Get Frontend Website URL
+        id: fe_url
+        working-directory: iac/stacks/frontend
+        run: |
+          URL=$(terraform output -raw website_url)
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "WEBSITE_URL=$URL"
+
+      - name: Frontend S3 Website Smoke Test
+        if: steps.fe_url.outputs.url != ''
+        run: |
+          set -euo pipefail
+          URL="${{ steps.fe_url.outputs.url }}"
+          echo "Checking $URL"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+          echo "HTTP status: $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "Frontend is reachable."
+          else
+            echo "Frontend check failed with status $STATUS" >&2
+            exit 1
+          fi

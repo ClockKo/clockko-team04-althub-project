@@ -34,6 +34,7 @@ resource "aws_ecs_task_definition" "backend" {
           { name = "PORT", value = tostring(var.container_port) },
           { name = "FRONTEND_URL", value = var.frontend_url },
           { name = "AWS_REGION", value = var.aws_region },
+          { name = "GOOGLE_OAUTH_SECRET_NAME", value = var.google_oauth_secret_name },
           { name = "GOOGLE_CLIENT_ID", value = var.google_client_id },
           { name = "REDIS_URL", value = var.use_ec2_redis ? aws_instance.redis[0].private_ip != "" ? "redis://" + aws_instance.redis[0].private_ip + ":6379" : "" : "" }
         ],

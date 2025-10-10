@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.12.0"
+  required_version = ">= 1.5.0, < 2.0.0"
   required_providers {
     aws = { source = "hashicorp/aws", version = "~> 5.0" }
     random = { source = "hashicorp/random", version = "~> 3.0" }
@@ -111,4 +111,10 @@ variable "smtp_from_name" {
 variable "smtp_password_secret_arn" {
   type    = string
   default = ""
+}
+
+variable "google_oauth_secret_name" {
+  type        = string
+  description = "Name for the Google OAuth secret in Secrets Manager"
+  default     = "clockko-google-oauth"
 }

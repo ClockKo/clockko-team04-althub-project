@@ -28,6 +28,7 @@ module "backend" {
   smtp_from               = var.smtp_from
   smtp_from_name          = var.smtp_from_name
   smtp_password_secret_arn = var.smtp_password_secret_arn
+  google_oauth_secret_name = var.google_oauth_secret_name
 }
 
 output "ecr_repo_url" { value = module.backend.ecr_repo_url }
@@ -38,3 +39,4 @@ output "db_endpoint" { value = module.backend.db_endpoint }
 output "db_secret_arn" { value = module.backend.db_secret_arn }
 output "jwt_secret_arn" { value = module.backend.jwt_secret_arn }
 output "redis_url" { value = module.backend.redis_url }
+output "google_oauth_secret_arn" { value = module.backend.google_oauth_secret_arn }

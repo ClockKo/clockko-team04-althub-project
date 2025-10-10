@@ -56,7 +56,8 @@ data "aws_iam_policy_document" "ecs_exec_secrets" {
     resources = compact([
       aws_secretsmanager_secret.jwt_secret.arn,
       var.create_rds ? aws_secretsmanager_secret.db_url[0].arn : null,
-      length(trimspace(var.smtp_password_secret_arn)) > 0 ? var.smtp_password_secret_arn : null
+      length(trimspace(var.smtp_password_secret_arn)) > 0 ? var.smtp_password_secret_arn : null,
+      aws_secretsmanager_secret.google_oauth.arn
     ])
   }
 }
@@ -68,6 +69,12 @@ resource "aws_iam_policy" "ecs_exec_secrets_policy" {
 
 resource "aws_iam_role_policy_attachment" "ecs_exec_secrets_attach" {
   role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.ecs_exec_secrets_policy.arn
+}
+
+# Allow the application running in the task (task role) to read necessary secrets at runtime
+resource "aws_iam_role_policy_attachment" "ecs_task_secrets_attach" {
+  role       = aws_iam_role.ecs_task_role.name
   policy_arn = aws_iam_policy.ecs_exec_secrets_policy.arn
 }
 

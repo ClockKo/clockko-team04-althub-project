@@ -79,3 +79,10 @@ variable "smtp_password_secret_arn" {
 	description = "Secrets Manager ARN for SMTP password (preferred)"
 	default     = ""
 }
+
+# Google OAuth secret management
+variable "google_oauth_secret_name" {
+  type        = string
+  description = "Name for the Google OAuth secret in Secrets Manager"
+  default     = "clockko-google-oauth"
+}

@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 data "aws_iam_policy_document" "ecs_assume" {
   statement {
     effect = "Allow"
@@ -118,50 +120,49 @@ resource "aws_iam_role" "gha_role" {
   tags               = { Name = "${var.project_name}-gha-role" }
 }
 
-data "aws_caller_identity" "current" {}
-
 data "aws_iam_policy_document" "gha_policy_doc" {
-  # General permissions required by CI/CD across various AWS services
   statement {
     effect = "Allow"
     actions = [
-      "ecr:GetAuthorizationToken","ecr:BatchCheckLayerAvailability","ecr:PutImage","ecr:InitiateLayerUpload","ecr:UploadLayerPart","ecr:CompleteLayerUpload","ecr:DescribeRepositories","ecr:ListImages",
+      "ecr:GetAuthorizationToken","ecr:BatchCheckLayerAvailability","ecr:PutImage","ecr:InitiateLayerUpload","ecr:UploadLayerPart","ecr:CompleteLayerUpload","ecr:DescribeRepositories","ecr:ListImages","ecr:ListTagsForResource",
       "ecs:DescribeClusters","ecs:DescribeServices","ecs:DescribeTasks","ecs:ListServices","ecs:ListTasks","ecs:RegisterTaskDefinition","ecs:DeregisterTaskDefinition","ecs:DescribeTaskDefinition","ecs:UpdateService","ecs:DescribeTaskDefinition",
       "iam:GetRole","iam:GetPolicy","iam:GetOpenIDConnectProvider","iam:ListRoles","iam:ListPolicies","iam:ListAttachedRolePolicies","iam:PassRole","iam:ListRolePolicies","iam:GetPolicyVersion",
       "logs:DescribeLogGroups","logs:DescribeLogStreams","logs:GetLogEvents","logs:ListTagsForResource",
       "s3:GetObject","s3:PutObject","s3:DeleteObject","s3:ListBucket","s3:CreateBucket","s3:DeleteBucket","s3:PutBucketPolicy","s3:PutBucketAcl","s3:PutBucketTagging","s3:PutBucketOwnershipControls","s3:PutBucketPublicAccessBlock","s3:PutBucketWebsite","s3:PutBucketVersioning","s3:GetBucketLocation","s3:GetBucketVersioning","s3:GetEncryptionConfiguration","s3:GetLifecycleConfiguration","s3:GetBucketPolicy","s3:GetAccelerateConfiguration","s3:GetBucketRequestPayment","s3:GetBucketLogging","s3:GetReplicationConfiguration","s3:GetBucketObjectLockConfiguration","s3:GetBucketTagging","s3:GetBucketPublicAccessBlock","s3:DeleteBucketPolicy","s3:GetBucketAcl","s3:GetBucketCORS","s3:GetBucketWebsite",
       "ec2:DescribeAvailabilityZones","ec2:DescribeVpcs","ec2:DescribeAddresses","ec2:DescribeVpcAttribute","ec2:DescribeAddressesAttribute","ec2:DescribeSecurityGroups","ec2:DescribeSubnets","ec2:DescribeInternetGateways","ec2:DescribeNatGateways","ec2:DescribeRouteTables","ec2:DescribeVpcEndpoints",
-      "rds:DescribeDBSubnetGroups","rds:ListTagsForResource",
+      "rds:DescribeDBSubnetGroups","rds:ListTagsForResource","rds:DescribeDBInstances",
       "cloudwatch:DescribeAlarms","cloudwatch:GetMetricData","cloudwatch:ListMetrics",
+      "dynamodb:PutItem","dynamodb:GetItem","dynamodb:DeleteItem","dynamodb:UpdateItem","dynamodb:DescribeTable","dynamodb:Scan",
       "iam:CreatePolicyVersion","iam:SetDefaultPolicyVersion"
     ]
     resources = ["*"]
   }
 
-  # Least-privilege permissions for Terraform state locking in DynamoDB
+  # API Gateway (HTTP API) management for stack resources (least privilege by path)
   statement {
     effect = "Allow"
-    actions = [
-      "dynamodb:PutItem","dynamodb:GetItem","dynamodb:DeleteItem","dynamodb:UpdateItem","dynamodb:DescribeTable"
-    ]
+    actions = ["apigateway:GET","apigateway:POST","apigateway:PATCH","apigateway:DELETE"]
     resources = [
-      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.project_name}-terraform-locks"
+      "arn:aws:apigateway:${var.aws_region}::/apis",
+      "arn:aws:apigateway:${var.aws_region}::/apis/*",
+      "arn:aws:apigateway:${var.aws_region}::/apis/*/routes",
+      "arn:aws:apigateway:${var.aws_region}::/apis/*/routes/*",
+      "arn:aws:apigateway:${var.aws_region}::/apis/*/integrations",
+      "arn:aws:apigateway:${var.aws_region}::/apis/*/integrations/*",
+      "arn:aws:apigateway:${var.aws_region}::/apis/*/stages",
+      "arn:aws:apigateway:${var.aws_region}::/apis/*/stages/*"
     ]
   }
 
-  # Allow Terraform plan to read metadata of module-managed Secrets Manager secrets (no secret values)
+  # Secrets Manager read for module-managed secrets only
   statement {
     effect = "Allow"
-    actions = [
-      "secretsmanager:DescribeSecret",
-      "secretsmanager:GetResourcePolicy"
-    ]
+    actions = ["secretsmanager:DescribeSecret","secretsmanager:GetResourcePolicy","secretsmanager:GetSecretValue"]
     resources = compact([
-      aws_secretsmanager_secret.jwt_secret.arn,
-      aws_secretsmanager_secret.db_creds.arn,
-      aws_secretsmanager_secret.google_oauth.arn,
-      var.create_rds ? aws_secretsmanager_secret.db_url[0].arn : null,
-      length(trimspace(var.smtp_password_secret_arn)) > 0 ? var.smtp_password_secret_arn : null
+      "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.project_name}-jwt-secret*",
+      "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.project_name}-db-creds*",
+      var.create_rds ? "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.project_name}-database-url*" : null,
+      length(trimspace(var.google_oauth_secret_name)) > 0 ? "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.google_oauth_secret_name}*" : null
     ])
   }
 }

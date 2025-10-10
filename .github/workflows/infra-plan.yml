@@ -2,6 +2,7 @@
 name: Terraform Plan (Frontend & Backend)
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: ["**"]
     paths:
@@ -46,7 +47,7 @@ jobs:
 
   plan-frontend:
     needs: detect-changes
-    if: needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.frontend_infra == 'true'
+    if: github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.frontend_infra == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -76,11 +77,10 @@ jobs:
         id: plan_frontend
         working-directory: iac/stacks/frontend
         run: |
+          set -euo pipefail
+          PROJECT_NAME="clockko-frontend"
           terraform plan -no-color \
-            -var="project_name=${{ vars.FRONTEND_PROJECT_NAME }}" \
-            -var="domain_name=${{ vars.FRONTEND_DOMAIN }}" \
-            -var="route53_zone_id=${{ vars.ROUTE53_ZONE_ID }}" \
-            -var="create_hosted_zone=${{ vars.CREATE_HOSTED_ZONE }}" \
+            -var="project_name=$PROJECT_NAME" \
             | tee ../../.terraform-plan-frontend.txt
 
       - name: Upload plan (frontend)
@@ -91,7 +91,7 @@ jobs:
 
   plan-backend:
     needs: detect-changes
-    if: needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.backend_infra == 'true'
+    if: github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.backend_infra == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -122,10 +122,13 @@ jobs:
         working-directory: iac/stacks/backend
         env:
           TF_VAR_image_tag: pr-${{ github.sha }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
         run: |
+          set -euo pipefail
+          PROJECT_NAME="clockko"
           terraform plan -no-color \
-            -var="aws_region=${{ vars.AWS_REGION }}" \
-            -var="project_name=${{ vars.BACKEND_PROJECT_NAME || vars.FRONTEND_PROJECT_NAME }}" \
+            -var="aws_region=$AWS_REGION" \
+            -var="project_name=$PROJECT_NAME" \
             -var="github_org=${{ github.repository_owner }}" \
             -var="github_repo=${{ github.event.repository.name }}" \
             | tee ../../.terraform-plan-backend.txt

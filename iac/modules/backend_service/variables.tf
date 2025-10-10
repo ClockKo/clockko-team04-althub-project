@@ -105,3 +105,10 @@ variable "existing_public_subnet_ids" {
 	description = "Existing public subnet IDs (2 AZs) when use_existing_vpc is true (e.g., [subnet-aaa, subnet-bbb])"
 	default     = []
 }
+
+# Fallback: provide subnets as a comma-separated string (easier for CI env vars)
+variable "existing_public_subnet_ids_string" {
+	type        = string
+	description = "Comma-separated existing public subnet IDs when use_existing_vpc is true (e.g., subnet-aaa,subnet-bbb)"
+	default     = ""
+}

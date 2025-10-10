@@ -69,7 +69,9 @@ resource "aws_route_table_association" "public_assoc_b" {
 locals {
   # Use try() so evaluation doesn't fail when count=0 on created resources
   vpc_id = var.use_existing_vpc ? var.existing_vpc_id : try(aws_vpc.clockko_vpc[0].id, "")
-  public_subnet_ids = var.use_existing_vpc ? var.existing_public_subnet_ids : compact([
+  # Prefer the explicit list; if empty, parse the string var by splitting on comma
+  existing_subnets_effective = length(var.existing_public_subnet_ids) > 0 ? var.existing_public_subnet_ids : (length(trimspace(var.existing_public_subnet_ids_string)) > 0 ? split(",", replace(var.existing_public_subnet_ids_string, " ", "")) : [])
+  public_subnet_ids = var.use_existing_vpc ? local.existing_subnets_effective : compact([
     try(aws_subnet.public[0].id, null),
     try(aws_subnet.public_b[0].id, null)
   ])

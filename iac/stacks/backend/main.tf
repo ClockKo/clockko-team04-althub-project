@@ -34,6 +34,7 @@ module "backend" {
   use_existing_vpc          = var.use_existing_vpc
   existing_vpc_id           = var.existing_vpc_id
   existing_public_subnet_ids = var.existing_public_subnet_ids
+  existing_public_subnet_ids_string = var.existing_public_subnet_ids_string
 }
 
 output "ecr_repo_url" { value = module.backend.ecr_repo_url }

@@ -137,3 +137,9 @@ variable "existing_public_subnet_ids" {
   description = "Existing public subnet IDs (two subnets in different AZs) when use_existing_vpc is true"
   default     = []
 }
+
+variable "existing_public_subnet_ids_string" {
+  type        = string
+  description = "Comma-separated existing public subnet IDs when use_existing_vpc is true"
+  default     = ""
+}

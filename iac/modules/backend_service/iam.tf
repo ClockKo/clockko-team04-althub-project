@@ -148,6 +148,22 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.project_name}-terraform-locks"
     ]
   }
+
+  # Allow Terraform plan to read metadata of module-managed Secrets Manager secrets (no secret values)
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:GetResourcePolicy"
+    ]
+    resources = compact([
+      aws_secretsmanager_secret.jwt_secret.arn,
+      aws_secretsmanager_secret.db_creds.arn,
+      aws_secretsmanager_secret.google_oauth.arn,
+      var.create_rds ? aws_secretsmanager_secret.db_url[0].arn : null,
+      length(trimspace(var.smtp_password_secret_arn)) > 0 ? var.smtp_password_secret_arn : null
+    ])
+  }
 }
 
 resource "aws_iam_policy" "gha_policy" {

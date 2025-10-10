@@ -118,7 +118,10 @@ resource "aws_iam_role" "gha_role" {
   tags               = { Name = "${var.project_name}-gha-role" }
 }
 
+data "aws_caller_identity" "current" {}
+
 data "aws_iam_policy_document" "gha_policy_doc" {
+  # General permissions required by CI/CD across various AWS services
   statement {
     effect = "Allow"
     actions = [
@@ -130,10 +133,20 @@ data "aws_iam_policy_document" "gha_policy_doc" {
       "ec2:DescribeAvailabilityZones","ec2:DescribeVpcs","ec2:DescribeAddresses","ec2:DescribeVpcAttribute","ec2:DescribeAddressesAttribute","ec2:DescribeSecurityGroups","ec2:DescribeSubnets","ec2:DescribeInternetGateways","ec2:DescribeNatGateways","ec2:DescribeRouteTables","ec2:DescribeVpcEndpoints",
       "rds:DescribeDBSubnetGroups","rds:ListTagsForResource",
       "cloudwatch:DescribeAlarms","cloudwatch:GetMetricData","cloudwatch:ListMetrics",
-      "dynamodb:PutItem","dynamodb:GetItem","dynamodb:DeleteItem","dynamodb:UpdateItem","dynamodb:DescribeTable","dynamodb:Scan",
       "iam:CreatePolicyVersion","iam:SetDefaultPolicyVersion"
     ]
     resources = ["*"]
+  }
+
+  # Least-privilege permissions for Terraform state locking in DynamoDB
+  statement {
+    effect = "Allow"
+    actions = [
+      "dynamodb:PutItem","dynamodb:GetItem","dynamodb:DeleteItem","dynamodb:UpdateItem","dynamodb:DescribeTable"
+    ]
+    resources = [
+      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.project_name}-terraform-locks"
+    ]
   }
 }
 

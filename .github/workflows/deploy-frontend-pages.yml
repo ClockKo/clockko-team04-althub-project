@@ -36,9 +36,6 @@ jobs:
           version: 9
           run_install: false
 
-      - name: Ensure pnpm is on PATH
-        run: npm install -g pnpm
-
       - name: Build frontend
         working-directory: frontend/clockko-wellness-app
         env:

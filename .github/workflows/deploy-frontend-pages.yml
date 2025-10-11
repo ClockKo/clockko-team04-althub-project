@@ -36,6 +36,9 @@ jobs:
           version: 9
           run_install: false
 
+      - name: Ensure pnpm is on PATH
+        run: npm install -g pnpm
+
       - name: Build frontend
         working-directory: frontend/clockko-wellness-app
         env:
@@ -43,7 +46,7 @@ jobs:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
           # GitHub Pages project site base path
           VITE_BASE: "/clockko-team04-althub-project/"
-          # Google Client ID used on the client
+          # Google Client ID used on the client       
           VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
         run: |
           pnpm install

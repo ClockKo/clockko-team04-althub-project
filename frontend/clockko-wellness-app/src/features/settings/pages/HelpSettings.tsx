@@ -18,7 +18,6 @@ import {
   Video,
   Download,
   Globe,
-  Smartphone,
   Mail,
   Phone,
   MessageSquare,
@@ -161,12 +160,6 @@ const quickActions = [
     action: 'shortcuts'
   },
   {
-    label: 'Download Mobile App',
-    icon: <Smartphone className="h-6 w-6 text-green-500" />,
-    description: 'ClockKo on iOS & Android',
-    action: 'mobile'
-  },
-  {
     label: 'System Status',
     icon: <TrendingUp className="h-6 w-6 text-blue-500" />,
     description: 'Check service uptime',
@@ -270,9 +263,6 @@ const HelpSettings: React.FC = () => {
       case 'tutorials':
         window.open('/help/tutorials', '_blank');
         break;
-      case 'mobile':
-        window.open('/help/mobile-app', '_blank');
-        break;
       case 'status':
         window.open('/status', '_blank');
         break;
@@ -329,7 +319,7 @@ const HelpSettings: React.FC = () => {
             <Lightbulb className="h-5 w-5 text-yellow-500 mr-2" />
             Quick Actions
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {quickActions.map((action) => (
               <button
                 key={action.action}

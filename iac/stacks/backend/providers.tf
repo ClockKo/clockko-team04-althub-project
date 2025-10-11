@@ -64,6 +64,7 @@ variable "frontend_url" {
   default     = "*"
 }
 
+
 variable "google_client_id" {
   type        = string
   description = "Google OAuth client id"
@@ -142,4 +143,10 @@ variable "existing_public_subnet_ids_string" {
   type        = string
   description = "Comma-separated existing public subnet IDs when use_existing_vpc is true"
   default     = ""
+}
+
+variable "additional_security_group_ids" {
+  type        = list(string)
+  description = "Additional SG IDs to attach to ECS service (safe migration)"
+  default     = []
 }

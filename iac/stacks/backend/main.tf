@@ -29,6 +29,7 @@ module "backend" {
   smtp_from_name          = var.smtp_from_name
   smtp_password_secret_arn = var.smtp_password_secret_arn
   google_oauth_secret_name = var.google_oauth_secret_name
+  additional_security_group_ids = var.additional_security_group_ids
 
   # Networking passthrough
   use_existing_vpc          = var.use_existing_vpc

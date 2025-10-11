@@ -107,6 +107,7 @@ jobs:
           AWS_REGION: ${{ vars.AWS_REGION }}
           VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
           FRONTEND_PROJECT_NAME: ${{ vars.FRONTEND_PROJECT_NAME }}
+          FRONTEND_URL: ${{ vars.FRONTEND_URL }}
         run: |
           PROJECT_NAME="$FRONTEND_PROJECT_NAME"; [ -z "$PROJECT_NAME" ] || [ "$PROJECT_NAME" = "null" ] && PROJECT_NAME="clockko"
           LOCK_FLAG=""
@@ -118,7 +119,8 @@ jobs:
             -var="github_org=${{ github.repository_owner }}" \
             -var="github_repo=${{ github.event.repository.name }}" \
             -var="google_client_id=$VITE_GOOGLE_CLIENT_ID" \
-            -var="google_oauth_secret_name=clockko-google-oauth"
+            -var="google_oauth_secret_name=clockko-google-oauth" \
+            -var="frontend_url=${FRONTEND_URL:-*}"
 
       - name: Run DB Migrations (Alembic upgrade head)
         working-directory: iac/scripts

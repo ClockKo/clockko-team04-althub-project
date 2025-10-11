@@ -87,6 +87,13 @@ variable "google_oauth_secret_name" {
   default     = "clockko-google-oauth"
 }
 
+# Optional: attach extra security groups to ECS service for safe migrations
+variable "additional_security_group_ids" {
+	type        = list(string)
+	description = "Additional security group IDs to attach to the ECS service (for blue/green SG rollout)"
+	default     = []
+}
+
 # Networking: optionally use an existing VPC and subnets
 variable "use_existing_vpc" {
 	type        = bool

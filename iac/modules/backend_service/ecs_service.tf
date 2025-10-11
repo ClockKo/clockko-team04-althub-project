@@ -7,7 +7,7 @@ resource "aws_ecs_service" "backend" {
 
   network_configuration {
     subnets          = local.public_subnet_ids
-    security_groups  = [aws_security_group.ecs_sg.id]
+    security_groups  = concat([aws_security_group.ecs_sg.id], var.additional_security_group_ids)
     assign_public_ip = true
   }
 

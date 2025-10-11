@@ -29,6 +29,13 @@ module "backend" {
   smtp_from_name          = var.smtp_from_name
   smtp_password_secret_arn = var.smtp_password_secret_arn
   google_oauth_secret_name = var.google_oauth_secret_name
+  additional_security_group_ids = var.additional_security_group_ids
+
+  # Networking passthrough
+  use_existing_vpc          = var.use_existing_vpc
+  existing_vpc_id           = var.existing_vpc_id
+  existing_public_subnet_ids = var.existing_public_subnet_ids
+  existing_public_subnet_ids_string = var.existing_public_subnet_ids_string
 }
 
 output "ecr_repo_url" { value = module.backend.ecr_repo_url }

@@ -86,3 +86,36 @@ variable "google_oauth_secret_name" {
   description = "Name for the Google OAuth secret in Secrets Manager"
   default     = "clockko-google-oauth"
 }
+
+# Optional: attach extra security groups to ECS service for safe migrations
+variable "additional_security_group_ids" {
+	type        = list(string)
+	description = "Additional security group IDs to attach to the ECS service (for blue/green SG rollout)"
+	default     = []
+}
+
+# Networking: optionally use an existing VPC and subnets
+variable "use_existing_vpc" {
+	type        = bool
+	description = "If true, use existing VPC/subnets provided instead of creating new ones"
+	default     = false
+}
+
+variable "existing_vpc_id" {
+	type        = string
+	description = "Existing VPC ID to use when use_existing_vpc is true (e.g., vpc-0123456789abcdef0)"
+	default     = ""
+}
+
+variable "existing_public_subnet_ids" {
+	type        = list(string)
+	description = "Existing public subnet IDs (2 AZs) when use_existing_vpc is true (e.g., [subnet-aaa, subnet-bbb])"
+	default     = []
+}
+
+# Fallback: provide subnets as a comma-separated string (easier for CI env vars)
+variable "existing_public_subnet_ids_string" {
+	type        = string
+	description = "Comma-separated existing public subnet IDs when use_existing_vpc is true (e.g., subnet-aaa,subnet-bbb)"
+	default     = ""
+}

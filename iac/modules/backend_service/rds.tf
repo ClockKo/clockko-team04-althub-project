@@ -1,7 +1,7 @@
 // WARNING: Publicly accessible RDS for MVP/demo to avoid NAT costs. Secure with SG and restrict in production.
 resource "aws_db_subnet_group" "public" {
   name       = "${var.project_name}-db-subnet-group"
-  subnet_ids = [aws_subnet.public.id, aws_subnet.public_b.id]
+  subnet_ids = local.public_subnet_ids
   tags = { Name = "${var.project_name}-db-subnet-group" }
 }
 
@@ -14,7 +14,7 @@ resource "aws_db_instance" "postgres" {
   engine_version          = "14"
   instance_class          = var.db_instance_class
   db_subnet_group_name    = aws_db_subnet_group.public.name
-  vpc_security_group_ids  = [aws_security_group.db_sg.id]
+  vpc_security_group_ids  = [aws_security_group.db_sg[0].id]
   skip_final_snapshot     = true
   publicly_accessible     = true
   db_name                 = var.db_name

@@ -6,8 +6,8 @@ resource "aws_ecs_service" "backend" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = [aws_subnet.public.id, aws_subnet.public_b.id]
-    security_groups  = [aws_security_group.ecs_sg.id]
+    subnets          = local.public_subnet_ids
+    security_groups  = concat([aws_security_group.ecs_sg.id], var.additional_security_group_ids)
     assign_public_ip = true
   }
 

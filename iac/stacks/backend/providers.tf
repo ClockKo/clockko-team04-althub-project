@@ -64,6 +64,7 @@ variable "frontend_url" {
   default     = "*"
 }
 
+
 variable "google_client_id" {
   type        = string
   description = "Google OAuth client id"
@@ -117,4 +118,35 @@ variable "google_oauth_secret_name" {
   type        = string
   description = "Name for the Google OAuth secret in Secrets Manager"
   default     = "clockko-google-oauth"
+}
+
+# Networking passthrough (optional): use existing VPC/subnets
+variable "use_existing_vpc" {
+  type        = bool
+  description = "If true, use existing VPC/subnets provided instead of creating new ones"
+  default     = false
+}
+
+variable "existing_vpc_id" {
+  type        = string
+  description = "Existing VPC ID to use when use_existing_vpc is true"
+  default     = ""
+}
+
+variable "existing_public_subnet_ids" {
+  type        = list(string)
+  description = "Existing public subnet IDs (two subnets in different AZs) when use_existing_vpc is true"
+  default     = []
+}
+
+variable "existing_public_subnet_ids_string" {
+  type        = string
+  description = "Comma-separated existing public subnet IDs when use_existing_vpc is true"
+  default     = ""
+}
+
+variable "additional_security_group_ids" {
+  type        = list(string)
+  description = "Additional SG IDs to attach to ECS service (safe migration)"
+  default     = []
 }

@@ -20,6 +20,11 @@ resource "aws_apigatewayv2_integration" "ecs_http" {
   # This value will be updated after each deploy to the live ECS IP by CI.
   # Use {proxy} to mirror the route key /api/{proxy+}
   integration_uri = "http://127.0.0.1:8000/{proxy}"
+
+  lifecycle {
+    # CI helper updates this at runtime; avoid perpetual drift
+    ignore_changes = [integration_uri]
+  }
 }
 
 resource "aws_apigatewayv2_route" "proxy_api" {

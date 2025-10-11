@@ -30,7 +30,7 @@ import HelpSettings from './features/settings/pages/HelpSettings';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AuthProvider>
         <UserProvider>
           <OnboardingProvider>

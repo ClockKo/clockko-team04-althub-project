@@ -20,8 +20,8 @@ from app.core.auth import get_current_user
 from app.core.database import get_db
 from app.models.user import User
 from app.models.room import CoworkingRoom
-from app.models.room_participant import RoomParticipant  
-from app.models.room_message import RoomMessage
+from app.models.coworking import RoomParticipant, RoomMessage
+# from app.models.room_message import RoomMessage
 from app.services import coworkingservice
 
 

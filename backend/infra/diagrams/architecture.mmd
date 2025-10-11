@@ -14,13 +14,13 @@ flowchart TD
   B -- OIDC JWT --> ROLE
 
   B -- Build & tag image --> DOCKER[Docker Build]
-  DOCKER -- Push :immutable and :latest --> ECR[ECR Repository\nclockko-backend (eu-west-1)]
+  DOCKER -- Push :immutable and :latest --> ECR[ECR Repository\nclockko-backend (us-east-1)]
 
   B -- terraform apply\nTF_VAR_image_tag --> TF[Terraform (backend/infra)]
   TF -- Register/Deregister --> TDEF[ECS Task Definition]
   TF -- Update Service (circuit breaker on) --> SERVICE[ECS Service (Fargate)]
 
-  subgraph VPC[VPC (eu-west-1)]
+  subgraph VPC[VPC (us-east-1)]
     direction LR
     IGW[Internet Gateway]
     subgraph PUB[Public Subnets]

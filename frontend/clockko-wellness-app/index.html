@@ -14,6 +14,19 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // spa-github-pages: If redirected from 404.html, restore original path
+      (function() {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var redirect = params.get('redirect');
+          if (redirect) {
+            var url = new URL(redirect, window.location.origin);
+            window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+          }
+        } catch (e) { /* no-op */ }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

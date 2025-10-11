@@ -259,6 +259,24 @@ def verify_current_password(
         raise HTTPException(status_code=500, detail=f"Password verification failed: {str(e)}")
 
 
+@router.get("/test-email-config")
+def test_email_config():
+    """Test SMTP/email configuration and connectivity.
+
+    Returns configuration validity and connection status without exposing secrets.
+    Useful for environment verification in ECS and locally.
+    """
+    try:
+        from app.services.emailservice import email_service
+        result = email_service.test_connection()
+        ok = bool(result.get("config_valid")) and bool(result.get("connection_successful"))
+        if ok:
+            return result
+        raise HTTPException(status_code=500, detail=result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Email test failed: {str(e)}")
+
+
 @router.get("/check-email")
 def check_email_availability(email: str, db: Session = Depends(get_db)):
     """Check if email is available for use."""

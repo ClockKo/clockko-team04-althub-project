@@ -17,13 +17,13 @@ flowchart TD
   B --> ROLE
 
   B --> DOCKER[Docker Build]
-  DOCKER --> ECR[ECR repository clockko-backend eu-west-1]
+  DOCKER --> ECR[ECR repository clockko-backend us-east-1]
 
   B --> TF[Terraform backend/infra]
   TF --> TDEF[ECS Task Definition]
   TF --> SERVICE[ECS Service Fargate]
 
-  subgraph VPC[VPC eu-west-1]
+  subgraph VPC[VPC us-east-1]
     direction LR
     IGW[Internet Gateway]
     subgraph PUB[Public subnets]

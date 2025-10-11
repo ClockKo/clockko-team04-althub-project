@@ -1,6 +1,5 @@
 import axios from 'axios'
-
-const API_BASE_URL = 'http://localhost:8000';
+import { apiUrl } from '@/utils/api'
 
 // Helper to get token
 function getToken() {
@@ -13,7 +12,7 @@ export async function fetchCurrentSession() {
   if (!token) return null; // Return null if no token
 
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/dashboard/current-session`, {
+    const res = await axios.get(apiUrl('/dashboard/current-session'), {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
@@ -35,7 +34,7 @@ export async function fetchLastSession() {
   if (!token) return null;
 
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/dashboard/last-session`, {
+    const res = await axios.get(apiUrl('/dashboard/last-session'), {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
@@ -52,7 +51,7 @@ export async function clockIn() {
   if (!token) throw new Error('You must be logged in to clock in.');
 
   try {
-    const res = await axios.post(`${API_BASE_URL}/api/dashboard/clock-in`, {}, {
+    const res = await axios.post(apiUrl('/dashboard/clock-in'), {}, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
@@ -70,7 +69,7 @@ export async function clockOut() {
   if (!token) throw new Error('You must be logged in to clock out.');
 
   try {
-    const res = await axios.post(`${API_BASE_URL}/api/dashboard/clock-out`, {}, {
+    const res = await axios.post(apiUrl('/dashboard/clock-out'), {}, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
@@ -89,7 +88,7 @@ export async function fetchUserData() {
 
   try {
     console.log('🔄 Fetching user data...');
-    const res = await axios.get(`${API_BASE_URL}/api/auth/user`, {
+    const res = await axios.get(apiUrl('/auth/user'), {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
@@ -119,12 +118,10 @@ export async function fetchDashboardData() {
   if (!token) return null;
 
   try {
-    console.log('📊 Fetching dashboard data...')
-    const res = await axios.get(`${API_BASE_URL}/api/dashboard/data`, {
+    const res = await axios.get(apiUrl('/dashboard/data'), {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
-    console.log('📊 Dashboard data received:', res.data)
     return res.data
   } catch (e) {
     if (axios.isAxiosError(e) && e.response?.data?.message) {

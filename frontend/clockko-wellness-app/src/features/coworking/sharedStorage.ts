@@ -9,7 +9,7 @@ class SharedStorageService {
   private readonly SHARED_PREFIX = 'clockko_shared_';
   private readonly ACTIVE_USERS_KEY = 'clockko_active_users';
   private readonly SESSION_TIMEOUT = 60000; // 1 minute timeout
-  private heartbeatInterval: NodeJS.Timeout | null = null;
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   private currentUserId: string | null = null;
 
   constructor() {

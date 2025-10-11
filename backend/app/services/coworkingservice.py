@@ -6,8 +6,8 @@ from typing import List, Optional
 from fastapi import HTTPException
 
 from app.models.room import CoworkingRoom, RoomStatus
-from app.models.room_participant import RoomParticipant
-from app.models.room_message import RoomMessage, RoomMessageType
+  # from app.models.room_participant import RoomParticipant
+from app.models.coworking import RoomParticipant, RoomMessage, RoomMessageType
 from app.models.user import User
 from app.schemas.room import (
     CoworkingRoomCreate,

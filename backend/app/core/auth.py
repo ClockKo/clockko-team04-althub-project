@@ -7,7 +7,8 @@ from app.models.user import User
 from app.core.security import SECRET_KEY, ALGORITHM
 from uuid import UUID
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+# The login endpoint is mounted under /api/auth in main.py, so include the full path here
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     try:
@@ -32,3 +33,18 @@ def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
             detail="Admin privileges required. This operation is restricted to administrators only."
         )
     return current_user
+
+
+async def get_current_user_websocket(token: str, db: Session) -> User:
+    """Authenticate user for WebSocket connection"""
+    try:
+        from app.core.config import settings
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+    except JWTError:
+        return None
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    return user

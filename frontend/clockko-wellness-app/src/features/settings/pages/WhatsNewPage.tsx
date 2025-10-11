@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '../../../components/ui/button';
-import Poses from '../../../assets/images/poses.png';
+import Poses from '../../../assets/images/Poses.png';
 
 const WhatsNewPage: React.FC = () => {
   return (

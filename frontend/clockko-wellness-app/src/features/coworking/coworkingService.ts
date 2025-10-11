@@ -17,7 +17,7 @@ const getCurrentUser = async (): Promise<Participant> => {
     const token = localStorage.getItem('authToken');
     if (token) {
       // Use the working auth/user endpoint
-      const response = await fetch('http://localhost:8000/api/auth/user', {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/auth/user`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

@@ -95,10 +95,9 @@ const SignInPage: React.FC = () => {
     }
 
     try {
-      // Send the ID token to backend
-      const response = await axios.post(`http://localhost:8000/api/auth/google/verify`, {
-        token: googleIdToken
-      });
+      // Send the ID token to backend using configured API base
+      const apiBase = (import.meta.env.VITE_API_BASE_URL as string | undefined) || 'http://localhost:8000/api';
+      const response = await axios.post(`${apiBase}/auth/google/verify`, { token: googleIdToken });
 
       if (response.data.access_token) {
         setAuthToken(response.data.access_token);
@@ -120,6 +119,8 @@ const SignInPage: React.FC = () => {
     console.error('Google Login Failed');
     setApiError('Google sign-in was cancelled or failed.');
   };
+
+  const isGoogleEnabled = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
 
   return (
     <AuthLayout hideHeader={true}>
@@ -175,6 +176,7 @@ const SignInPage: React.FC = () => {
 
         {/* Google Sign In Button */}
         <button
+          disabled={!isGoogleEnabled}
           onClick={() => {
             // Try to find and click the hidden Google button
             const hiddenGoogleBtn = document.querySelector('.hidden-google-btn div[role="button"]') as HTMLElement;
@@ -192,7 +194,11 @@ const SignInPage: React.FC = () => {
               }, 100);
             }
           }}
-          className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-[24px] bg-white hover:bg-gray-50 transition-colors duration-200 text-gray-700 font-medium min-h-[48px]"
+          className={`w-full flex items-center justify-center gap-3 px-4 py-3 border rounded-[24px] transition-colors duration-200 font-medium min-h-[48px] ${
+            isGoogleEnabled
+              ? 'border-gray-300 bg-white hover:bg-gray-50 text-gray-700'
+              : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+          }`}
         >
           <svg width="20" height="20" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -200,19 +206,27 @@ const SignInPage: React.FC = () => {
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
           </svg>
-          Sign in with Google
+          {isGoogleEnabled ? 'Sign in with Google' : 'Google sign-in unavailable'}
         </button>
         
-        {/* Hidden GoogleLogin for functionality */}
-        <div className="hidden-google-btn absolute opacity-0 pointer-events-none -z-10">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            text="signin_with"
-            ux_mode="popup"
-            auto_select={false}
-          />
-        </div>
+        {/* Hidden GoogleLogin for functionality (mount only when enabled) */}
+        {isGoogleEnabled && (
+          <div className="hidden-google-btn absolute opacity-0 pointer-events-none -z-10">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              text="signin_with"
+              ux_mode="popup"
+              auto_select={false}
+            />
+          </div>
+        )}
+
+        {!isGoogleEnabled && (
+          <p className="mt-3 text-center text-xs text-gray-500">
+            Google sign-in is disabled. Set VITE_GOOGLE_CLIENT_ID to enable it.
+          </p>
+        )}
 
         <p className="mt-8 text-center text-sm text-gray-600">
           Don't have an account?{' '}

@@ -1,7 +1,4 @@
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8000';
-
 export interface UserProfileUpdateParams {
   name?: string;
   avatar?: string | null;
@@ -19,6 +16,9 @@ export interface UserProfileResponse {
   otp_verified: boolean;
 }
 
+// Normalize API base to include /api once
+const RAW_API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) || 'http://localhost:8000/api';
+const API_BASE_URL = RAW_API_BASE.replace(/\/$/, '');
 function getToken() {
   return localStorage.getItem('authToken') || '';
 }
@@ -43,7 +43,7 @@ export async function updateUserProfile({ name, avatar }: { name?: string; avata
 
   try {
     // Update profile using auth endpoint for consistency
-    const res = await axios.put(`${API_BASE_URL}/api/auth/user`, payload, {
+    const res = await axios.put(`${API_BASE_URL.replace(/\/api$/, '')}/api/auth/user`, payload, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true,
     });

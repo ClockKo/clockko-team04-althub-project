@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "tf_state" {
-  bucket = "clockko-terraform-state-eu-west-1"
+  bucket = "clockko-terraform-state-us-east-1"
 
   # Allow terraform destroy to remove all objects and versions
   force_destroy = true

@@ -1,9 +1,21 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
+import os
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, timetracker, tasks, users, dashboard, coworking, user_settings, two_factor_auth
+from app.api import (
+    auth,
+    timetracker,
+    tasks,
+    users,
+    dashboard,
+    coworking,
+    user_settings,
+    two_factor_auth,
+    challenges,
+    websocket,
+)
 from app.api import auth_google  # Google ID token verification endpoints
-from app.core.config import settings
+from app.core.config import settings, get_secret
 from app.core.database import Base, engine
 
 # Create all tables (if using without Alembic migrations)
@@ -33,13 +45,14 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
-
-
-# CORS settings (adjust as needed for frontend origin)
+# CORS settings: read allowed origins from env via settings.FRONTEND_URL (comma-separated supported)
+# CORS settings: read allowed origins from env via settings.FRONTEND_URL (comma-separated supported)
+origins = [o.strip() for o in str(getattr(settings, 'FRONTEND_URL', '')).split(',') if o.strip()] or ["*"]
+allow_credentials = False if origins == ["*"] else True
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or restrict to specific domains
-    allow_credentials=True,
+    allow_origins=origins,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"]
 )
@@ -54,7 +67,8 @@ app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"]
 app.include_router(coworking.router, prefix="/api", tags=["Coworking"])
 app.include_router(user_settings.router)  # Has its own prefix /api/users
 app.include_router(two_factor_auth.router, prefix="/api/auth", tags=["Two-Factor Authentication"])
-app.include_router(auth_google.router)  # router has its own prefix
+app.include_router(challenges.router, prefix="/api/challenges", tags=["challenges"])
+app.include_router(websocket.router, prefix="/api", tags=["websocket"])
 
 # If you have a reminder thread, import and start it here
 # from app.reminders import start_reminder_thread
@@ -78,5 +92,43 @@ def health():
 
 @app.get("/health/google")
 def google_health():
+    # Prefer the in-memory setting, but if empty, attempt to read from Secrets Manager
     configured = bool(getattr(settings, 'GOOGLE_CLIENT_ID', ''))
+    if not configured:
+        try:
+            secret_name = os.getenv("GOOGLE_OAUTH_SECRET_NAME", "clockko-google-oauth")
+            google_creds = get_secret(secret_name) or {}
+            configured = bool(google_creds.get("client_id"))
+        except Exception:
+            configured = False
     return {"google_sign_in_configured": configured}
+
+
+@app.get("/health/google/details")
+def google_health_details():
+    """
+    Diagnostic endpoint exposing non-sensitive signals to help troubleshoot Google OAuth config.
+    Does NOT return any secret values.
+    """
+    source = "settings"
+    configured = bool(getattr(settings, 'GOOGLE_CLIENT_ID', ''))
+    region = getattr(settings, 'AWS_REGION', None)
+    secret_name = os.getenv("GOOGLE_OAUTH_SECRET_NAME", "clockko-google-oauth")
+    error = None
+    if not configured:
+        try:
+            google_creds = get_secret(secret_name)
+            configured = bool(google_creds.get("client_id"))
+            source = "secretsmanager" if configured else "none"
+        except Exception as e:  # pragma: no cover
+            source = "error"
+            # Return a minimal error shape to avoid leaking internals
+            error = str(e).split("\n")[0][:200]
+    return {
+        "configured": configured,
+        "source": source,
+        "secret_name": secret_name,
+        "region": region,
+        "error": error,
+    }
+

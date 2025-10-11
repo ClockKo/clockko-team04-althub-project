@@ -1,0 +1,140 @@
+
+name: Terraform Plan (Frontend & Backend)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: ["**"]
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - "iac/**"
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: "infra-plan-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      frontend_infra: ${{ steps.filter.outputs.frontend_infra }}
+      backend: ${{ steps.filter.outputs.backend }}
+      backend_infra: ${{ steps.filter.outputs.backend_infra }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            frontend_infra:
+              - 'iac/stacks/frontend/**'
+              - 'iac/modules/frontend_static_site/**'
+              - 'iac/bootstrap/**'
+            backend:
+              - 'backend/**'
+            backend_infra:
+              - 'iac/stacks/backend/**'
+              - 'iac/modules/backend_service/**'
+              - 'iac/bootstrap/**'
+
+  plan-frontend:
+    needs: detect-changes
+    if: github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.frontend_infra == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
+
+      - name: Terraform Init (frontend)
+        working-directory: iac/stacks/frontend
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="dynamodb_table=${{ vars.TF_STATE_DYNAMO_TABLE }}" \
+            -backend-config="key=${{ vars.TF_STATE_KEY }}" \
+            -backend-config="region=${{ vars.AWS_REGION }}"
+
+      - name: Terraform Plan (frontend)
+        id: plan_frontend
+        working-directory: iac/stacks/frontend
+        run: |
+          set -euo pipefail
+          PROJECT_NAME="clockko-frontend"
+          terraform plan -no-color \
+            -var="project_name=$PROJECT_NAME" \
+            | tee ../../.terraform-plan-frontend.txt
+
+      - name: Upload plan (frontend)
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-frontend
+          path: iac/.terraform-plan-frontend.txt
+
+  plan-backend:
+    needs: detect-changes
+    if: github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.backend_infra == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
+
+      - name: Terraform Init (backend)
+        working-directory: iac/stacks/backend
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="dynamodb_table=${{ vars.TF_STATE_DYNAMO_TABLE }}" \
+            -backend-config="key=${{ vars.TF_STATE_KEY_BACKEND }}" \
+            -backend-config="region=${{ vars.AWS_REGION }}"
+
+      - name: Terraform Plan (backend)
+        id: plan_backend
+        working-directory: iac/stacks/backend
+        env:
+          TF_VAR_image_tag: pr-${{ github.sha }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+        run: |
+          set -euo pipefail
+          PROJECT_NAME="clockko"
+          terraform plan -no-color \
+            -var="aws_region=$AWS_REGION" \
+            -var="project_name=$PROJECT_NAME" \
+            -var="github_org=${{ github.repository_owner }}" \
+            -var="github_repo=${{ github.event.repository.name }}" \
+            | tee ../../.terraform-plan-backend.txt
+
+      - name: Upload plan (backend)
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-backend
+          path: iac/.terraform-plan-backend.txt

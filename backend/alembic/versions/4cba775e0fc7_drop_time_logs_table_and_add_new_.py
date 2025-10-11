@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
@@ -20,22 +21,29 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Drop the time_logs table
-    op.drop_table("time_logs")
+    # Drop the time_logs table if present
+    op.execute("DROP TABLE IF EXISTS time_logs CASCADE")
 
-    # Add new columns to the time_sessions table
-    op.add_column(
-        "time_sessions", sa.Column("planned_duration", sa.Integer(), nullable=True)
-    )
-    op.add_column(
-        "time_sessions", sa.Column("status", sa.String(), nullable=True)
-    )
-    op.add_column(
-        "time_sessions", sa.Column("paused_at", sa.DateTime(), nullable=True)
-    )
-    op.add_column(
-        "time_sessions", sa.Column("remaining_time", sa.Integer(), nullable=True)
-    )
+    # Ensure time_sessions table exists before adding columns
+    bind = op.get_bind()
+    inspector = inspect(bind)
+    tables = {t for t in inspector.get_table_names()}
+    if "time_sessions" not in tables:
+        op.create_table(
+            "time_sessions",
+            sa.Column("session_id", sa.UUID(), primary_key=True, nullable=False),
+            sa.Column("user_id", sa.UUID(), nullable=False),
+            sa.Column("start_time", sa.DateTime(), nullable=True),
+            sa.Column("end_time", sa.DateTime(), nullable=True),
+            sa.Column("type", sa.String(), nullable=True),
+            sa.Column("date", sa.DateTime(), nullable=True),
+        )
+
+    # Add new columns to the time_sessions table idempotently
+    op.execute("ALTER TABLE time_sessions ADD COLUMN IF NOT EXISTS planned_duration INTEGER")
+    op.execute("ALTER TABLE time_sessions ADD COLUMN IF NOT EXISTS status VARCHAR")
+    op.execute("ALTER TABLE time_sessions ADD COLUMN IF NOT EXISTS paused_at TIMESTAMP")
+    op.execute("ALTER TABLE time_sessions ADD COLUMN IF NOT EXISTS remaining_time INTEGER")
 
 
 def downgrade() -> None:

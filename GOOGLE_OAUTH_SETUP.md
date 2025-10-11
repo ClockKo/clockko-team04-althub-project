@@ -13,7 +13,7 @@
 2. **Update your `.env.local` file:**
    ```env
    VITE_API_BASE_URL=http://localhost:8000
-   VITE_GOOGLE_CLIENT_ID="1041621987892-ruan8gh12d87kso2f0adh1amv3mso7ha.apps.googleusercontent.com"
+   VITE_GOOGLE_CLIENT_ID=1041621987892-ruan8gh12d87kso2f0adh1amv3mso7ha.apps.googleusercontent.com
    ```
 
 
@@ -67,9 +67,10 @@ python -m uvicorn app.main:app --reload
 ### 6. Team Sharing Best Practices
 
 1. **Never commit `.env.local` files** (they're in .gitignore)
-2. **Share Google Client ID via secure channels** (Slack DMs, encrypted notes)
-3. **Use the same ports consistently** across the team
-4. **Document any port changes** in this file
+2. **Frontend CI uses a GitHub Actions Variable** `VITE_GOOGLE_CLIENT_ID` (not a Secret). Set it under Settings → Secrets and variables → Actions → Variables.
+3. **Backend in production** should read Google OAuth creds from AWS Secrets Manager (secret name `clockko-google-oauth` with keys `client_id` and `client_secret`).
+4. **Share the Client ID carefully** (it’s public-facing but don’t misuse). Keep the Client Secret private (never share in chat or commit).
+5. **Use the same ports consistently** across the team and document any changes.
 
 ### 7. Testing Google OAuth
 

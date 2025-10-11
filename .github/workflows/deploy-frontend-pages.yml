@@ -36,6 +36,9 @@ jobs:
           version: 9
           run_install: false
 
+      - name: Check pnpm version
+        run: pnpm --version
+
       - name: Build frontend
         working-directory: frontend/clockko-wellness-app
         env:

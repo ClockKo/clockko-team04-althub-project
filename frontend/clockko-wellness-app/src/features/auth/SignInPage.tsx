@@ -11,6 +11,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { loginUser} from './api';
 import { useAuth } from './authcontext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
+import { Eye, EyeOff } from 'lucide-react';
 // import googleLogo from '../../assets/images/google.png';
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -45,6 +46,7 @@ const SignInPage: React.FC = () => {
   const { setAuthToken } = useAuth(); // Get setAuthToken
   const { checkBackendOnboardingStatus } = useOnboarding(); // Get onboarding check function
   const [apiError, setApiError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
 
   // Check if user came from email verification
@@ -139,12 +141,26 @@ const SignInPage: React.FC = () => {
             <div className="flex justify-between items-center mb-1">
               <label className="text-sm font-bold text-gray-700">Password</label>
             </div>
-            <Input
-              {...register('password')}
-              type="password"
-              placeholder="********"
-              className="py-6"
-            />
+            <div className="relative">
+              <Input
+                {...register('password')}
+                type={showPassword ? "text" : "password"}
+                placeholder="********"
+                className="py-6 pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
             {errors.password && (
               <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
             )}

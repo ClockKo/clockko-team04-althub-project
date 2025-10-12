@@ -40,6 +40,7 @@ import {
   setDeletedAvatarName,
   clearDeletedAvatarName
 } from '../../../utils/avatarUtils';
+import { apiUrl } from '../../../utils/api';
 
 
 
@@ -442,7 +443,7 @@ const ProfileSettings: React.FC = () => {
                     variant="destructive"
                     onClick={async () => {
                       try {
-                        const res = await fetch('http://localhost:8000/api/users/delete', {
+                        const res = await fetch(apiUrl('/users/delete'), {
                           method: 'DELETE',
                           headers: {
                             'Authorization': `Bearer ${authToken}`,

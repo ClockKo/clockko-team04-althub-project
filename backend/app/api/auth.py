@@ -21,46 +21,81 @@ router = APIRouter(tags=["auth"])
 
 @router.post("/register", response_model=schema.UserResponse)
 def register(user_data: schema.UserCreate, db: Session = Depends(get_db)):
-    """Register a new user and send OTP email"""
+    """Register a new user and send OTP email.
+
+    Ensures username uniqueness by retrying with randomized suffixes on collision.
+    """
     try:
-        # Check if user already exists
+        # Check if user already exists (by email)
         existing_user = db.query(User).filter(User.email == user_data.email).first()
         if existing_user:
             raise HTTPException(status_code=400, detail="Email already registered")
-        
-        # Check if username already exists (since we're using name as username)
-        existing_username = db.query(User).filter(User.username == user_data.name).first()
-        if existing_username:
-            # Generate unique username by appending timestamp
-            import time
-            unique_username = f"{user_data.name}_{int(time.time())}"
-        else:
-            unique_username = user_data.name
-        
+
+        # Prepare a safe base username from provided name
+        import re, time, random
+        base = user_data.name.strip()
+        # Replace non-alphanumeric with underscores, collapse repeats, and trim
+        base = re.sub(r"\W+", "_", base)
+        base = re.sub(r"_+", "_", base).strip("_") or "user"
+        # Limit base length to keep room for suffixes
+        MAX_LEN = 50
+        base = base[:MAX_LEN]
+
+        def make_candidate(attempt: int) -> str:
+            if attempt == 0:
+                return base
+            # Use short time + random to avoid collisions in same second
+            rand = random.randint(100, 999)
+            suffix = f"_{int(time.time()) % 100000}{rand}"
+            # Ensure total length bound
+            return (base[: max(1, MAX_LEN - len(suffix))] + suffix)
+
         # Hash password and generate tokens
         hashed_password = hash_password(user_data.password)
         verification_token = str(uuid.uuid4())
-        user_id = uuid.uuid4()  
-        
-        # Create new user
-        db_user = User(
-            id=user_id,
-            username=unique_username,  # Use the unique username we generated
-            full_name=user_data.name,  # Store original name as full_name
-            email=user_data.email,
-            # phone_number=user_data.phone_number,
-            hashed_password=hashed_password,
-            verification_token=verification_token,
-            is_active=True,
-            is_verified=False,
-            otp_verified=False,
-            onboarding_completed=False  
-        )
-        
-        # Save user to database
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
+        user_id = uuid.uuid4()
+
+        # Try a few times in case of race conditions
+        MAX_ATTEMPTS = 6
+        last_error: Exception | None = None
+        for attempt in range(MAX_ATTEMPTS):
+            candidate_username = make_candidate(attempt)
+            try:
+                # Optional pre-check to skip obvious duplicates
+                if db.query(User).filter(User.username == candidate_username).first():
+                    continue
+
+                # Create new user
+                db_user = User(
+                    id=user_id,
+                    username=candidate_username,
+                    full_name=user_data.name,  # Store original name as full_name
+                    email=user_data.email,
+                    hashed_password=hashed_password,
+                    verification_token=verification_token,
+                    is_active=True,
+                    is_verified=False,
+                    otp_verified=False,
+                    onboarding_completed=False,
+                )
+
+                db.add(db_user)
+                db.commit()
+                db.refresh(db_user)
+                break  # Success
+            except IntegrityError as ie:
+                # Rollback and retry if it's a username unique violation
+                db.rollback()
+                last_error = ie
+                # Some DBs include constraint name; be defensive
+                msg = str(ie.orig) if hasattr(ie, "orig") else str(ie)
+                if "users_username_key" in msg or "unique" in msg.lower():
+                    continue  # try next candidate
+                # Not a username unique error: re-raise
+                raise
+        else:
+            # Exhausted attempts
+            raise HTTPException(status_code=500, detail="Could not generate a unique username. Please try again.")
 
         # Send welcome email with OTP (in case of failure it doesn't break the registration process)
         try:

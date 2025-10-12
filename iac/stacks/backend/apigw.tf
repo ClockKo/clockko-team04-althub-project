@@ -3,8 +3,8 @@ resource "aws_apigatewayv2_api" "backend_api" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_credentials = false
-    allow_headers     = ["authorization", "content-type", "x-requested-with"]
+    allow_credentials = true
+    allow_headers     = ["authorization", "content-type", "x-requested-with", "x-amz-date", "x-amz-security-token", "x-api-key"]
     allow_methods     = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
     allow_origins     = split(",", var.frontend_url)
     max_age           = 3600

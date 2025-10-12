@@ -35,6 +35,7 @@ import {
 } from 'lucide-react'
 import clockkoLogo from '../../assets/images/frame1.png'
 import { useIsMobile } from '../../hooks/use-mobile'
+import { useAuth } from '../auth/authcontext'
 import { SidebarProvider } from '../../components/ui/sidebar'
 import { getAvatarUrl } from '../../utils/avatarUtils'
 
@@ -92,6 +93,7 @@ export default function MainLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [avatarPreviewOpen, setAvatarPreviewOpen] = useState(false)
+  const { logout } = useAuth()
 
   const [searchTerm, setSearchTerm] = useState<string>('')
   // Sidebar mode: 'main' or 'settings'
@@ -160,8 +162,7 @@ export default function MainLayout() {
   const settingsBottomItems = [{ path: '/logout', label: 'Logout', icon: LogOut }]
 
   const handleLogout = () => {
-    // Add your logout logic here (e.g., clear tokens, redirect)
-    localStorage.removeItem('authToken')
+    logout()
     navigate('/signin')
   }
 

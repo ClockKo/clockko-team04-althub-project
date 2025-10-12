@@ -78,7 +78,6 @@ function App() {
                   <Route path="/settings/security" element={<SecuritySettings />} />
                   <Route path="/settings/integrations" element={<IntegrationsSettings />} />
                   <Route path="/settings/email" element={<EmailSettings />} />
-                  <Route path="/settings/security" element={<SecuritySettings />} />
                   <Route path="/settings/whats-new" element={<WhatsNewPage />} />
                   <Route path="/settings/invite" element={<InviteFriendsPage />} />
                   <Route path="/settings/help" element={<HelpSettings />} />

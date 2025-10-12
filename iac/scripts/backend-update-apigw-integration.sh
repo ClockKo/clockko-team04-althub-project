@@ -41,9 +41,46 @@ if [[ -z "$API_ID" || "$API_ID" == "None" ]]; then
   exit 1
 fi
 
-INTEGRATION_ID=$(aws apigatewayv2 get-integrations --region "$AWS_REGION" --api-id "$API_ID" --query 'items[0].integrationId' --output text)
-NEW_URI="http://${PUBLIC_IP}:8000/{proxy}"
+## Resolve the integration id robustly (AWS CLI uses capitalized keys in apigatewayv2 responses)
+INTEGRATION_ID=$(aws apigatewayv2 get-integrations \
+  --region "$AWS_REGION" \
+  --api-id "$API_ID" \
+  --query 'Items[0].IntegrationId' \
+  --output text 2>/dev/null || true)
+
+# Fallback 1: try lowercase keys (defensive)
+if [[ -z "$INTEGRATION_ID" || "$INTEGRATION_ID" == "None" || "$INTEGRATION_ID" == "null" ]]; then
+  INTEGRATION_ID=$(aws apigatewayv2 get-integrations \
+    --region "$AWS_REGION" \
+    --api-id "$API_ID" \
+    --query 'items[0].integrationId' \
+    --output text 2>/dev/null || true)
+fi
+
+# Fallback 2: pick the HTTP_PROXY integration explicitly if present
+if [[ -z "$INTEGRATION_ID" || "$INTEGRATION_ID" == "None" || "$INTEGRATION_ID" == "null" ]]; then
+  INTEGRATION_ID=$(aws apigatewayv2 get-integrations \
+    --region "$AWS_REGION" \
+    --api-id "$API_ID" \
+    --query 'Items[?IntegrationType==`HTTP_PROXY`][0].IntegrationId' \
+    --output text 2>/dev/null || true)
+fi
+
+if [[ -z "$INTEGRATION_ID" || "$INTEGRATION_ID" == "None" || "$INTEGRATION_ID" == "null" ]]; then
+  echo "Failed to resolve IntegrationId for API $API_ID. Dumping integrations for debugging:" >&2
+  aws apigatewayv2 get-integrations --region "$AWS_REGION" --api-id "$API_ID" --output table >&2 || true
+  exit 1
+fi
+
+# Route is ANY /api/{proxy+}; forward to backend /api/{proxy} so paths align
+NEW_URI="http://${PUBLIC_IP}:8000/api/{proxy}"
 
 echo "Updating API $API_ID integration $INTEGRATION_ID to $NEW_URI"
 aws apigatewayv2 update-integration --region "$AWS_REGION" --api-id "$API_ID" --integration-id "$INTEGRATION_ID" --integration-uri "$NEW_URI" >/dev/null
-echo "Done. API base: $(aws apigatewayv2 get-api --region "$AWS_REGION" --api-id "$API_ID" --query 'apiEndpoint' --output text)/api"
+
+# Resolve the API base endpoint (AWS CLI uses 'ApiEndpoint') with a safe fallback
+API_BASE=$(aws apigatewayv2 get-api --region "$AWS_REGION" --api-id "$API_ID" --query 'ApiEndpoint' --output text 2>/dev/null || true)
+if [[ -z "$API_BASE" || "$API_BASE" == "None" || "$API_BASE" == "null" ]]; then
+  API_BASE="https://$API_ID.execute-api.$AWS_REGION.amazonaws.com"
+fi
+echo "Done. API base: $API_BASE/api"

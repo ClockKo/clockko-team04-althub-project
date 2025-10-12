@@ -18,7 +18,7 @@ export default defineConfig({
   build: {
     // Optimize build for production
     target: 'es2015',
-    minify: 'terser',
+    minify: 'esbuild',
     sourcemap: false, // Disable source maps for production
     rollupOptions: {
       output: {

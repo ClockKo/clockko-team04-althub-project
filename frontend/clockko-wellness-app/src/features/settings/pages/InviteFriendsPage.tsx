@@ -1,10 +1,10 @@
 import React from 'react';
 import { Button } from '../../../components/ui/button';
 import { Link2, Send } from 'lucide-react';
-import ko_faces_1 from '../../../assets/images/ko_faces_1.png';
-import ko_faces_2 from '../../../assets/images/ko_faces_2.png';
-import ko_faces_3 from '../../../assets/images/ko_faces_3.png';
-import ko_faces_4 from '../../../assets/images/ko_faces_4.png';
+import ko_faces_1 from '../../../assets/images/Ko_Faces_1.png';
+import ko_faces_2 from '../../../assets/images/Ko_Faces_2.png';
+import ko_faces_3 from '../../../assets/images/Ko_Faces_3.png';
+import ko_faces_4 from '../../../assets/images/Ko_Faces_4.png';
 
 const InviteFriendsPage: React.FC = () => {
   return (

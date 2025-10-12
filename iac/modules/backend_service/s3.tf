@@ -1,6 +1,6 @@
 resource "aws_s3_bucket" "artifacts" {
   bucket        = "${var.project_name}-${random_id.suffix.hex}-artifacts"
-  force_destroy = true
+    force_destroy = true
   tags = { Name = "${var.project_name}-artifacts" }
 }
 
@@ -22,7 +22,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "artifacts_encrypt
 
 resource "aws_s3_bucket" "reports" {
   bucket        = "${var.project_name}-${random_id.suffix.hex}-reports"
-  force_destroy = true
+    force_destroy = true
   tags = { Name = "${var.project_name}-reports" }
 }
 

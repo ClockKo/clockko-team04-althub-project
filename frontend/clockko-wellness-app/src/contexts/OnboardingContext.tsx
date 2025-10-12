@@ -91,8 +91,11 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     // Listen for localStorage changes (when auth token is set/removed)
     window.addEventListener('storage', handleStorageChange);
     
-    // Also check immediately if token exists
-    handleStorageChange();
+    // Do not force clear on mount; just check and sync if token exists
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      handleStorageChange();
+    }
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);

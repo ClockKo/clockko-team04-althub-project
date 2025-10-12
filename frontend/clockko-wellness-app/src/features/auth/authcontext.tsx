@@ -15,15 +15,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Create a provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [authToken, setAuthTokenState] = useState<string | null>(null);
-
-  // Check localStorage for a token when the app loads
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      setAuthTokenState(token);
-    }
-  }, []);
+  // Initialize from localStorage synchronously to avoid a false unauthenticated render
+  const [authToken, setAuthTokenState] = useState<string | null>(() => {
+    return localStorage.getItem('authToken');
+  });
 
   const setAuthToken = (token: string | null) => {
     if (token) {

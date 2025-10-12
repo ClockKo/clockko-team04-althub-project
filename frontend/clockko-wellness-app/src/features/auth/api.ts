@@ -70,8 +70,8 @@ export const fetchUserData = async () => {
     return response.data;
   } catch (error) {
     console.error('Fetch user data failed:', error);
-    localStorage.removeItem('authToken');
-    // Also return null here to prevent crashes on API failure.
+    // Do NOT clear the auth token here to avoid logging the user out on transient errors.
+    // Return null so callers can handle unauthenticated state gracefully.
     return null;
   }
 };

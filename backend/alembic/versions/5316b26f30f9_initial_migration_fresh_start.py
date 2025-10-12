@@ -24,10 +24,11 @@ def upgrade() -> None:
     op.alter_column('room_messages', 'user_id',
                existing_type=sa.UUID(),
                nullable=False)
-    op.drop_index(op.f('idx_room_messages_room_id_created_at'), table_name='room_messages')
-    op.drop_index(op.f('ix_room_messages_created_at'), table_name='room_messages')
-    op.create_index('idx_room_message_room_id', 'room_messages', ['room_id'], unique=False)
-    op.create_index('idx_room_message_user_id', 'room_messages', ['user_id'], unique=False)
+    # Use IF EXISTS/IF NOT EXISTS for idempotency across environments
+    op.execute("DROP INDEX IF EXISTS idx_room_messages_room_id_created_at")
+    op.execute("DROP INDEX IF EXISTS ix_room_messages_created_at")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_room_message_room_id ON room_messages (room_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_room_message_user_id ON room_messages (user_id)")
     op.drop_constraint(op.f('room_messages_user_id_fkey'), 'room_messages', type_='foreignkey')
     op.create_foreign_key(None, 'room_messages', 'users', ['user_id'], ['id'], ondelete='CASCADE')
     op.alter_column('room_participants', 'is_muted',
@@ -36,14 +37,26 @@ def upgrade() -> None:
     op.alter_column('room_participants', 'is_speaking',
                existing_type=sa.BOOLEAN(),
                nullable=True)
-    op.drop_index(op.f('idx_room_participants_room_id'), table_name='room_participants')
-    op.drop_index(op.f('idx_room_participants_user_id'), table_name='room_participants')
-    op.drop_constraint(op.f('uq_room_participant_user'), 'room_participants', type_='unique')
-    op.create_index('idx_room_participant_room_id', 'room_participants', ['room_id'], unique=False)
-    op.create_index('idx_room_participant_user_id', 'room_participants', ['user_id'], unique=False)
-    op.create_index('idx_task_completed', 'tasks', ['completed'], unique=False)
-    op.create_index('idx_task_due_date', 'tasks', ['due_date'], unique=False)
-    op.create_index('idx_task_priority', 'tasks', ['priority'], unique=False)
+    op.execute("DROP INDEX IF EXISTS idx_room_participants_room_id")
+    op.execute("DROP INDEX IF EXISTS idx_room_participants_user_id")
+    # Drop constraint only if it exists (idempotent)
+    op.execute("""
+    DO $$
+    BEGIN
+        IF EXISTS (
+            SELECT 1 FROM information_schema.table_constraints
+            WHERE constraint_name = 'uq_room_participant_user'
+              AND table_name = 'room_participants'
+        ) THEN
+            ALTER TABLE room_participants DROP CONSTRAINT uq_room_participant_user;
+        END IF;
+    END$$;
+    """)
+    op.execute("CREATE INDEX IF NOT EXISTS idx_room_participant_room_id ON room_participants (room_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_room_participant_user_id ON room_participants (user_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_task_completed ON tasks (completed)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_task_due_date ON tasks (due_date)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_task_priority ON tasks (priority)")
     op.alter_column('user_settings', 'created_at',
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.String(),
@@ -52,8 +65,20 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.String(),
                existing_nullable=True)
-    op.drop_constraint(op.f('user_settings_user_id_key'), 'user_settings', type_='unique')
-    op.create_index(op.f('ix_user_settings_user_id'), 'user_settings', ['user_id'], unique=True)
+    # Drop constraint only if it exists (idempotent)
+    op.execute("""
+    DO $$
+    BEGIN
+        IF EXISTS (
+            SELECT 1 FROM information_schema.table_constraints
+            WHERE constraint_name = 'user_settings_user_id_key'
+              AND table_name = 'user_settings'
+        ) THEN
+            ALTER TABLE user_settings DROP CONSTRAINT user_settings_user_id_key;
+        END IF;
+    END$$;
+    """)
+    op.execute("CREATE UNIQUE INDEX IF NOT EXISTS ix_user_settings_user_id ON user_settings (user_id)")
     op.drop_constraint(op.f('user_settings_user_id_fkey'), 'user_settings', type_='foreignkey')
     op.create_foreign_key(None, 'user_settings', 'users', ['user_id'], ['id'])
     # ### end Alembic commands ###

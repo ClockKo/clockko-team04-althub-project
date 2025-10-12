@@ -5,9 +5,7 @@ resource "aws_security_group" "ecs_sg" {
 
   lifecycle {
     # Keep existing SG name to avoid forced replacement on project_name changes
-    ignore_changes  = [name, vpc_id]
-    # Guardrail: avoid deleting a SG that might still be referenced by ENIs/tasks
-    prevent_destroy = true
+    ignore_changes  = [name]
   }
 
   ingress {
@@ -35,10 +33,8 @@ resource "aws_security_group" "db_sg" {
   vpc_id      = local.vpc_id
 
   lifecycle {
-    # Guardrail: avoid deleting an SG that may be attached to a live RDS ENI
-    prevent_destroy = true
-    # Keep existing SG name and VPC to avoid forced replacement on renames/VPC flips
-    ignore_changes  = [name, vpc_id]
+    # Keep existing SG name to avoid forced replacement on project_name changes
+    ignore_changes  = [name]
   }
 
   ingress {

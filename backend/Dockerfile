@@ -1,7 +1,7 @@
 # ==============================
 # Stage 1 - Build dependencies
 # ==============================
-FROM python:3.11-slim-bookworm AS builder
+FROM public.ecr.aws/docker/library/python:3.11-slim-bookworm AS builder
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
 # ==============================
 # Stage 2 - Runtime container
 # ==============================
-FROM python:3.11-slim-bookworm
+FROM public.ecr.aws/docker/library/python:3.11-slim-bookworm
 
 WORKDIR /app
 

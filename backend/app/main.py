@@ -89,6 +89,12 @@ def read_root():
 def health():
     return {"status": "ok", "service": "clockko-api", "version": app.version}
 
+# Mirror health endpoints under /api to align with API Gateway path mapping
+@app.get("/api/health")
+@app.get("/api/healthz")
+def api_health():
+    return {"status": "ok", "service": "clockko-api", "version": app.version}
+
 
 @app.get("/health/google")
 def google_health():

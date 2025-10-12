@@ -8,6 +8,11 @@ set -euo pipefail
 AWS_REGION="${AWS_REGION:-us-east-1}"
 # Used for fallbacks when no ECS service is present; should match var.project_name
 PROJECT_NAME="${PROJECT_NAME:-clockko}"
+# Allow overriding the migration command (useful for testing or downgrades)
+# Default runs Alembic upgrade to head from backend workdir
+MIGRATION_COMMAND="${MIGRATION_COMMAND:-cd /app && alembic upgrade head}"
+# Use POSIX sh by default (runtime image may not include bash)
+MIGRATION_SHELL="${MIGRATION_SHELL:-sh}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../.. && pwd)"
 STACK_DIR="$ROOT_DIR/iac/stacks/backend"
 
@@ -81,6 +86,12 @@ fi
 SUBNETS_CSV=$(echo "$SUBNETS" | tr '\t' ',' | tr ' ' ',')
 SGS_CSV=$(echo "$SGS" | tr '\t' ',' | tr ' ' ',')
 
+# Ensure RDS is available before running migrations (reduces connection errors)
+echo "Waiting for RDS instance ${PROJECT_NAME}-postgres to be available..."
+aws rds wait db-instance-available \
+  --region "$AWS_REGION" \
+  --db-instance-identifier "${PROJECT_NAME}-postgres" || true
+
 if [[ -z "$TASK_DEF" || "$TASK_DEF" == "None" ]]; then
   echo "Could not resolve task definition from service" >&2
   exit 1
@@ -91,7 +102,15 @@ if [[ -z "$SUBNETS_CSV" || -z "$SGS_CSV" ]]; then
 fi
 
 echo "Running migration task on cluster: $CLUSTER"
-TASK_ARN=$(aws ecs run-task --region "$AWS_REGION" --cluster "$CLUSTER" --launch-type FARGATE --task-definition "$TASK_DEF" --count 1 --network-configuration "awsvpcConfiguration={subnets=[$SUBNETS_CSV],securityGroups=[$SGS_CSV],assignPublicIp=ENABLED}" --overrides '{"containerOverrides":[{"name":"backend","command":["alembic","upgrade","head"]}]}' --query 'tasks[0].taskArn' --output text)
+TASK_ARN=$(aws ecs run-task \
+  --region "$AWS_REGION" \
+  --cluster "$CLUSTER" \
+  --launch-type FARGATE \
+  --task-definition "$TASK_DEF" \
+  --count 1 \
+  --network-configuration "awsvpcConfiguration={subnets=[$SUBNETS_CSV],securityGroups=[$SGS_CSV],assignPublicIp=ENABLED}" \
+  --overrides "{\"containerOverrides\":[{\"name\":\"backend\",\"command\":[\"${MIGRATION_SHELL//\"/\\\"}\",\"-lc\",\"${MIGRATION_COMMAND//\"/\\\"}\"]}]}" \
+  --query 'tasks[0].taskArn' --output text)
 
 if [[ -z "$TASK_ARN" || "$TASK_ARN" == "None" ]]; then
   echo "Failed to start migration task" >&2
@@ -113,7 +132,57 @@ STATUS=$(aws ecs describe-tasks \
 echo "Task status: $STATUS, container exit code: $EXIT_CODE"
 
 if [[ "$EXIT_CODE" != "0" ]]; then
-  echo "Migration failed. Check CloudWatch Logs group /clockko/app for details." >&2
+  echo "Migration failed. Attempting to fetch CloudWatch logs..." >&2
+  # Try to pull logs for this specific task from the expected log group/stream
+  TASK_ID="${TASK_ARN##*/}"
+  LOG_GROUP="/${PROJECT_NAME}/app"
+  STREAM_CANDIDATE="ecs/backend/${TASK_ID}"
+
+  # Function to print logs for a given stream name (last ~200 events)
+  print_logs() {
+    local stream_name="$1"
+    echo "\n--- CloudWatch logs (${LOG_GROUP} :: ${stream_name}) ---" >&2
+    aws logs get-log-events \
+      --region "$AWS_REGION" \
+      --log-group-name "$LOG_GROUP" \
+      --log-stream-name "$stream_name" \
+      --start-from-head \
+      --query 'events[].message' \
+      --output text 2>/dev/null | tail -n 200 >&2 || true
+    echo "\n--- End logs ---" >&2
+  }
+
+  set +e
+  # 1) Try exact task-based stream name first
+  EXISTS=$(aws logs describe-log-streams \
+    --region "$AWS_REGION" \
+    --log-group-name "$LOG_GROUP" \
+    --log-stream-name-prefix "$STREAM_CANDIDATE" \
+    --max-items 1 \
+    --query 'logStreams[0].logStreamName' \
+    --output text 2>/dev/null || true)
+
+  if [[ -n "$EXISTS" && "$EXISTS" != "None" ]]; then
+    print_logs "$EXISTS"
+  else
+    # 2) Fall back to latest backend stream (ordered by LastEventTime)
+    LATEST_STREAM=$(aws logs describe-log-streams \
+      --region "$AWS_REGION" \
+      --log-group-name "$LOG_GROUP" \
+      --log-stream-name-prefix "ecs/backend" \
+      --order-by LastEventTime --descending \
+      --max-items 1 \
+      --query 'logStreams[0].logStreamName' \
+      --output text 2>/dev/null || true)
+    if [[ -n "$LATEST_STREAM" && "$LATEST_STREAM" != "None" ]]; then
+      print_logs "$LATEST_STREAM"
+    else
+      echo "Could not locate CloudWatch log stream. Please check log group ${LOG_GROUP} manually." >&2
+    fi
+  fi
+  set -e
+
+  echo "Migration failed. See logs above. Log group: ${LOG_GROUP}" >&2
   exit "$EXIT_CODE"
 fi
 

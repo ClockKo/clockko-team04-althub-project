@@ -33,35 +33,43 @@ def upgrade() -> None:
     # Add columns only if they don't already exist
     bind = op.get_bind()
     inspector = inspect(bind)
-    existing_cols = {c["name"] for c in inspector.get_columns("time_logs")}
-    if "type" not in existing_cols:
-        op.add_column("time_logs", sa.Column("type", sa.String(), nullable=True))
-    if "date" not in existing_cols:
-        op.add_column("time_logs", sa.Column("date", sa.DateTime(), nullable=True))
-    op.alter_column(
-        "time_logs", "start_time", existing_type=postgresql.TIMESTAMP(), nullable=True
-    )
-    op.execute("DROP INDEX IF EXISTS idx_timelog_user_id_task_id")
-    op.execute("DROP INDEX IF EXISTS ix_time_logs_id")
-    # Drop constraints only if they exist; some fresh DBs may not have them
-    op.execute("ALTER TABLE time_logs DROP CONSTRAINT IF EXISTS time_logs_user_id_fkey")
-    op.execute("ALTER TABLE time_logs DROP CONSTRAINT IF EXISTS time_logs_task_id_fkey")
+    existing_tables = set(inspector.get_table_names())
 
-    # Ensure user_id column exists before creating FK
-    try:
-        cols_for_fk = {c["name"] for c in inspector.get_columns("time_logs")}
-    except Exception:
-        cols_for_fk = set()
-    if "user_id" not in cols_for_fk:
-        op.add_column("time_logs", sa.Column("user_id", sa.UUID(), nullable=True))
+    if "time_logs" in existing_tables:
+        existing_cols = {c["name"] for c in inspector.get_columns("time_logs")}
+        if "type" not in existing_cols:
+            op.add_column("time_logs", sa.Column("type", sa.String(), nullable=True))
+        if "date" not in existing_cols:
+            op.add_column("time_logs", sa.Column("date", sa.DateTime(), nullable=True))
+        # Make start_time nullable if the column exists
+        if "start_time" in existing_cols:
+            op.alter_column(
+                "time_logs", "start_time", existing_type=postgresql.TIMESTAMP(), nullable=True
+            )
+        op.execute("DROP INDEX IF EXISTS idx_timelog_user_id_task_id")
+        op.execute("DROP INDEX IF EXISTS ix_time_logs_id")
+        # Drop constraints only if they exist; some fresh DBs may not have them
+        op.execute("ALTER TABLE time_logs DROP CONSTRAINT IF EXISTS time_logs_user_id_fkey")
+        op.execute("ALTER TABLE time_logs DROP CONSTRAINT IF EXISTS time_logs_task_id_fkey")
 
-    # Create FK only if both time_logs.user_id and users.id exist
-    try:
-        users_cols = {c["name"] for c in inspector.get_columns("users")}
-    except Exception:
-        users_cols = set()
-    if "user_id" in cols_for_fk.union({"user_id"}) and "id" in users_cols:
-        op.create_foreign_key(None, "time_logs", "users", ["user_id"], ["id"])
+        # Ensure user_id column exists before creating FK
+        try:
+            cols_for_fk = {c["name"] for c in inspector.get_columns("time_logs")}
+        except Exception:
+            cols_for_fk = set()
+        if "user_id" not in cols_for_fk:
+            op.add_column("time_logs", sa.Column("user_id", sa.UUID(), nullable=True))
+
+        # Create FK only if both time_logs.user_id and users.id exist
+        try:
+            users_cols = {c["name"] for c in inspector.get_columns("users")}
+        except Exception:
+            users_cols = set()
+        if "user_id" in cols_for_fk.union({"user_id"}) and "id" in users_cols:
+            op.create_foreign_key(None, "time_logs", "users", ["user_id"], ["id"])
+    else:
+        # Table doesn't exist; nothing to modify in this migration
+        pass
     # op.drop_column("time_logs", "task_id")
     # ### end Alembic commands ###
 

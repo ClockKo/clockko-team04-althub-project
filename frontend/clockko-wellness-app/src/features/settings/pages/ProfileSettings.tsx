@@ -436,6 +436,7 @@ const ProfileSettings: React.FC = () => {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction asChild>
                   <Button
                     variant="destructive"

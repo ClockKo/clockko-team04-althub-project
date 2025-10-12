@@ -17,6 +17,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.core.config import settings
 from app.core.database import engine, Base, get_db
 from sqlalchemy import text
+from app.core.database import get_database_type
 
 def get_db_name_from_url(database_url: str) -> str:
     """Extract database name from DATABASE_URL"""
@@ -142,6 +143,45 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/{db_name}
         print(f"❌ Database creation failed: {e}")
         return False
 
+def purge_all_users(skip_backup: bool = True, assume_yes: bool = False) -> bool:
+    """Delete ALL users and their related records.
+
+    Postgres: TRUNCATE users RESTART IDENTITY CASCADE
+    SQLite: fallback to full reset (drops and recreates all tables)
+
+    NEVER run against production databases.
+    """
+    db_type = get_database_type()
+
+    # Safety prompt
+    if not assume_yes:
+        print("WARNING: This will remove ALL users and related records.")
+        print("This is intended for development/testing only.")
+        confirm = input("Type DELETE to continue: ")
+        if confirm.strip().upper() != "DELETE":
+            print("Aborted.")
+            return False
+
+    try:
+        if db_type == "postgresql":
+            with engine.begin() as conn:
+                users_before = conn.execute(text("SELECT COUNT(*) FROM users")).scalar() or 0
+                print(f"Found {users_before} users. Truncating users and related tables…")
+                # Truncate users and all dependent tables, reset sequences
+                conn.execute(text("TRUNCATE TABLE users RESTART IDENTITY CASCADE"))
+                users_after = conn.execute(text("SELECT COUNT(*) FROM users")).scalar() or 0
+                print(f"✅ Purge complete. Users before: {users_before}, after: {users_after}")
+            return True
+        elif db_type == "sqlite":
+            print("SQLite detected. Performing full reset instead (drops and recreates all tables)…")
+            return reset_database(with_backup=False)
+        else:
+            print(f"Unsupported database type '{db_type}'. Aborting.")
+            return False
+    except Exception as e:
+        print(f"❌ Purge failed: {e}")
+        return False
+
 def main():
     parser = argparse.ArgumentParser(description="ClockKo Database Management")
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
@@ -165,6 +205,10 @@ def main():
     # Create developer database
     create_parser = subparsers.add_parser('create-dev', help='Create developer database')
     create_parser.add_argument('dev_name', help='Developer name')
+
+    # Purge users command
+    purge_parser = subparsers.add_parser('purge-users', help='Delete ALL users and related records (dev only)')
+    purge_parser.add_argument('--yes', action='store_true', help='Skip confirmation prompt')
     
     args = parser.parse_args()
     
@@ -188,6 +232,9 @@ def main():
     
     elif args.command == 'create-dev':
         create_developer_database(args.dev_name)
+
+    elif args.command == 'purge-users':
+        purge_all_users(assume_yes=args.yes)
 
 if __name__ == "__main__":
     main()

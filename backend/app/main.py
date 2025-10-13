@@ -169,6 +169,17 @@ async def options_handler(path: str, request: Request):
     response.headers["Access-Control-Max-Age"] = "86400"
     return response
 
+# CORS test endpoint
+@app.get("/api/cors-test")
+def cors_test(request: Request):
+    """Simple endpoint to test CORS functionality"""
+    origin = request.headers.get("origin", "No Origin")
+    return {
+        "message": "CORS test successful",
+        "origin": origin,
+        "timestamp": "2025-10-13T20:00:00Z"
+    }
+
 # Optional: Health check route
 @app.get("/")
 def read_root():

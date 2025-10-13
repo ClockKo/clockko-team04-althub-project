@@ -9,6 +9,14 @@ import os
 from contextlib import contextmanager
 from app.core.config import settings
 
+# Import SendGrid service
+try:
+    from app.services.sendgrid_service import sendgrid_service
+    SENDGRID_AVAILABLE = True
+except ImportError:
+    SENDGRID_AVAILABLE = False
+    sendgrid_service = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -180,11 +188,26 @@ class EmailService:
         html_content: str,
         text_content: Optional[str] = None
     ) -> bool:
-        """Send an email"""
+        """Send an email using SendGrid first, fallback to SMTP"""
+        
+        # Try SendGrid first if available
+        if SENDGRID_AVAILABLE and sendgrid_service and sendgrid_service.is_available():
+            logger.info("📧 Attempting to send email via SendGrid")
+            try:
+                success = sendgrid_service.send_email(to_email, subject, html_content, text_content)
+                if success:
+                    logger.info(f"✅ Email sent successfully via SendGrid to {to_email}")
+                    return True
+                else:
+                    logger.warning("⚠️ SendGrid failed, falling back to SMTP")
+            except Exception as e:
+                logger.warning(f"⚠️ SendGrid error: {e}, falling back to SMTP")
+        
+        # Fallback to SMTP
         try:
             # Log service being used
             service_name = "MailHog" if self.is_mailhog else "Gmail" if self.is_gmail else "Generic SMTP"
-            logger.info(f"📧 Sending email via {service_name}")
+            logger.info(f"📧 Sending email via {service_name} (SMTP fallback)")
             logger.debug(f"To: {to_email}, Subject: {subject}")
             
             # Create message
@@ -273,7 +296,23 @@ class EmailService:
         return result
     
     def send_otp_email(self, to_email: str, otp: str, username: str = "") -> bool:
-        """Send OTP verification email"""
+        """Send OTP verification email using SendGrid first, fallback to SMTP"""
+        
+        # Try SendGrid first if available
+        if SENDGRID_AVAILABLE and sendgrid_service and sendgrid_service.is_available():
+            logger.info("📧 Sending OTP email via SendGrid")
+            try:
+                success = sendgrid_service.send_otp_email(to_email, otp, username)
+                if success:
+                    logger.info(f"✅ OTP email sent successfully via SendGrid to {to_email}")
+                    return True
+                else:
+                    logger.warning("⚠️ SendGrid OTP failed, falling back to SMTP")
+            except Exception as e:
+                logger.warning(f"⚠️ SendGrid OTP error: {e}, falling back to SMTP")
+        
+        # Fallback to SMTP
+        logger.info("📧 Sending OTP email via SMTP (fallback)")
         subject = f"Your {settings.APP_NAME} Verification Code"
         
         html_content = f"""
@@ -625,7 +664,23 @@ class EmailService:
         return self.send_email(to_email, subject, html_content, text_content)
     
     def send_welcome_email_with_otp(self, to_email: str, username: str, otp: str, verification_link: str) -> bool:
-        """Send welcome email with OTP and verification link"""
+        """Send welcome email with OTP using SendGrid first, fallback to SMTP"""
+        
+        # Try SendGrid first if available
+        if SENDGRID_AVAILABLE and sendgrid_service and sendgrid_service.is_available():
+            logger.info("📧 Sending welcome email via SendGrid")
+            try:
+                success = sendgrid_service.send_welcome_email(to_email, username, otp)
+                if success:
+                    logger.info(f"✅ Welcome email sent successfully via SendGrid to {to_email}")
+                    return True
+                else:
+                    logger.warning("⚠️ SendGrid welcome email failed, falling back to SMTP")
+            except Exception as e:
+                logger.warning(f"⚠️ SendGrid welcome email error: {e}, falling back to SMTP")
+        
+        # Fallback to SMTP
+        logger.info("📧 Sending welcome email via SMTP (fallback)")
         subject = f"Welcome to {settings.APP_NAME}! Please verify your email"
         
         html_content = f"""

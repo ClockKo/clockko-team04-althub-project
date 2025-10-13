@@ -79,6 +79,12 @@ class Settings:
         # ====================
         # Email Configuration
         # ====================
+        # SendGrid (Primary email service)
+        self.SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY", "")
+        self.SENDGRID_FROM_EMAIL = os.getenv("SENDGRID_FROM_EMAIL", "")
+        self.SENDGRID_FROM_NAME = os.getenv("SENDGRID_FROM_NAME", "ClockKo Team")
+        
+        # SMTP (Fallback email service)
         self.SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
         self.SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 

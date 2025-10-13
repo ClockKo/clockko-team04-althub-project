@@ -17,6 +17,14 @@ except ImportError:
     RESEND_AVAILABLE = False
     resend_service = None
 
+# Import SendGrid service
+try:
+    from app.services.sendgrid_service import sendgrid_service
+    SENDGRID_AVAILABLE = True
+except ImportError:
+    SENDGRID_AVAILABLE = False
+    sendgrid_service = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -188,9 +196,22 @@ class EmailService:
         html_content: str,
         text_content: Optional[str] = None
     ) -> bool:
-        """Send an email using SendGrid first, fallback to SMTP"""
+        """Send an email using SendGrid first, then Resend, finally fallback to SMTP"""
         
-        # Try Resend first if available
+        # Try SendGrid first if available
+        if SENDGRID_AVAILABLE and sendgrid_service and sendgrid_service.is_available():
+            logger.info("📧 Attempting to send email via SendGrid")
+            try:
+                success = sendgrid_service.send_email(to_email, subject, html_content, text_content)
+                if success:
+                    logger.info(f"✅ Email sent successfully via SendGrid to {to_email}")
+                    return True
+                else:
+                    logger.warning("⚠️ SendGrid failed, trying Resend")
+            except Exception as e:
+                logger.warning(f"⚠️ SendGrid error: {e}, trying Resend")
+        
+        # Try Resend as secondary option
         if RESEND_AVAILABLE and resend_service and resend_service.is_available():
             logger.info("📧 Attempting to send email via Resend")
             try:

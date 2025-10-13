@@ -1,21 +1,34 @@
 import os
-import boto3
 import json
 from dotenv import load_dotenv
+
+# Optional AWS Secrets Manager support
+try:
+    import boto3
+    AWS_AVAILABLE = True
+except ImportError:
+    AWS_AVAILABLE = False
+    boto3 = None
 
 def get_secret(secret_name: str, region_name: str | None = None):
     """
     Fetch secret from AWS Secrets Manager. Region is resolved from AWS_REGION env
-    if not explicitly provided.
+    if not explicitly provided. Returns empty dict if AWS not available.
     """
-    region = region_name or os.getenv("AWS_REGION", os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
-    client = boto3.client("secretsmanager", region_name=region)
-    response = client.get_secret_value(SecretId=secret_name)
-    # The secret can be a JSON string or plain text. Try JSON first.
+    if not AWS_AVAILABLE:
+        return {}
+    
     try:
-        return json.loads(response.get("SecretString", "{}"))
-    except json.JSONDecodeError:
-        return {"value": response.get("SecretString", "")}
+        region = region_name or os.getenv("AWS_REGION", os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
+        client = boto3.client("secretsmanager", region_name=region)
+        response = client.get_secret_value(SecretId=secret_name)
+        # The secret can be a JSON string or plain text. Try JSON first.
+        try:
+            return json.loads(response.get("SecretString", "{}"))
+        except json.JSONDecodeError:
+            return {"value": response.get("SecretString", "")}
+    except Exception:
+        return {}
 
 class Settings:
     def __init__(self):

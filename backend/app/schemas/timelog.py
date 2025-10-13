@@ -1,5 +1,5 @@
-from pydantic import BaseModel, UUID4
-from datetime import datetime
+from pydantic import BaseModel, UUID4, field_serializer
+from datetime import datetime, timezone
 from typing import Optional, List, Literal
 
 
@@ -54,6 +54,7 @@ class TimeLogResponse(BaseModel):
     end_time: Optional [datetime]
     type: str
     date: Optional[datetime]
+    
     class Config:
         from_attributes = True
 

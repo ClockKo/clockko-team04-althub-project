@@ -13,7 +13,8 @@ router = APIRouter(tags=["Dashboard"])
 @router.post("/clock-in", response_model=TimeLogResponse)
 def clock_in(db: Session = Depends(get_db), user=Depends(get_current_user)):
     # request = StartSessionRequest(user_id=user.id, type="clock-in")
-    return timetrackerservice.clock_in(db, user.id)
+    result = timetrackerservice.clock_in(db, user.id)
+    return fix_timezone_for_timelog(result)
 
 @router.post("/clock-out", response_model=TimeLogResponse)
 def clock_out(db: Session = Depends(get_db), user=Depends(get_current_user)):
@@ -27,8 +28,29 @@ def clock_out(db: Session = Depends(get_db), user=Depends(get_current_user)):
     if not current_work_session:
         raise HTTPException(status_code=404, detail="No active work session found to end.")
     
-    return timetrackerservice.clock_out(db, user.id)
+    result = timetrackerservice.clock_out(db, user.id)
+    return fix_timezone_for_timelog(result)
 
+
+def fix_timezone_for_timelog(timelog: Timelog) -> Timelog:
+    """Fix timezone issues for existing database records"""
+    from datetime import timezone
+    
+    if timelog.start_time and timelog.start_time.tzinfo is None:
+        # Treat naive datetime as UTC (not local time)
+        timelog.start_time = timelog.start_time.replace(tzinfo=timezone.utc)
+    
+    if timelog.end_time and timelog.end_time.tzinfo is None:
+        # Treat naive datetime as UTC (not local time)  
+        timelog.end_time = timelog.end_time.replace(tzinfo=timezone.utc)
+        
+    if timelog.date and timelog.date.tzinfo is None:
+        timelog.date = timelog.date.replace(tzinfo=timezone.utc)
+        
+    if timelog.paused_at and timelog.paused_at.tzinfo is None:
+        timelog.paused_at = timelog.paused_at.replace(tzinfo=timezone.utc)
+    
+    return timelog
 
 @router.get("/current-session", response_model=TimeLogResponse)
 def get_current_session(db: Session = Depends(get_db), user = Depends(get_current_user)):
@@ -41,6 +63,9 @@ def get_current_session(db: Session = Depends(get_db), user = Depends(get_curren
     
     if not result:
         raise HTTPException(status_code=404, detail="No ongoing work session")
+    
+    # Fix timezone issues for response
+    result = fix_timezone_for_timelog(result)
     return result
 
 @router.get("/last-session", response_model=TimeLogResponse)
@@ -49,6 +74,9 @@ def get_last_session(db: Session = Depends(get_db), user = Depends(get_current_u
     result = timetrackerservice.get_last_session(db, user.id)
     if not result:
         raise HTTPException(status_code=404, detail="No completed session found")
+    
+    # Fix timezone issues for response
+    result = fix_timezone_for_timelog(result)
     return result
 
 @router.get("/data")

@@ -20,6 +20,7 @@ def delete_current_user(
     """
     Delete the current authenticated user's account and all related data.
     """
+    logger.info(f"🗑️ Account deletion requested for user: {current_user.id}")
     try:
         user_id = current_user.id
         logger.info(f"Starting deletion of user {user_id}")

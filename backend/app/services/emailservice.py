@@ -9,13 +9,13 @@ import os
 from contextlib import contextmanager
 from app.core.config import settings
 
-# Import SendGrid service
+# Import Resend service
 try:
-    from app.services.sendgrid_service import sendgrid_service
-    SENDGRID_AVAILABLE = True
+    from app.services.resend_service import resend_service
+    RESEND_AVAILABLE = True
 except ImportError:
-    SENDGRID_AVAILABLE = False
-    sendgrid_service = None
+    RESEND_AVAILABLE = False
+    resend_service = None
 
 logger = logging.getLogger(__name__)
 
@@ -190,18 +190,18 @@ class EmailService:
     ) -> bool:
         """Send an email using SendGrid first, fallback to SMTP"""
         
-        # Try SendGrid first if available
-        if SENDGRID_AVAILABLE and sendgrid_service and sendgrid_service.is_available():
-            logger.info("📧 Attempting to send email via SendGrid")
+        # Try Resend first if available
+        if RESEND_AVAILABLE and resend_service and resend_service.is_available():
+            logger.info("📧 Attempting to send email via Resend")
             try:
-                success = sendgrid_service.send_email(to_email, subject, html_content, text_content)
+                success = resend_service.send_email(to_email, subject, html_content, text_content)
                 if success:
-                    logger.info(f"✅ Email sent successfully via SendGrid to {to_email}")
+                    logger.info(f"✅ Email sent successfully via Resend to {to_email}")
                     return True
                 else:
-                    logger.warning("⚠️ SendGrid failed, falling back to SMTP")
+                    logger.warning("⚠️ Resend failed, falling back to SMTP")
             except Exception as e:
-                logger.warning(f"⚠️ SendGrid error: {e}, falling back to SMTP")
+                logger.warning(f"⚠️ Resend error: {e}, falling back to SMTP")
         
         # Fallback to SMTP
         try:
@@ -298,18 +298,18 @@ class EmailService:
     def send_otp_email(self, to_email: str, otp: str, username: str = "") -> bool:
         """Send OTP verification email using SendGrid first, fallback to SMTP"""
         
-        # Try SendGrid first if available
-        if SENDGRID_AVAILABLE and sendgrid_service and sendgrid_service.is_available():
-            logger.info("📧 Sending OTP email via SendGrid")
+        # Try Resend first if available
+        if RESEND_AVAILABLE and resend_service and resend_service.is_available():
+            logger.info("📧 Sending OTP email via Resend")
             try:
-                success = sendgrid_service.send_otp_email(to_email, otp, username)
+                success = resend_service.send_otp_email(to_email, otp, username)
                 if success:
-                    logger.info(f"✅ OTP email sent successfully via SendGrid to {to_email}")
+                    logger.info(f"✅ OTP email sent successfully via Resend to {to_email}")
                     return True
                 else:
-                    logger.warning("⚠️ SendGrid OTP failed, falling back to SMTP")
+                    logger.warning("⚠️ Resend OTP failed, falling back to SMTP")
             except Exception as e:
-                logger.warning(f"⚠️ SendGrid OTP error: {e}, falling back to SMTP")
+                logger.warning(f"⚠️ Resend OTP error: {e}, falling back to SMTP")
         
         # Fallback to SMTP
         logger.info("📧 Sending OTP email via SMTP (fallback)")
@@ -666,18 +666,18 @@ class EmailService:
     def send_welcome_email_with_otp(self, to_email: str, username: str, otp: str, verification_link: str) -> bool:
         """Send welcome email with OTP using SendGrid first, fallback to SMTP"""
         
-        # Try SendGrid first if available
-        if SENDGRID_AVAILABLE and sendgrid_service and sendgrid_service.is_available():
-            logger.info("📧 Sending welcome email via SendGrid")
+        # Try Resend first if available
+        if RESEND_AVAILABLE and resend_service and resend_service.is_available():
+            logger.info("📧 Sending welcome email via Resend")
             try:
-                success = sendgrid_service.send_welcome_email(to_email, username, otp)
+                success = resend_service.send_welcome_email(to_email, username, otp)
                 if success:
-                    logger.info(f"✅ Welcome email sent successfully via SendGrid to {to_email}")
+                    logger.info(f"✅ Welcome email sent successfully via Resend to {to_email}")
                     return True
                 else:
-                    logger.warning("⚠️ SendGrid welcome email failed, falling back to SMTP")
+                    logger.warning("⚠️ Resend welcome email failed, falling back to SMTP")
             except Exception as e:
-                logger.warning(f"⚠️ SendGrid welcome email error: {e}, falling back to SMTP")
+                logger.warning(f"⚠️ Resend welcome email error: {e}, falling back to SMTP")
         
         # Fallback to SMTP
         logger.info("📧 Sending welcome email via SMTP (fallback)")

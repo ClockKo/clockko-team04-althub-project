@@ -47,8 +47,13 @@ app = FastAPI(
 )
 
 # CORS settings: read allowed origins from env via settings.FRONTEND_URL (comma-separated supported)
-origins = [o.strip() for o in str(getattr(settings, 'FRONTEND_URL', '')).split(',') if o.strip()] or ["*"]
-print("CORS allowed origins:", origins)
+# origins = [o.strip() for o in str(getattr(settings, 'FRONTEND_URL', '')).split(',') if o.strip()] or ["*"]
+# print("CORS allowed origins:", origins)
+origins = [
+    "https://clockko.vercel.app",
+    "https://clockko-*.vercel.app",
+    "http://localhost:5173",
+]
 
 allow_credentials = True
 app.add_middleware(

@@ -24,8 +24,75 @@ def delete_current_user(
         user_id = current_user.id
         logger.info(f"Starting deletion of user {user_id}")
         
-        # The database relationships should handle cascade deletes
-        # But let's be explicit about the deletion order for safety
+        # Explicitly delete related data first to avoid foreign key constraint issues
+        from app.models.user_settings import UserSettings
+        from app.models.timelog import Timelog
+        from app.models.task import Task
+        from app.models.shutdown_reflection import ShutdownReflection
+        
+        # Delete user settings first (most likely to cause the constraint issue)
+        user_settings = db.query(UserSettings).filter(UserSettings.user_id == user_id).first()
+        if user_settings:
+            logger.info(f"Deleting user settings for user {user_id}")
+            db.delete(user_settings)
+        
+        # Delete time logs
+        time_logs = db.query(Timelog).filter(Timelog.user_id == user_id).all()
+        for log in time_logs:
+            db.delete(log)
+        logger.info(f"Deleted {len(time_logs)} time logs for user {user_id}")
+        
+        # Delete tasks
+        tasks = db.query(Task).filter(Task.user_id == user_id).all()
+        for task in tasks:
+            db.delete(task)
+        logger.info(f"Deleted {len(tasks)} tasks for user {user_id}")
+        
+        # Delete shutdown reflections
+        reflections = db.query(ShutdownReflection).filter(ShutdownReflection.user_id == user_id).all()
+        for reflection in reflections:
+            db.delete(reflection)
+        logger.info(f"Deleted {len(reflections)} shutdown reflections for user {user_id}")
+        
+        # Try to delete coworking related data (if models exist)
+        try:
+            from app.models.coworking import RoomParticipant, RoomMessage
+            
+            # Delete room participations
+            participations = db.query(RoomParticipant).filter(RoomParticipant.user_id == user_id).all()
+            for participation in participations:
+                db.delete(participation)
+            logger.info(f"Deleted {len(participations)} room participations for user {user_id}")
+            
+            # Delete room messages
+            messages = db.query(RoomMessage).filter(RoomMessage.user_id == user_id).all()
+            for message in messages:
+                db.delete(message)
+            logger.info(f"Deleted {len(messages)} room messages for user {user_id}")
+            
+        except ImportError:
+            logger.info("Coworking models not found, skipping coworking data deletion")
+        
+        # Try to delete challenge related data (if models exist)
+        try:
+            from app.models.challenge import ChallengeParticipant, UserChallengeStats
+            
+            # Delete challenge participations
+            challenge_participations = db.query(ChallengeParticipant).filter(ChallengeParticipant.user_id == user_id).all()
+            for participation in challenge_participations:
+                db.delete(participation)
+            logger.info(f"Deleted {len(challenge_participations)} challenge participations for user {user_id}")
+            
+            # Delete challenge stats
+            challenge_stats = db.query(UserChallengeStats).filter(UserChallengeStats.user_id == user_id).first()
+            if challenge_stats:
+                db.delete(challenge_stats)
+                logger.info(f"Deleted challenge stats for user {user_id}")
+            
+        except ImportError:
+            logger.info("Challenge models not found, skipping challenge data deletion")
+        
+        # Finally delete the user
         db.delete(current_user)
         db.commit()
         

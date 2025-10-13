@@ -31,7 +31,7 @@ import {
   Flame,
   Settings,
   Brain,
-  Smartphone,
+  // Smartphone,
 } from 'lucide-react'
 import clockkoLogo from '../../assets/images/frame1.png'
 import { useIsMobile } from '../../hooks/use-mobile'

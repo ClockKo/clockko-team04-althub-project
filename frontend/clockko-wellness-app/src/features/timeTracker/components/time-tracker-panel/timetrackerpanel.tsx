@@ -55,48 +55,48 @@ function TimeTrackerPanel() {
 
   // Remember, this is a debug function only - remove or disable in production
   // Debug function to manually refresh daily summary
-  const forceRefreshSummary = () => {
-    console.log('🔄 Force refreshing daily summary...')
+  // const forceRefreshSummary = () => {
+  //   console.log('🔄 Force refreshing daily summary...')
 
-    // Log current localStorage state
-    const currentSession = localStorage.getItem('timetracker_current_session')
-    const dailySummary = localStorage.getItem('timetracker_daily_summary')
+  //   // Log current localStorage state
+  //   const currentSession = localStorage.getItem('timetracker_current_session')
+  //   const dailySummary = localStorage.getItem('timetracker_daily_summary')
 
-    console.log(
-      '📱 Current session in localStorage:',
-      currentSession ? JSON.parse(currentSession) : null
-    )
-    console.log('📊 Daily summary in localStorage:', dailySummary ? JSON.parse(dailySummary) : null)
+  //   console.log(
+  //     '📱 Current session in localStorage:',
+  //     currentSession ? JSON.parse(currentSession) : null
+  //   )
+  //   console.log('📊 Daily summary in localStorage:', dailySummary ? JSON.parse(dailySummary) : null)
 
-    refreshDailySummary()
-  }
+  //   refreshDailySummary()
+  // }
 
-  // Clear all sessions function for clean slate
-  const clearAllSessions = async () => {
-    try {
-      console.log('🧹 Clearing all timetracker sessions...')
-      await timeTrackerService.clearAllSessions()
+  // Clear all sessions function for clean slate comment out before production
+  // const clearAllSessions = async () => {
+  //   try {
+  //     console.log('🧹 Clearing all timetracker sessions...')
+  //     await timeTrackerService.clearAllSessions()
 
-      // Reset all state to initial values
-      setMode('initial')
-      setTimeLeft(FOCUS_DEFAULT_DURATION)
-      setIsRunning(false)
-      setCurrentSession(null)
-      setPausedFocusSession(null)
-      setPausedFocusTimeLeft(null)
-      setTotalFocusSessions(0)
-      setTotalFocusTime(0)
+  //     // Reset all state to initial values
+  //     setMode('initial')
+  //     setTimeLeft(FOCUS_DEFAULT_DURATION)
+  //     setIsRunning(false)
+  //     setCurrentSession(null)
+  //     setPausedFocusSession(null)
+  //     setPausedFocusTimeLeft(null)
+  //     setTotalFocusSessions(0)
+  //     setTotalFocusTime(0)
 
-      // Refresh the daily summary to show cleared state
-      await refreshDailySummary()
+  //     // Refresh the daily summary to show cleared state
+  //     await refreshDailySummary()
 
-      console.log('✅ All sessions cleared successfully')
-      alert('All timetracker sessions cleared successfully!')
-    } catch (error) {
-      console.error('Failed to clear sessions:', error)
-      alert('Failed to clear sessions. Please try again.')
-    }
-  }
+  //     console.log('✅ All sessions cleared successfully')
+  //     alert('All timetracker sessions cleared successfully!')
+  //   } catch (error) {
+  //     console.error('Failed to clear sessions:', error)
+  //     alert('Failed to clear sessions. Please try again.')
+  //   }
+  // }
 
   // Sound settings toggle
   const toggleSound = () => {
@@ -136,7 +136,7 @@ function TimeTrackerPanel() {
   const [currentSession, setCurrentSession] = useState<FocusSession | null>(null) // Current active session
   const [pausedFocusSession, setPausedFocusSession] = useState<FocusSession | null>(null) // Paused focus session during break
   const [pausedFocusTimeLeft, setPausedFocusTimeLeft] = useState<number | null>(null) // Time left on paused focus session
-  const [isDataLoaded] = useState(false) // Track if data has been loaded (read-only for now)
+  // const [isDataLoaded] = useState(false) // Track if data has been loaded (read-only for now)
 
   // --- Sound Settings State ---
   const [soundEnabled, setSoundEnabled] = useState(true)
@@ -619,7 +619,7 @@ function TimeTrackerPanel() {
                     </option>
                   ))}
                 </select>
-                <span
+                {/* <span
                   style={{
                     fontSize: '12px',
                     color: isDataLoaded ? '#4caf50' : '#ff9800',
@@ -630,7 +630,7 @@ function TimeTrackerPanel() {
                   }}
                 >
                   {isDataLoaded ? '✅ Data Loaded' : '⏳ Loading...'}
-                </span>
+                </span> */}
                 {pausedFocusSession && (
                   <span
                     style={{
@@ -692,7 +692,7 @@ function TimeTrackerPanel() {
           <div
             style={{ display: 'flex', gap: '10px', marginBottom: '10px', justifyContent: 'center' }}
           >
-            <button
+            {/* <button
               onClick={forceRefreshSummary}
               style={{
                 padding: '5px 10px',
@@ -704,8 +704,8 @@ function TimeTrackerPanel() {
               }}
             >
               🔄 Refresh Summary
-            </button>
-            <button
+            </button> */}
+            {/* <button
               onClick={() => {
                 console.log('🔴 Clear button clicked!')
                 alert('Clear button clicked!')
@@ -721,7 +721,7 @@ function TimeTrackerPanel() {
               }}
             >
               🧹 Clear All Sessions
-            </button>
+            </button> */}
           </div>
           {/* Daily Summary Component */}
           <DailySummary

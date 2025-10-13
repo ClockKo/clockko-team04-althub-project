@@ -15,7 +15,7 @@ class Challenge(ChallengeBase):
     id: UUID
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ChallengeParticipantBase(BaseModel):
     user_id: UUID
@@ -28,7 +28,7 @@ class ChallengeParticipant(ChallengeParticipantBase):
     id: UUID
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserChallengeStatsBase(BaseModel):
     user_id: UUID
@@ -39,7 +39,7 @@ class UserChallengeStatsBase(BaseModel):
 
 class UserChallengeStats(UserChallengeStatsBase):
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class WeeklyChallenge(BaseModel):
     id: UUID

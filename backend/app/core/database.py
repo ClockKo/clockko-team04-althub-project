@@ -20,13 +20,15 @@ if "sqlite" in DATABASE_URL:
     )
 elif "postgresql" in DATABASE_URL:
     # PostgreSQL-specific configuration
+    # Use sslmode=prefer for development (falls back to non-SSL), require for production
+    ssl_mode = "require" if not settings.DEBUG else "prefer"
     engine = create_engine(
         DATABASE_URL,
         pool_size=5,
         max_overflow=10,
         pool_pre_ping=True,
         echo=settings.DEBUG,
-        connect_args={"sslmode": "require"}    
+        connect_args={"sslmode": ssl_mode}    
         )
 else:
     # Generic configuration for other databases

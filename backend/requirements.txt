@@ -33,7 +33,7 @@ python-dotenv==1.1.1
 python-jose[cryptography]==3.5.0
 qrcode[pil]==8.0
 redis==6.4.0
-requests==2.31.0
+requests==2.32.5
 # requests-oauthlib left unpinned so pip can resolve a compatible version
 requests-oauthlib
 resend==0.6.0

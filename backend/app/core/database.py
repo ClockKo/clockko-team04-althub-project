@@ -25,7 +25,7 @@ elif "postgresql" in DATABASE_URL:
         pool_size=5,
         max_overflow=10,
         pool_pre_ping=True,
-        echo=settings.DEBUG
+        echo=settings.DEBUG,
         connect_args={"sslmode": "require"}    
         )
 else:

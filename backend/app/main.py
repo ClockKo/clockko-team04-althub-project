@@ -50,7 +50,9 @@ app = FastAPI(
 # CORS settings: Always allow the frontend domains
 origins = [
     "https://clockko.vercel.app",
-    "https://clockko-team04-althub-project.vercel.app", 
+    "https://clockko-team04-althub-project.vercel.app",
+    "https://clockko-team04-althub-project-git-fe-feature-renderhosting-clockko.vercel.app",
+    "https://clockko-team04-althub-project-git-main-clockko.vercel.app", 
     "http://localhost:5173",
 ]
 
@@ -64,10 +66,32 @@ if frontend_url:
 origins = list(set(origins))
 
 print("🌐 CORS allowed origins:", origins)
+
+# Custom CORS validation function that allows Vercel preview URLs
+def is_allowed_origin(origin: str) -> bool:
+    """Check if origin is allowed, including Vercel preview URLs"""
+    if origin in origins:
+        return True
+    
+    # Allow any Vercel deployment URL for this project
+    vercel_patterns = [
+        "clockko-team04-althub-project",
+        "clockko.vercel.app"
+    ]
+    
+    if origin.startswith("https://") and origin.endswith(".vercel.app"):
+        for pattern in vercel_patterns:
+            if pattern in origin:
+                print(f"🌐 Allowing Vercel deployment origin: {origin}")
+                return True
+    
+    print(f"❌ CORS rejected origin: {origin}")
+    return False
+
 allow_credentials = True
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origin_regex=r"https://.*clockko.*\.vercel\.app|http://localhost:5173",
     allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"]
@@ -93,11 +117,14 @@ async def custom_exception_handler(request: Request, exc: Exception):
     
     # Add CORS headers manually to error responses
     origin = request.headers.get("origin")
-    if origin in origins:
+    if origin and is_allowed_origin(origin):
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Allow-Methods"] = "*"
         response.headers["Access-Control-Allow-Headers"] = "*"
+    elif origin:
+        # Log rejected origins for debugging
+        logger.error(f"CORS rejected origin in exception handler: {origin}")
     
     return response
 

@@ -457,15 +457,37 @@ const ProfileSettings: React.FC = () => {
                           logout();
                           navigate('/');
                         } else {
+                          // Handle different error status codes
                           const errorText = await res.text();
+                          let errorMessage = 'Failed to delete account';
+                          
+                          if (res.status === 500) {
+                            errorMessage = 'Server error occurred while deleting account. Please try again.';
+                          } else if (res.status === 401) {
+                            errorMessage = 'Authentication failed. Please log in again.';
+                          } else if (res.status === 403) {
+                            errorMessage = 'You do not have permission to delete this account.';
+                          }
+                          
                           let errorData;
                           try {
                             errorData = JSON.parse(errorText);
+                            errorMessage = errorData.detail || errorData.message || errorMessage;
                           } catch {
-                            errorData = { detail: errorText || 'Failed to delete account' };
+                            // If parsing fails, use the raw text or default message
+                            if (errorText && errorText.trim()) {
+                              errorMessage = errorText;
+                            }
                           }
                           
-                          toast.error(errorData.detail || errorData.message || 'Failed to delete account.');
+                          console.error('Account deletion failed:', {
+                            status: res.status,
+                            statusText: res.statusText,
+                            errorText,
+                            errorMessage
+                          });
+                          
+                          toast.error(errorMessage);
                         }
                       } catch (err: any) {
                         toast.error('Network error. Please try again.');

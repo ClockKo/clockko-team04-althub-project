@@ -29,6 +29,27 @@ export default function CoWorkingRoomsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState<RoomSummary | null>(null);
 
+  const loadRooms = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchRooms();
+      const processedRooms = data.map(room => ({
+        ...room,
+        count: room.status && room.status.toLowerCase() === "active" ? room.count : 0,
+      }));
+      
+      setTimeout(() => {
+        setRooms(processedRooms);
+        setLoading(false);
+        toast.success('Rooms refreshed successfully!');
+      }, 1000); // Shorter loading time for refresh
+    } catch (error) {
+      console.error('❌ Error loading rooms:', error);
+      toast.error(`Failed to load rooms: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -44,7 +65,7 @@ export default function CoWorkingRoomsPage() {
           setRooms(processedRooms);
           setLoading(false);
         }
-      }, 3000); // 3 seconds skeleton loading
+      }, 3000); // 3 seconds skeleton loading for initial load
     });
 
     // Listen for room count updates
@@ -92,7 +113,18 @@ export default function CoWorkingRoomsPage() {
         </div>
       </div>
       
-      <div className="font-semibold text-lg mb-3">Available Rooms</div>
+      <div className="flex items-center justify-between mb-3">
+        <div className="font-semibold text-lg">Available Rooms ({rooms.length})</div>
+        <Button 
+          onClick={loadRooms} 
+          variant="outline"
+          size="sm"
+          className="text-blue1 border-blue1 hover:bg-blue1 hover:text-white"
+          disabled={loading}
+        >
+          {loading ? 'Refreshing...' : 'Refresh'}
+        </Button>
+      </div>
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[...Array(4)].map((_, i) => (
@@ -113,10 +145,11 @@ export default function CoWorkingRoomsPage() {
               <h3 className="text-xl font-semibold text-gray-700 mb-2">No Coworking Rooms Available</h3>
               <p className="text-gray-500 mb-6">There are currently no active coworking rooms. Check back later or contact your administrator.</p>
               <Button 
-                onClick={() => window.location.reload()} 
+                onClick={loadRooms} 
                 className="bg-blue1 hover:bg-blue-800/70"
+                disabled={loading}
               >
-                Refresh Page
+                {loading ? 'Refreshing...' : 'Refresh Rooms'}
               </Button>
             </div>
           ) : (

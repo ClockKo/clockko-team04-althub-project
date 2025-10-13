@@ -13,7 +13,7 @@ class UserSettings(Base):
     __tablename__ = "user_settings"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, unique=True, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
     
     # Work Schedule Settings
     work_start_time = Column(Time, nullable=True)

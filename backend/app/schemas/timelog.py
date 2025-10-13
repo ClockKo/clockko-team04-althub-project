@@ -44,7 +44,7 @@ class FocusSessionResponse(BaseModel):
     remaining_time: Optional[int] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class TimeLogResponse(BaseModel):
@@ -55,7 +55,7 @@ class TimeLogResponse(BaseModel):
     type: str
     date: Optional[datetime]
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class FocusTimeResponse(BaseModel):
     total_focus_time: int

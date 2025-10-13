@@ -1,8 +1,8 @@
 import os
 import logging
 from typing import Optional
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, From, To, Content
+import requests
+import json
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -12,52 +12,69 @@ class SendGridEmailService:
         self.api_key = os.getenv("SENDGRID_API_KEY", "")
         self.from_email = os.getenv("SENDGRID_FROM_EMAIL", settings.SMTP_FROM)
         self.from_name = os.getenv("SENDGRID_FROM_NAME", settings.SMTP_FROM_NAME)
-        self.client = None
+        self.base_url = "https://api.sendgrid.com/v3"
         
         if self.api_key:
-            try:
-                self.client = SendGridAPIClient(api_key=self.api_key)
-                logger.info("📧 SendGrid email service initialized")
-            except Exception as e:
-                logger.error(f"Failed to initialize SendGrid: {e}")
-                self.client = None
+            logger.info("📧 SendGrid email service initialized (requests-based)")
         else:
             logger.warning("SENDGRID_API_KEY not found - email service disabled")
     
     def is_available(self) -> bool:
         """Check if SendGrid is properly configured"""
-        return self.client is not None and bool(self.api_key)
+        return bool(self.api_key and self.from_email)
     
     def send_email(self, to_email: str, subject: str, html_content: str, text_content: Optional[str] = None) -> bool:
-        """Send email via SendGrid API"""
+        """Send email via SendGrid API using requests"""
         if not self.is_available():
             logger.error("SendGrid not available - email not sent")
             return False
         
         try:
-            # Create email message
-            message = Mail(
-                from_email=From(self.from_email, self.from_name),
-                to_emails=To(to_email),
-                subject=subject,
-                html_content=Content("text/html", html_content)
-            )
+            # Prepare email data
+            email_data = {
+                "personalizations": [
+                    {
+                        "to": [{"email": to_email}],
+                        "subject": subject
+                    }
+                ],
+                "from": {
+                    "email": self.from_email,
+                    "name": self.from_name
+                },
+                "content": []
+            }
             
             # Add text content if provided
             if text_content:
-                message.content = [
-                    Content("text/plain", text_content),
-                    Content("text/html", html_content)
-                ]
+                email_data["content"].append({
+                    "type": "text/plain",
+                    "value": text_content
+                })
+            
+            # Add HTML content
+            email_data["content"].append({
+                "type": "text/html",
+                "value": html_content
+            })
+            
+            # Prepare headers
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
             
             # Send email
-            response = self.client.send(message)
+            url = f"{self.base_url}/mail/send"
+            response = requests.post(url, headers=headers, json=email_data, timeout=30)
             
-            if response.status_code in [200, 201, 202]:
+            if response.status_code == 202:
                 logger.info(f"✅ Email sent successfully to {to_email} via SendGrid")
                 return True
             else:
-                logger.error(f"❌ SendGrid API error: {response.status_code} - {response.body}")
+                logger.error(f"❌ SendGrid API error: {response.status_code}")
+                if response.text:
+                    logger.error(f"Response: {response.text}")
                 return False
                 
         except Exception as e:

@@ -17,6 +17,14 @@ except ImportError:
     SENDGRID_AVAILABLE = False
     sendgrid_service = None
 
+# Import SendGrid service
+try:
+    from app.services.sendgrid_service import sendgrid_service
+    SENDGRID_AVAILABLE = True
+except ImportError:
+    SENDGRID_AVAILABLE = False
+    sendgrid_service = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -188,7 +196,7 @@ class EmailService:
         html_content: str,
         text_content: Optional[str] = None
     ) -> bool:
-        """Send an email using SendGrid first, fallback to SMTP"""
+        """Send an email using SendGrid first, then Resend, finally fallback to SMTP"""
         
         # Try SendGrid first if available
         if SENDGRID_AVAILABLE and sendgrid_service and sendgrid_service.is_available():

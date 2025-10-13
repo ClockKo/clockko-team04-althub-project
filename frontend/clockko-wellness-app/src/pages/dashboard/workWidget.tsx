@@ -34,13 +34,39 @@ export function WorkSessionCard({
   // Helper function to format duration
   const formatDuration = (startTime: string, endTime?: string) => {
     try {
-      // Parse the ISO string times - JavaScript Date constructor handles ISO strings consistently
-      const start = new Date(startTime)
-      const end = endTime ? new Date(endTime) : new Date()
+      // Parse the ISO string times with explicit timezone handling
+      let start: Date
+      let end: Date
+      
+      // Handle different datetime formats that might come from backend
+      if (startTime.includes('T') && !startTime.endsWith('Z') && !startTime.includes('+')) {
+        // Naive ISO format (no timezone info) - assume UTC
+        start = new Date(startTime + 'Z')
+      } else {
+        // Has timezone info or Z suffix
+        start = new Date(startTime)
+      }
+      
+      if (endTime) {
+        if (endTime.includes('T') && !endTime.endsWith('Z') && !endTime.includes('+')) {
+          // Naive ISO format (no timezone info) - assume UTC
+          end = new Date(endTime + 'Z')
+        } else {
+          // Has timezone info or Z suffix
+          end = new Date(endTime)
+        }
+      } else {
+        end = new Date() // Current time in local timezone, but will be converted to UTC milliseconds
+      }
       
       // Validate dates
-      if (isNaN(start.getTime()) || (endTime && isNaN(end.getTime()))) {
-        console.warn('Invalid date format:', { startTime, endTime })
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        console.warn('Invalid date format after parsing:', { 
+          startTime, 
+          endTime,
+          parsedStart: start,
+          parsedEnd: end
+        })
         return '0s'
       }
 
@@ -48,15 +74,14 @@ export function WorkSessionCard({
       // getTime() returns milliseconds since epoch in UTC, ensuring consistent calculation
       const diffMs = Math.max(0, end.getTime() - start.getTime())
       
-      // Debug log for production troubleshooting
+      // Debug log for troubleshooting timezone issues
       if (process.env.NODE_ENV === 'development') {
-        console.log('Duration calculation:', {
-          startTime,
-          endTime: endTime || 'current time',
-          startTimestamp: start.getTime(),
-          endTimestamp: end.getTime(),
+        console.log('🕒 Duration calculation:', {
+          original: { startTime, endTime: endTime || 'current time' },
+          parsed: { start: start.toISOString(), end: end.toISOString() },
+          timestamps: { start: start.getTime(), end: end.getTime() },
           diffMs,
-          diffSeconds: diffMs / 1000
+          diffSeconds: Math.round(diffMs / 1000)
         })
       }
       

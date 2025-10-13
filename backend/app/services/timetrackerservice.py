@@ -141,8 +141,8 @@ def pause_session(db: Session, request: PauseSessionRequest):
     elif session.planned_duration:
         # Fix timezone issue: handle naive start_time
         if session.start_time.tzinfo is None:
-            # Convert naive datetime to UTC (assuming it was stored in local time UTC+1)
-            start_time_utc = session.start_time.replace(tzinfo=timezone.utc) - timedelta(hours=1)
+            # Convert naive datetime to UTC (assuming it was already stored in UTC)
+            start_time_utc = session.start_time.replace(tzinfo=timezone.utc)
         else:
             start_time_utc = session.start_time
             
@@ -188,10 +188,9 @@ def end_session(db: Session, request: EndSessionRequest, type: str):
     
     # Ensure start_time is also timezone-aware UTC (in case of old data)
     if session.start_time.tzinfo is None:
-        # For naive datetimes, assume they were stored in local time (UTC+1)
-        # and convert to UTC by subtracting 1 hour
-        session.start_time = session.start_time.replace(tzinfo=timezone.utc) - timedelta(hours=1)
-        print(f"  Fixed start_time (converted from local UTC+1): {session.start_time}")
+        # For naive datetimes, assume they were already stored in UTC
+        session.start_time = session.start_time.replace(tzinfo=timezone.utc)
+        print(f"  Fixed start_time (converted to UTC): {session.start_time}")
         
     # Calculate duration to verify it's positive
     duration_seconds = (end_time - session.start_time).total_seconds()

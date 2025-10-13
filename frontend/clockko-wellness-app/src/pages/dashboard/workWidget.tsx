@@ -34,15 +34,32 @@ export function WorkSessionCard({
   // Helper function to format duration
   const formatDuration = (startTime: string, endTime?: string) => {
     try {
+      // Parse the ISO string times - JavaScript Date constructor handles ISO strings consistently
       const start = new Date(startTime)
       const end = endTime ? new Date(endTime) : new Date()
       
       // Validate dates
       if (isNaN(start.getTime()) || (endTime && isNaN(end.getTime()))) {
-        return '0m'
+        console.warn('Invalid date format:', { startTime, endTime })
+        return '0s'
       }
 
+      // Calculate the difference in milliseconds using UTC timestamps
+      // getTime() returns milliseconds since epoch in UTC, ensuring consistent calculation
       const diffMs = Math.max(0, end.getTime() - start.getTime())
+      
+      // Debug log for production troubleshooting
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Duration calculation:', {
+          startTime,
+          endTime: endTime || 'current time',
+          startTimestamp: start.getTime(),
+          endTimestamp: end.getTime(),
+          diffMs,
+          diffSeconds: diffMs / 1000
+        })
+      }
+      
       const totalMinutes = Math.floor(diffMs / 60000)
       const hours = Math.floor(totalMinutes / 60)
       const minutes = totalMinutes % 60
@@ -56,8 +73,8 @@ export function WorkSessionCard({
         return `${seconds}s`
       }
     } catch (error) {
-      console.error('Error formatting duration:', error)
-      return '0m'
+      console.error('Error formatting duration:', error, { startTime, endTime })
+      return '0s'
     }
   }
 

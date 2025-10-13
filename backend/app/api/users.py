@@ -12,7 +12,7 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["User Management"])
 
-@router.delete("/delete", status_code=204)
+@router.delete("/delete")
 def delete_current_user(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -21,12 +21,23 @@ def delete_current_user(
     Delete the current authenticated user's account and all related data.
     """
     try:
+        user_id = current_user.id
+        logger.info(f"Starting deletion of user {user_id}")
+        
+        # The database relationships should handle cascade deletes
+        # But let's be explicit about the deletion order for safety
         db.delete(current_user)
         db.commit()
-        return {"message": "Account deleted successfully."}
+        
+        logger.info(f"Successfully deleted user {user_id}")
+        return {"message": "Account deleted successfully", "success": True}
     except Exception as e:
-        logger.error(f"Failed to delete user {current_user.id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to delete account")
+        db.rollback()
+        logger.error(f"Failed to delete user {current_user.id}: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Failed to delete account: {str(e)}"
+        )
 
 # --- PATCH: Add schema for profile update ---
 class UserProfileUpdateRequest(BaseModel):

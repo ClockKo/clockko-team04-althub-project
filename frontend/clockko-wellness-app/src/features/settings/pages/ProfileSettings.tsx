@@ -447,17 +447,27 @@ const ProfileSettings: React.FC = () => {
                           method: 'DELETE',
                           headers: {
                             'Authorization': `Bearer ${authToken}`,
+                            'Content-Type': 'application/json',
                           },
                         });
+                        
                         if (res.ok) {
-                          toast.success('Account deleted successfully.');
+                          const data = await res.json().catch(() => ({ message: 'Account deleted successfully' }));
+                          toast.success(data.message || 'Account deleted successfully.');
                           logout();
                           navigate('/');
                         } else {
-                          const data = await res.json().catch(() => ({}));
-                          toast.error(data.detail || 'Failed to delete account.');
+                          const errorText = await res.text();
+                          let errorData;
+                          try {
+                            errorData = JSON.parse(errorText);
+                          } catch {
+                            errorData = { detail: errorText || 'Failed to delete account' };
+                          }
+                          
+                          toast.error(errorData.detail || errorData.message || 'Failed to delete account.');
                         }
-                      } catch (err) {
+                      } catch (err: any) {
                         toast.error('Network error. Please try again.');
                       }
                     }}

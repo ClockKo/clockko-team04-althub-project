@@ -26,7 +26,8 @@ elif "postgresql" in DATABASE_URL:
         max_overflow=10,
         pool_pre_ping=True,
         echo=settings.DEBUG
-    )
+        connect_args={"sslmode": "require"}    
+        )
 else:
     # Generic configuration for other databases
     engine = create_engine(DATABASE_URL, echo=settings.DEBUG)

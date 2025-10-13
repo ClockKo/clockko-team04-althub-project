@@ -46,29 +46,23 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS settings: read allowed origins from env via settings.FRONTEND_URL (comma-separated supported)
+# CORS settings: Always allow the frontend domains
+origins = [
+    "https://clockko.vercel.app",
+    "http://localhost:5173",
+]
+
+# Also try to read from environment if available
 frontend_url = getattr(settings, 'FRONTEND_URL', '')
 if frontend_url:
-    origins = [o.strip() for o in frontend_url.split(',') if o.strip()]
-    # Add common variations for Vercel
-    base_origins = []
-    for origin in origins:
-        base_origins.append(origin)
-        if origin.startswith('https://clockko.vercel.app'):
-            base_origins.extend([
-                "https://clockko.vercel.app",
-                "https://clockko-*.vercel.app"
-            ])
-    origins = list(set(base_origins))  # Remove duplicates
-else:
-    origins = ["*"]
+    env_origins = [o.strip() for o in frontend_url.split(',') if o.strip()]
+    origins.extend(env_origins)
 
-# Add localhost for development
-origins.extend(["http://localhost:5173", "http://localhost:3000"])
-origins = list(set(origins))  # Remove duplicates
+# Remove duplicates
+origins = list(set(origins))
 
 print("🌐 CORS allowed origins:", origins)
-allow_credentials = False if "*" in origins else True
+allow_credentials = True
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

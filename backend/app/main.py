@@ -44,6 +44,7 @@ app = FastAPI(
     description="Authentication and user management system for ClockKo.",
     version="1.0.0",
     lifespan=lifespan,
+)
 
 # CORS settings: read allowed origins from env via settings.FRONTEND_URL (comma-separated supported)
 origins = [o.strip() for o in str(getattr(settings, 'FRONTEND_URL', '')).split(',') if o.strip()] or ["*"]
@@ -138,4 +139,3 @@ def google_health_details():
         "region": region,
         "error": error,
     }
-

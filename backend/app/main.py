@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
+from fastapi.responses import JSONResponse
 import os
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,6 +50,7 @@ app = FastAPI(
 # CORS settings: Always allow the frontend domains
 origins = [
     "https://clockko.vercel.app",
+    "https://clockko-team04-althub-project.vercel.app", 
     "http://localhost:5173",
 ]
 
@@ -70,6 +72,34 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+# Custom exception handler to ensure CORS headers on all responses
+@app.exception_handler(Exception)
+async def custom_exception_handler(request: Request, exc: Exception):
+    """
+    Custom exception handler that ensures CORS headers are present on error responses.
+    """
+    import traceback
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    logger.error(f"Unhandled exception: {str(exc)}")
+    logger.error(f"Traceback: {traceback.format_exc()}")
+    
+    response = JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
+    
+    # Add CORS headers manually to error responses
+    origin = request.headers.get("origin")
+    if origin in origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+    
+    return response
 
 # Include API routers
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])

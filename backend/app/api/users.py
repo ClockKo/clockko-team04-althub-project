@@ -99,11 +99,29 @@ def delete_current_user(
         logger.info(f"Successfully deleted user {user_id}")
         return {"message": "Account deleted successfully", "success": True}
     except Exception as e:
-        db.rollback()
+        try:
+            db.rollback()
+            logger.info("Database transaction rolled back successfully")
+        except Exception as rollback_error:
+            logger.error(f"Error during rollback: {str(rollback_error)}")
+        
+        # Log detailed error information
         logger.error(f"Failed to delete user {current_user.id}: {str(e)}")
+        logger.error(f"Error type: {type(e).__name__}")
+        
+        import traceback
+        logger.error(f"Full traceback: {traceback.format_exc()}")
+        
+        # Create a user-friendly error message
+        error_detail = "Unable to delete account due to a server error."
+        if "constraint" in str(e).lower():
+            error_detail = "Unable to delete account due to data dependencies. Please contact support."
+        elif "foreign key" in str(e).lower():
+            error_detail = "Unable to delete account due to linked data. Please contact support."
+        
         raise HTTPException(
             status_code=500, 
-            detail=f"Failed to delete account: {str(e)}"
+            detail=error_detail
         )
 
 # --- PATCH: Add schema for profile update ---

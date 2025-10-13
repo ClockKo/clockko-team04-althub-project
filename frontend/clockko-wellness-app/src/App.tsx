@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { LandingPage } from './pages/landingpage'
 import MainLayout from './features/layout/mainLayout'
 import { DashboardLayout } from './pages/dashboard'
-import ChallengesPage from "./features/challenges/challengePage";
+// import ChallengesPage from "./features/challenges/challengePage";
 import { OnboardingProvider } from './contexts/OnboardingContext';
 import { UserProvider } from './contexts/UserContext';
 import { AuthProvider } from './features/auth';
@@ -71,7 +71,8 @@ function App() {
                   <Route path="/time-tracker" element={<TimeTrackerFeatures />} />
                   <Route path="/co-working" element={<CoWorkingRoomsPage/>} />
                   <Route path="/reports" element={<div className="p-6"><h1 className="text-2xl font-bold">Reports</h1><p>Coming soon...</p></div>} />
-                  <Route path="/challenges" element={<ChallengesPage/>} />
+                  {/* <Route path="/challenges" element={<ChallengesPage/>} /> */}
+                  <Route path="/challenges" element={<div className="p-6"><h1 className="text-2xl font-bold">Challenges</h1><p>Coming soon...</p></div>} />
                   
                   <Route path="/settings/profile" element={<ProfileSettings />} />
                   <Route path="/settings/general" element={<GeneralSettings />} />

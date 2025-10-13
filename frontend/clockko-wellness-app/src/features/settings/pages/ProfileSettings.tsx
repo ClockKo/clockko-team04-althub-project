@@ -42,7 +42,39 @@ import {
 } from '../../../utils/avatarUtils';
 import { apiUrl } from '../../../utils/api';
 
+// Debug functions for testing (can be called from browser console)
+(window as any).testCORS = async () => {
+  console.log('🧪 Testing CORS with backend...');
+  try {
+    const response = await fetch(apiUrl('/cors-test'));
+    const data = await response.json();
+    console.log('✅ CORS test successful:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ CORS test failed:', error);
+    return { error: error.message };
+  }
+};
 
+(window as any).testAccountDeletion = async (token: string) => {
+  console.log('🧪 Testing account deletion endpoint...');
+  try {
+    const response = await fetch(apiUrl('/users/delete'), {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log(`📡 Response status: ${response.status}`);
+    const text = await response.text();
+    console.log(`📡 Response body: ${text}`);
+    return { status: response.status, body: text };
+  } catch (error) {
+    console.error('❌ Account deletion test failed:', error);
+    return { error: error.message };
+  }
+};
 
 const ProfileSettings: React.FC = () => {
   const navigate = useNavigate();
@@ -442,55 +474,105 @@ const ProfileSettings: React.FC = () => {
                   <Button
                     variant="destructive"
                     onClick={async () => {
-                      try {
-                        const res = await fetch(apiUrl('/users/delete'), {
-                          method: 'DELETE',
-                          headers: {
-                            'Authorization': `Bearer ${authToken}`,
-                            'Content-Type': 'application/json',
-                          },
-                        });
+                      console.log('🗑️ Starting account deletion process...');
+                      
+                      // Create a more robust deletion function with retry logic
+                      const deleteAccount = async (retryCount = 0): Promise<void> => {
+                        const maxRetries = 2;
                         
-                        if (res.ok) {
-                          const data = await res.json().catch(() => ({ message: 'Account deleted successfully' }));
-                          toast.success(data.message || 'Account deleted successfully.');
-                          logout();
-                          navigate('/');
-                        } else {
-                          // Handle different error status codes
-                          const errorText = await res.text();
+                        try {
+                          console.log(`🔄 Deletion attempt ${retryCount + 1}/${maxRetries + 1}`);
+                          
+                          const controller = new AbortController();
+                          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+                          
+                          const res = await fetch(apiUrl('/users/delete'), {
+                            method: 'DELETE',
+                            headers: {
+                              'Authorization': `Bearer ${authToken}`,
+                              'Content-Type': 'application/json',
+                            },
+                            signal: controller.signal,
+                          });
+                          
+                          clearTimeout(timeoutId);
+                          
+                          console.log(`📡 Response status: ${res.status}`);
+                          console.log(`📡 Response headers:`, Object.fromEntries(res.headers.entries()));
+                          
+                          if (res.ok) {
+                            const data = await res.json().catch(() => ({ message: 'Account deleted successfully' }));
+                            console.log('✅ Account deletion successful:', data);
+                            toast.success(data.message || 'Account deleted successfully.');
+                            logout();
+                            navigate('/');
+                            return;
+                          }
+                          
+                          // Handle error responses
+                          const errorText = await res.text().catch(() => '');
                           let errorMessage = 'Failed to delete account';
                           
+                          console.error('❌ Account deletion failed:', {
+                            status: res.status,
+                            statusText: res.statusText,
+                            errorText,
+                            headers: Object.fromEntries(res.headers.entries())
+                          });
+                          
                           if (res.status === 500) {
-                            errorMessage = 'Server error occurred while deleting account. Please try again.';
+                            // For 500 errors, assume deletion might have succeeded but response failed
+                            if (retryCount < maxRetries) {
+                              console.log(`🔄 500 error, retrying in 2 seconds... (${retryCount + 1}/${maxRetries})`);
+                              await new Promise(resolve => setTimeout(resolve, 2000));
+                              return await deleteAccount(retryCount + 1);
+                            }
+                            errorMessage = 'Server error occurred. The account may have been deleted. Please try logging in again.';
                           } else if (res.status === 401) {
                             errorMessage = 'Authentication failed. Please log in again.';
                           } else if (res.status === 403) {
                             errorMessage = 'You do not have permission to delete this account.';
                           }
                           
-                          let errorData;
+                          // Try to parse error message from response
                           try {
-                            errorData = JSON.parse(errorText);
+                            const errorData = JSON.parse(errorText);
                             errorMessage = errorData.detail || errorData.message || errorMessage;
                           } catch {
-                            // If parsing fails, use the raw text or default message
                             if (errorText && errorText.trim()) {
                               errorMessage = errorText;
                             }
                           }
                           
-                          console.error('Account deletion failed:', {
-                            status: res.status,
-                            statusText: res.statusText,
-                            errorText,
-                            errorMessage
-                          });
+                          throw new Error(errorMessage);
                           
-                          toast.error(errorMessage);
+                        } catch (err: any) {
+                          console.error('💥 Network/fetch error:', err);
+                          
+                          if (err.name === 'AbortError') {
+                            throw new Error('Request timed out. Please try again.');
+                          }
+                          
+                          if (err.message && !err.message.includes('Failed to fetch')) {
+                            throw err; // Re-throw if it's our custom error
+                          }
+                          
+                          // Handle network errors (including CORS)
+                          if (retryCount < maxRetries) {
+                            console.log(`🔄 Network error, retrying in 2 seconds... (${retryCount + 1}/${maxRetries})`);
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            return await deleteAccount(retryCount + 1);
+                          }
+                          
+                          throw new Error('Network error. Account deletion may have succeeded but could not be confirmed. Please try logging in again to check if your account still exists.');
                         }
-                      } catch (err: any) {
-                        toast.error('Network error. Please try again.');
+                      };
+                      
+                      try {
+                        await deleteAccount();
+                      } catch (error: any) {
+                        console.error('🚨 Final deletion error:', error);
+                        toast.error(error.message || 'Failed to delete account. Please try again.');
                       }
                     }}
                   >
